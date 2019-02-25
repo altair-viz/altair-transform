@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'leftPLUSMINUSleftTIMESDIVIDEleftEXPrightUMINUSUPLUSDIVIDE EXP LPAREN MINUS NAME NUMBER PERIOD PLUS RPAREN TIMESstatement : expression\n        expression : expression PLUS expression\n                  | expression MINUS expression\n                  | expression TIMES expression\n                  | expression DIVIDE expression\n                  | expression EXP expression\n        expression : MINUS expression %prec UMINUSexpression : PLUS expression %prec UPLUSexpression : groupexpression : NUMBERexpression : NAME\n        expression : group PERIOD NAME\n                   | NAME PERIOD NAME\n        group : LPAREN expression RPAREN'
+_lr_signature = 'leftPLUSMINUSleftTIMESDIVIDEleftEXPrightUMINUSUPLUSDIVIDE EXP FLOAT INTEGER LPAREN MINUS NAME PERIOD PLUS RPAREN TIMESstatement : expression\n        expression : expression PLUS expression\n                  | expression MINUS expression\n                  | expression TIMES expression\n                  | expression DIVIDE expression\n                  | expression EXP expression\n        expression : MINUS expression %prec UMINUSexpression : PLUS expression %prec UPLUSexpression : group\n        number : INTEGER\n               | FLOAT\n        expression : numberexpression : NAME\n        expression : group PERIOD NAME\n                   | NAME PERIOD NAME\n        group : LPAREN expression RPAREN'
     
-_lr_action_items = {'MINUS':([0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22,23,24,25,26,],[4,10,4,4,-9,-10,-11,4,4,4,4,4,4,-8,-7,10,-2,-3,-4,-5,-6,-12,-13,-14,]),'PLUS':([0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,18,19,20,21,22,23,24,25,26,],[3,9,3,3,-9,-10,-11,3,3,3,3,3,3,-8,-7,9,-2,-3,-4,-5,-6,-12,-13,-14,]),'NUMBER':([0,3,4,8,9,10,11,12,13,],[6,6,6,6,6,6,6,6,6,]),'NAME':([0,3,4,8,9,10,11,12,13,16,17,],[7,7,7,7,7,7,7,7,7,24,25,]),'LPAREN':([0,3,4,8,9,10,11,12,13,],[8,8,8,8,8,8,8,8,8,]),'$end':([1,2,5,6,7,14,15,19,20,21,22,23,24,25,26,],[0,-1,-9,-10,-11,-8,-7,-2,-3,-4,-5,-6,-12,-13,-14,]),'TIMES':([2,5,6,7,14,15,18,19,20,21,22,23,24,25,26,],[11,-9,-10,-11,-8,-7,11,11,11,-4,-5,-6,-12,-13,-14,]),'DIVIDE':([2,5,6,7,14,15,18,19,20,21,22,23,24,25,26,],[12,-9,-10,-11,-8,-7,12,12,12,-4,-5,-6,-12,-13,-14,]),'EXP':([2,5,6,7,14,15,18,19,20,21,22,23,24,25,26,],[13,-9,-10,-11,-8,-7,13,13,13,13,13,-6,-12,-13,-14,]),'RPAREN':([5,6,7,14,15,18,19,20,21,22,23,24,25,26,],[-9,-10,-11,-8,-7,26,-2,-3,-4,-5,-6,-12,-13,-14,]),'PERIOD':([5,7,26,],[16,17,-14,]),}
+_lr_action_items = {'MINUS':([0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,20,21,22,23,24,25,26,27,28,],[4,12,4,4,-9,-12,-13,4,-10,-11,4,4,4,4,4,-8,-7,12,-2,-3,-4,-5,-6,-14,-15,-16,]),'PLUS':([0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,20,21,22,23,24,25,26,27,28,],[3,11,3,3,-9,-12,-13,3,-10,-11,3,3,3,3,3,-8,-7,11,-2,-3,-4,-5,-6,-14,-15,-16,]),'NAME':([0,3,4,8,11,12,13,14,15,18,19,],[7,7,7,7,7,7,7,7,7,26,27,]),'LPAREN':([0,3,4,8,11,12,13,14,15,],[8,8,8,8,8,8,8,8,8,]),'INTEGER':([0,3,4,8,11,12,13,14,15,],[9,9,9,9,9,9,9,9,9,]),'FLOAT':([0,3,4,8,11,12,13,14,15,],[10,10,10,10,10,10,10,10,10,]),'$end':([1,2,5,6,7,9,10,16,17,21,22,23,24,25,26,27,28,],[0,-1,-9,-12,-13,-10,-11,-8,-7,-2,-3,-4,-5,-6,-14,-15,-16,]),'TIMES':([2,5,6,7,9,10,16,17,20,21,22,23,24,25,26,27,28,],[13,-9,-12,-13,-10,-11,-8,-7,13,13,13,-4,-5,-6,-14,-15,-16,]),'DIVIDE':([2,5,6,7,9,10,16,17,20,21,22,23,24,25,26,27,28,],[14,-9,-12,-13,-10,-11,-8,-7,14,14,14,-4,-5,-6,-14,-15,-16,]),'EXP':([2,5,6,7,9,10,16,17,20,21,22,23,24,25,26,27,28,],[15,-9,-12,-13,-10,-11,-8,-7,15,15,15,15,15,-6,-14,-15,-16,]),'RPAREN':([5,6,7,9,10,16,17,20,21,22,23,24,25,26,27,28,],[-9,-12,-13,-10,-11,-8,-7,28,-2,-3,-4,-5,-6,-14,-15,-16,]),'PERIOD':([5,7,28,],[18,19,-16,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'statement':([0,],[1,]),'expression':([0,3,4,8,9,10,11,12,13,],[2,14,15,18,19,20,21,22,23,]),'group':([0,3,4,8,9,10,11,12,13,],[5,5,5,5,5,5,5,5,5,]),}
+_lr_goto_items = {'statement':([0,],[1,]),'expression':([0,3,4,8,11,12,13,14,15,],[2,16,17,20,21,22,23,24,25,]),'group':([0,3,4,8,11,12,13,14,15,],[5,5,5,5,5,5,5,5,5,]),'number':([0,3,4,8,11,12,13,14,15,],[6,6,6,6,6,6,6,6,6,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,18 +27,20 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> statement","S'",1,None,None,None),
-  ('statement -> expression','statement',1,'p_statement_expr','parser.py',99),
-  ('expression -> expression PLUS expression','expression',3,'p_expression_binop','parser.py',104),
-  ('expression -> expression MINUS expression','expression',3,'p_expression_binop','parser.py',105),
-  ('expression -> expression TIMES expression','expression',3,'p_expression_binop','parser.py',106),
-  ('expression -> expression DIVIDE expression','expression',3,'p_expression_binop','parser.py',107),
-  ('expression -> expression EXP expression','expression',3,'p_expression_binop','parser.py',108),
-  ('expression -> MINUS expression','expression',2,'p_expression_uminus','parser.py',123),
-  ('expression -> PLUS expression','expression',2,'p_expression_uplus','parser.py',127),
-  ('expression -> group','expression',1,'p_expression_group','parser.py',131),
-  ('expression -> NUMBER','expression',1,'p_expression_number','parser.py',135),
-  ('expression -> NAME','expression',1,'p_expression_name','parser.py',139),
-  ('expression -> group PERIOD NAME','expression',3,'p_expression_attr','parser.py',148),
-  ('expression -> NAME PERIOD NAME','expression',3,'p_expression_attr','parser.py',149),
-  ('group -> LPAREN expression RPAREN','group',3,'p_group_paren','parser.py',159),
+  ('statement -> expression','statement',1,'p_statement_expr','parser.py',98),
+  ('expression -> expression PLUS expression','expression',3,'p_expression_binop','parser.py',103),
+  ('expression -> expression MINUS expression','expression',3,'p_expression_binop','parser.py',104),
+  ('expression -> expression TIMES expression','expression',3,'p_expression_binop','parser.py',105),
+  ('expression -> expression DIVIDE expression','expression',3,'p_expression_binop','parser.py',106),
+  ('expression -> expression EXP expression','expression',3,'p_expression_binop','parser.py',107),
+  ('expression -> MINUS expression','expression',2,'p_expression_uminus','parser.py',122),
+  ('expression -> PLUS expression','expression',2,'p_expression_uplus','parser.py',126),
+  ('expression -> group','expression',1,'p_expression_group','parser.py',130),
+  ('number -> INTEGER','number',1,'p_number','parser.py',135),
+  ('number -> FLOAT','number',1,'p_number','parser.py',136),
+  ('expression -> number','expression',1,'p_expression_number','parser.py',141),
+  ('expression -> NAME','expression',1,'p_expression_name','parser.py',145),
+  ('expression -> group PERIOD NAME','expression',3,'p_expression_attr','parser.py',154),
+  ('expression -> NAME PERIOD NAME','expression',3,'p_expression_attr','parser.py',155),
+  ('group -> LPAREN expression RPAREN','group',3,'p_group_paren','parser.py',165),
 ]

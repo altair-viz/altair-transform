@@ -49,7 +49,7 @@ class ParserBase(object):
 class Parser(ParserBase):
 
     tokens = (
-        'NAME', 'NUMBER',
+        'NAME', 'FLOAT', 'INTEGER',
         'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'PERIOD',
         'LPAREN', 'RPAREN',
     )
@@ -66,14 +66,14 @@ class Parser(ParserBase):
     t_PERIOD = r'\.'
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
-    def t_NUMBER(self, t):
+    def t_FLOAT(self, t):
+        r'(\d+(\.\d*)?|\.\d+)'
+        t.value = float(t.value)
+        return t
+
+    def t_INTEGER(self, t):
         r'\d+'
-        try:
-            t.value = int(t.value)
-        except ValueError:
-            print("Integer value too large %s" % t.value)
-            t.value = 0
-        # print "parsed number %s" % repr(t.value)
+        t.value = int(t.value)
         return t
 
     t_ignore = " \t"
@@ -84,7 +84,6 @@ class Parser(ParserBase):
 
     def t_error(self, t):
         raise ValueError("Illegal character '%s'" % t.value[0])
-        t.lexer.skip(1)
 
     # Parsing rules
 
@@ -131,8 +130,15 @@ class Parser(ParserBase):
         'expression : group'
         p[0] = p[1]
 
+    def p_number(self, p):
+        """
+        number : INTEGER
+               | FLOAT
+        """
+        p[0] = p[1]
+
     def p_expression_number(self, p):
-        'expression : NUMBER'
+        'expression : number'
         p[0] = p[1]
 
     def p_expression_name(self, p):
