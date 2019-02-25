@@ -21,7 +21,10 @@ EXPRESSIONS_WITH_NAMES = [
     "3 * (4 + C)"
 ]
 
-
+class Bunch(object):
+    def __init__(self, **kwargs):
+        for key, val in kwargs.items():
+            setattr(self, key, val)
 
 
 @pytest.fixture
@@ -38,3 +41,16 @@ def test_simple_eval(expression, parser):
 def test_name_eval(expression, parser):
     names = {'A': 5, 'B': 6, 'C': 7}
     assert eval(expression, names) == parser.parse(expression, names)
+
+
+def test_attribute_access(parser):
+    names = {'A': Bunch(B=4), 'C': 5}
+
+    expression = 'A.B + C / 5'
+    assert eval(expression, names) == parser.parse(expression, names)
+
+    expression = '(A).B + C * 10'
+    assert eval(expression, names) == parser.parse(expression, names)
+
+    with pytest.raises(ValueError) as err:
+        parser.parse("1.B")

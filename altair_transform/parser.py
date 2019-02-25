@@ -50,7 +50,7 @@ class Parser(ParserBase):
 
     tokens = (
         'NAME', 'NUMBER',
-        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE',
+        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'PERIOD',
         'LPAREN', 'RPAREN',
     )
 
@@ -63,6 +63,7 @@ class Parser(ParserBase):
     t_DIVIDE = r'/'
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
+    t_PERIOD = r'\.'
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
     def t_NUMBER(self, t):
@@ -127,8 +128,8 @@ class Parser(ParserBase):
         p[0] = +p[2]
 
     def p_expression_group(self, p):
-        'expression : LPAREN expression RPAREN'
-        p[0] = p[2]
+        'expression : group'
+        p[0] = p[1]
 
     def p_expression_number(self, p):
         'expression : NUMBER'
@@ -141,6 +142,22 @@ class Parser(ParserBase):
         except LookupError:
             print("Undefined name '%s'" % p[1])
             p[0] = 0
+
+    def p_expression_attr(self, p):
+        """
+        expression : group PERIOD NAME
+                   | NAME PERIOD NAME
+        """
+        try:
+            p[1] = self.names[p[1]]
+        except LookupError:
+            print("Undefined name '%s'" % p[1])
+            p[0] = 0
+        p[0] = getattr(p[1], p[3])
+
+    def p_group_paren(self, p):
+        'group : LPAREN expression RPAREN'
+        p[0] = p[2]
 
     def p_error(self, p):
         if p:
