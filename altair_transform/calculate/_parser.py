@@ -170,5 +170,3 @@ class Parser(ParserBase):
             raise ValueError("Syntax error at '%s'" % p.value)
         else:
             raise ValueError("Syntax error at EOF")
-
-parser = Parser()

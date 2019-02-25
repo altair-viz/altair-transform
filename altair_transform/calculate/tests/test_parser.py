@@ -1,6 +1,6 @@
 import pytest
 
-from altair_transform.parser import Parser
+from altair_transform.calculate import Parser
 
 EXPRESSIONS = [
     "1 + 1",
