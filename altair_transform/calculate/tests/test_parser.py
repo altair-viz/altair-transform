@@ -46,7 +46,7 @@ def test_name_eval(expression, parser):
 
 
 def test_attribute_access(parser):
-    names = {'A': Bunch(B=4), 'C': 5}
+    names = {'A': Bunch(B=4), 'C': 5, 'f': lambda x: x ** 2}
 
     expression = 'A.B + C / 5'
     assert eval(expression, names) == parser.parse(expression, names)
@@ -56,3 +56,17 @@ def test_attribute_access(parser):
 
     with pytest.raises(ValueError) as err:
         parser.parse("1.B")
+
+
+def test_function_calls(parser):
+    names = {'A': 3, 'C': 5, 'f': lambda x=2: x ** 2, 'mul': lambda x, y: x * y}
+
+    expression = 'A * f()'
+    assert eval(expression, names) == parser.parse(expression, names)
+
+    expression = 'A * f(C)'
+    assert eval(expression, names) == parser.parse(expression, names)
+
+    # expression = 'mul(A, 2)'
+    # assert eval(expression, names) == parser.parse(expression, names)
+
