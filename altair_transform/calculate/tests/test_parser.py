@@ -81,3 +81,9 @@ def test_string_variants(parser):
     names = {'f': lambda *args: args}
     expression = r"""f("abc", 'abc', "a\"b\"c", 'a\'b\'c', 'abc\\', "abc\\")"""
     assert eval(expression, names) == parser.parse(expression, names)
+
+
+@pytest.mark.parametrize('expression', ["[]", "[1 + 1]", "[A, 'foo', 23 * B]"])
+def test_lists(parser, expression):
+    names = {'A': 1, 'B': 2}
+    assert eval(expression, names) == parser.parse(expression, names)

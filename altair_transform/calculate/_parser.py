@@ -165,6 +165,7 @@ class Parser(ParserBase):
              | FLOAT
              | STRING
              | global
+             | list
              | group
         """
         p[0] = p[1]
@@ -172,6 +173,18 @@ class Parser(ParserBase):
     def p_global(self, p):
         'global : NAME'
         p[0] = self.names[p[1]]
+
+    def p_list(self, p):
+        """
+        list : LBRACKET RBRACKET
+             | LBRACKET arglist RBRACKET
+        """
+        if len(p) == 3:
+            p[0] = []
+        elif len(p) == 4:
+            p[0] = list(p[2])
+        else:
+            raise NotImplementedError()
 
     def p_group(self, p):
         'group : LPAREN expression RPAREN'
