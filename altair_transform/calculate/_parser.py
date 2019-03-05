@@ -7,12 +7,19 @@ import os
 import ply.lex as lex
 import ply.yacc as yacc
 
+
 # TODO: 
-# - string literals
-# - function calls
-# - argument lists
 # - square brackets,
 # - JS operators
+
+
+def _decode_escapes(s):
+    """Decode string escape sequences"""
+    if sys.version_info[0] == 2:
+        return s.decode("string-escape")
+    else:
+        return bytes(s, "utf-8").decode("unicode_escape")
+
 
 class ParserBase(object):
     """
@@ -81,8 +88,8 @@ class Parser(ParserBase):
         return t
 
     def t_STRING(self, t):
-        r'''("((\\{2})*|(.*?[^\\](\\{2})*))")|('((\\{2})*|(.*?[^\\](\\{2})*))')'''
-        t.value = bytes(t.value[1:-1], "utf-8").decode("unicode_escape")
+        r'''(?P<openquote>["'])((\\{2})*|(.*?[^\\](\\{2})*))(?P=openquote)'''
+        t.value = _decode_escapes(t.value[1:-1])
         return t
 
     t_ignore = " \t"
