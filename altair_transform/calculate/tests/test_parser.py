@@ -87,3 +87,14 @@ def test_string_variants(parser):
 def test_lists(parser, expression):
     names = {'A': 1, 'B': 2}
     assert eval(expression, names) == parser.parse(expression, names)
+
+
+@pytest.mark.parametrize('expression', ["{}", "{'a': 4}", "{'a': 5, 'b': 5}"])
+def test_objects(parser, expression):
+    assert eval(expression) == parser.parse(expression)
+
+
+def test_jsobject(parser):
+    names = {'a': 1, 'b': 2}
+    js_obj = "{a, b, c: 3, 'd': 4, 1: 5}"
+    assert parser.parse(js_obj, names) == {'a': 1, 'b': 2, 'c': 3, 'd': 4, 1: 5}

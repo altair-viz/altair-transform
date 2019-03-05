@@ -62,8 +62,11 @@ class Parser(ParserBase):
 
     tokens = (
         'NAME', 'FLOAT', 'INTEGER', 'STRING',
-        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'PERIOD',
-        'LBRACKET', 'RBRACKET', 'LPAREN', 'RPAREN', 'COMMA',
+        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE',
+        'PERIOD', 'COMMA', 'COLON',
+        'LPAREN', 'RPAREN',
+        'LBRACKET', 'RBRACKET',
+        'LBRACE', 'RBRACE'
     )
 
     # Tokens
@@ -77,8 +80,11 @@ class Parser(ParserBase):
     t_RPAREN = r'\)'
     t_LBRACKET = r'\['
     t_RBRACKET = r'\]'
+    t_LBRACE = r'\{'
+    t_RBRACE = r'\}'
     t_PERIOD = r'\.'
     t_COMMA = r','
+    t_COLON = r'\:'
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
     def t_FLOAT(self, t):
@@ -166,6 +172,7 @@ class Parser(ParserBase):
              | STRING
              | global
              | list
+             | object
              | group
         """
         p[0] = p[1]
@@ -185,6 +192,45 @@ class Parser(ParserBase):
             p[0] = list(p[2])
         else:
             raise NotImplementedError()
+
+    def p_object(self, p):
+        """
+        object : LBRACE RBRACE
+               | LBRACE objectarglist RBRACE
+        """
+        if len(p) == 3:
+            p[0] = {}
+        elif len(p) == 4:
+            p[0] = dict(p[2])
+
+    def p_objectarglist(self, p):
+        """
+        objectarglist : objectarglist COMMA objectarg
+                      | objectarg
+        """
+        if len(p) == 4:
+            p[0] = p[1] + [p[3]]
+        else:
+            p[0] = [p[1]]
+
+    def p_objectarg(self, p):
+        """
+        objectarg : objectkey COLON expression
+                  | NAME
+        """
+        if len(p) == 2:
+            p[0] = (p[1], self.names[p[1]])
+        elif len(p) == 4:
+            p[0] = (p[1], p[3])
+
+    def p_objectkey(self, p):
+        """
+        objectkey : NAME
+                  | STRING
+                  | INTEGER
+                  | FLOAT
+        """ 
+        p[0] = p[1]
 
     def p_group(self, p):
         'group : LPAREN expression RPAREN'
