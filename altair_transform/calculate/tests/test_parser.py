@@ -67,6 +67,15 @@ def test_function_calls(parser):
     expression = 'A * f(C)'
     assert eval(expression, names) == parser.parse(expression, names)
 
-    # expression = 'mul(A, 2)'
-    # assert eval(expression, names) == parser.parse(expression, names)
+    expression = 'mul(A, 2)'
+    assert eval(expression, names) == parser.parse(expression, names)
 
+
+def test_string_variants(parser):
+    names = {'f': lambda x: x}
+
+    expression = 'f("abc")'
+    assert eval(expression, names) == parser.parse(expression, names)
+
+    expression = "f('abc')"
+    assert eval(expression, names) == parser.parse(expression, names)

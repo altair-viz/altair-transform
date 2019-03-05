@@ -52,9 +52,9 @@ class ParserBase(object):
 class Parser(ParserBase):
 
     tokens = (
-        'NAME', 'FLOAT', 'INTEGER',
+        'NAME', 'FLOAT', 'INTEGER', 'STRING',
         'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'PERIOD',
-        'LPAREN', 'RPAREN', #'COMMA',
+        'LPAREN', 'RPAREN', 'COMMA',
     )
 
     # Tokens
@@ -67,7 +67,7 @@ class Parser(ParserBase):
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
     t_PERIOD = r'\.'
-    #t_COMMA = r','
+    t_COMMA = r','
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
     def t_FLOAT(self, t):
@@ -78,6 +78,11 @@ class Parser(ParserBase):
     def t_INTEGER(self, t):
         r'\d+'
         t.value = int(t.value)
+        return t
+
+    def t_STRING(self, t):
+        r'''("((\\{2})*|(.*?[^\\](\\{2})*))")|('((\\{2})*|(.*?[^\\](\\{2})*))')'''
+        t.value = bytes(t.value[1:-1], "utf-8").decode("unicode_escape")
         return t
 
     t_ignore = " \t"
@@ -101,25 +106,6 @@ class Parser(ParserBase):
     def p_statement_expr(self, p):
         'statement : expression'
         p[0] = p[1]
-
-    # def p_expression_func(self, p):
-    #     """
-    #     expression : expression LPAREN RPAREN
-    #     """
-    #     if len(p) == 5:
-    #         p[0] = p[1](*p[3])
-    #     else:
-    #         p[0] = p[1]()
-
-    # def p_arglist(self, p):
-    #     """
-    #     arglist : arglist COMMA expression
-    #             | expression
-    #     """
-    #     if len(p) == 4:
-    #         p[0] = p[1] + [p[3]]
-    #     else:
-    #         p[0] = [p[1]]
 
     def p_expression_binop(self, p):
         """
@@ -161,6 +147,24 @@ class Parser(ParserBase):
         """
         p[0] = p[1]
 
+    def p_atom(self, p):
+        """
+        atom : INTEGER
+             | FLOAT
+             | STRING
+             | global
+             | group
+        """
+        p[0] = p[1]
+
+    def p_global(self, p):
+        'global : NAME'
+        p[0] = self.names[p[1]]
+
+    def p_group(self, p):
+        'group : LPAREN expression RPAREN'
+        p[0] = p[2]
+
     def p_attraccess(self, p):
         'attraccess : atom PERIOD NAME'
         p[0] = getattr(p[1], p[3])
@@ -168,37 +172,24 @@ class Parser(ParserBase):
     def p_functioncall(self, p):
         """
         functioncall : atom LPAREN RPAREN
-                     | atom LPAREN expression RPAREN
+                     | atom LPAREN arglist RPAREN
         """
         if len(p) == 4:
             p[0] = p[1]()
         elif len(p) == 5:
-            p[0] = p[1](p[3])
+            p[0] = p[1](*p[3])
         else:
             raise NotImplementedError()
 
-    def p_atom(self, p):
+    def p_arglist(self, p):
         """
-        atom : number
-             | name
-             | group
+        arglist : arglist COMMA expression
+                | expression
         """
-        p[0] = p[1]
-
-    def p_number(self, p):
-        """
-        number : INTEGER
-               | FLOAT
-        """
-        p[0] = p[1]
-
-    def p_name(self, p):
-        'name : NAME'
-        p[0] = self.names[p[1]]
-
-    def p_group(self, p):
-        'group : LPAREN expression RPAREN'
-        p[0] = p[2]
+        if len(p) == 4:
+            p[0] = p[1] + [p[3]]
+        else:
+            p[0] = [p[1]]
 
     def p_error(self, p):
         if p:

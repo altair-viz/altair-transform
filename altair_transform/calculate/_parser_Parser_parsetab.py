@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'leftPLUSMINUSleftTIMESDIVIDEleftEXPrightUMINUSUPLUSDIVIDE EXP FLOAT INTEGER LPAREN MINUS NAME PERIOD PLUS RPAREN TIMESstatement : expression\n        expression : expression PLUS expression\n                   | expression MINUS expression\n                   | expression TIMES expression\n                   | expression DIVIDE expression\n                   | expression EXP expression\n        expression : MINUS expression %prec UMINUSexpression : PLUS expression %prec UPLUSexpression : term\n        term : atom\n             | attraccess\n             | functioncall\n        attraccess : atom PERIOD NAME\n        functioncall : atom LPAREN RPAREN\n                     | atom LPAREN expression RPAREN\n        \n        atom : number\n             | name\n             | group\n        \n        number : INTEGER\n               | FLOAT\n        name : NAMEgroup : LPAREN expression RPAREN'
+_lr_signature = 'leftPLUSMINUSleftTIMESDIVIDEleftEXPrightUMINUSUPLUSCOMMA DIVIDE EXP FLOAT INTEGER LPAREN MINUS NAME PERIOD PLUS RPAREN STRING TIMESstatement : expression\n        expression : expression PLUS expression\n                   | expression MINUS expression\n                   | expression TIMES expression\n                   | expression DIVIDE expression\n                   | expression EXP expression\n        expression : MINUS expression %prec UMINUSexpression : PLUS expression %prec UPLUSexpression : term\n        term : atom\n             | attraccess\n             | functioncall\n        \n        atom : INTEGER\n             | FLOAT\n             | STRING\n             | global\n             | group\n        global : NAMEgroup : LPAREN expression RPARENattraccess : atom PERIOD NAME\n        functioncall : atom LPAREN RPAREN\n                     | atom LPAREN arglist RPAREN\n        \n        arglist : arglist COMMA expression\n                | expression\n        '
     
-_lr_action_items = {'MINUS':([0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,24,25,26,27,28,29,30,31,32,33,34,35,],[4,17,4,4,-9,-10,-11,-12,-16,-17,-18,-21,4,-19,-20,4,4,4,4,4,-8,-7,4,17,-2,-3,-4,-5,-6,-13,-14,17,-22,-15,]),'PLUS':([0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,24,25,26,27,28,29,30,31,32,33,34,35,],[3,16,3,3,-9,-10,-11,-12,-16,-17,-18,-21,3,-19,-20,3,3,3,3,3,-8,-7,3,16,-2,-3,-4,-5,-6,-13,-14,16,-22,-15,]),'INTEGER':([0,3,4,13,16,17,18,19,20,24,],[14,14,14,14,14,14,14,14,14,14,]),'FLOAT':([0,3,4,13,16,17,18,19,20,24,],[15,15,15,15,15,15,15,15,15,15,]),'NAME':([0,3,4,13,16,17,18,19,20,23,24,],[12,12,12,12,12,12,12,12,12,31,12,]),'LPAREN':([0,3,4,6,9,10,11,12,13,14,15,16,17,18,19,20,24,34,],[13,13,13,24,-16,-17,-18,-21,13,-19,-20,13,13,13,13,13,13,-22,]),'$end':([1,2,5,6,7,8,9,10,11,12,14,15,21,22,26,27,28,29,30,31,32,34,35,],[0,-1,-9,-10,-11,-12,-16,-17,-18,-21,-19,-20,-8,-7,-2,-3,-4,-5,-6,-13,-14,-22,-15,]),'TIMES':([2,5,6,7,8,9,10,11,12,14,15,21,22,25,26,27,28,29,30,31,32,33,34,35,],[18,-9,-10,-11,-12,-16,-17,-18,-21,-19,-20,-8,-7,18,18,18,-4,-5,-6,-13,-14,18,-22,-15,]),'DIVIDE':([2,5,6,7,8,9,10,11,12,14,15,21,22,25,26,27,28,29,30,31,32,33,34,35,],[19,-9,-10,-11,-12,-16,-17,-18,-21,-19,-20,-8,-7,19,19,19,-4,-5,-6,-13,-14,19,-22,-15,]),'EXP':([2,5,6,7,8,9,10,11,12,14,15,21,22,25,26,27,28,29,30,31,32,33,34,35,],[20,-9,-10,-11,-12,-16,-17,-18,-21,-19,-20,-8,-7,20,20,20,20,20,-6,-13,-14,20,-22,-15,]),'RPAREN':([5,6,7,8,9,10,11,12,14,15,21,22,24,25,26,27,28,29,30,31,32,33,34,35,],[-9,-10,-11,-12,-16,-17,-18,-21,-19,-20,-8,-7,32,34,-2,-3,-4,-5,-6,-13,-14,35,-22,-15,]),'PERIOD':([6,9,10,11,12,14,15,34,],[23,-16,-17,-18,-21,-19,-20,-22,]),}
+_lr_action_items = {'MINUS':([0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,24,25,26,27,28,29,30,31,32,34,35,36,37,38,],[4,17,4,4,-9,-10,-11,-12,-13,-14,-15,-16,-17,-18,4,4,4,4,4,4,-8,-7,4,17,-2,-3,-4,-5,-6,-20,-21,17,-19,-22,4,17,]),'PLUS':([0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,24,25,26,27,28,29,30,31,32,34,35,36,37,38,],[3,16,3,3,-9,-10,-11,-12,-13,-14,-15,-16,-17,-18,3,3,3,3,3,3,-8,-7,3,16,-2,-3,-4,-5,-6,-20,-21,16,-19,-22,3,16,]),'INTEGER':([0,3,4,15,16,17,18,19,20,24,37,],[9,9,9,9,9,9,9,9,9,9,9,]),'FLOAT':([0,3,4,15,16,17,18,19,20,24,37,],[10,10,10,10,10,10,10,10,10,10,10,]),'STRING':([0,3,4,15,16,17,18,19,20,24,37,],[11,11,11,11,11,11,11,11,11,11,11,]),'NAME':([0,3,4,15,16,17,18,19,20,23,24,37,],[14,14,14,14,14,14,14,14,14,31,14,14,]),'LPAREN':([0,3,4,6,9,10,11,12,13,14,15,16,17,18,19,20,24,35,37,],[15,15,15,24,-13,-14,-15,-16,-17,-18,15,15,15,15,15,15,15,-19,15,]),'$end':([1,2,5,6,7,8,9,10,11,12,13,14,21,22,26,27,28,29,30,31,32,35,36,],[0,-1,-9,-10,-11,-12,-13,-14,-15,-16,-17,-18,-8,-7,-2,-3,-4,-5,-6,-20,-21,-19,-22,]),'TIMES':([2,5,6,7,8,9,10,11,12,13,14,21,22,25,26,27,28,29,30,31,32,34,35,36,38,],[18,-9,-10,-11,-12,-13,-14,-15,-16,-17,-18,-8,-7,18,18,18,-4,-5,-6,-20,-21,18,-19,-22,18,]),'DIVIDE':([2,5,6,7,8,9,10,11,12,13,14,21,22,25,26,27,28,29,30,31,32,34,35,36,38,],[19,-9,-10,-11,-12,-13,-14,-15,-16,-17,-18,-8,-7,19,19,19,-4,-5,-6,-20,-21,19,-19,-22,19,]),'EXP':([2,5,6,7,8,9,10,11,12,13,14,21,22,25,26,27,28,29,30,31,32,34,35,36,38,],[20,-9,-10,-11,-12,-13,-14,-15,-16,-17,-18,-8,-7,20,20,20,20,20,-6,-20,-21,20,-19,-22,20,]),'RPAREN':([5,6,7,8,9,10,11,12,13,14,21,22,24,25,26,27,28,29,30,31,32,33,34,35,36,38,],[-9,-10,-11,-12,-13,-14,-15,-16,-17,-18,-8,-7,32,35,-2,-3,-4,-5,-6,-20,-21,36,-24,-19,-22,-23,]),'COMMA':([5,6,7,8,9,10,11,12,13,14,21,22,26,27,28,29,30,31,32,33,34,35,36,38,],[-9,-10,-11,-12,-13,-14,-15,-16,-17,-18,-8,-7,-2,-3,-4,-5,-6,-20,-21,37,-24,-19,-22,-23,]),'PERIOD':([6,9,10,11,12,13,14,35,],[23,-13,-14,-15,-16,-17,-18,-19,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'statement':([0,],[1,]),'expression':([0,3,4,13,16,17,18,19,20,24,],[2,21,22,25,26,27,28,29,30,33,]),'term':([0,3,4,13,16,17,18,19,20,24,],[5,5,5,5,5,5,5,5,5,5,]),'atom':([0,3,4,13,16,17,18,19,20,24,],[6,6,6,6,6,6,6,6,6,6,]),'attraccess':([0,3,4,13,16,17,18,19,20,24,],[7,7,7,7,7,7,7,7,7,7,]),'functioncall':([0,3,4,13,16,17,18,19,20,24,],[8,8,8,8,8,8,8,8,8,8,]),'number':([0,3,4,13,16,17,18,19,20,24,],[9,9,9,9,9,9,9,9,9,9,]),'name':([0,3,4,13,16,17,18,19,20,24,],[10,10,10,10,10,10,10,10,10,10,]),'group':([0,3,4,13,16,17,18,19,20,24,],[11,11,11,11,11,11,11,11,11,11,]),}
+_lr_goto_items = {'statement':([0,],[1,]),'expression':([0,3,4,15,16,17,18,19,20,24,37,],[2,21,22,25,26,27,28,29,30,34,38,]),'term':([0,3,4,15,16,17,18,19,20,24,37,],[5,5,5,5,5,5,5,5,5,5,5,]),'atom':([0,3,4,15,16,17,18,19,20,24,37,],[6,6,6,6,6,6,6,6,6,6,6,]),'attraccess':([0,3,4,15,16,17,18,19,20,24,37,],[7,7,7,7,7,7,7,7,7,7,7,]),'functioncall':([0,3,4,15,16,17,18,19,20,24,37,],[8,8,8,8,8,8,8,8,8,8,8,]),'global':([0,3,4,15,16,17,18,19,20,24,37,],[12,12,12,12,12,12,12,12,12,12,12,]),'group':([0,3,4,15,16,17,18,19,20,24,37,],[13,13,13,13,13,13,13,13,13,13,13,]),'arglist':([24,],[33,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,26 +27,28 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> statement","S'",1,None,None,None),
-  ('statement -> expression','statement',1,'p_statement_expr','_parser.py',102),
-  ('expression -> expression PLUS expression','expression',3,'p_expression_binop','_parser.py',126),
-  ('expression -> expression MINUS expression','expression',3,'p_expression_binop','_parser.py',127),
-  ('expression -> expression TIMES expression','expression',3,'p_expression_binop','_parser.py',128),
-  ('expression -> expression DIVIDE expression','expression',3,'p_expression_binop','_parser.py',129),
-  ('expression -> expression EXP expression','expression',3,'p_expression_binop','_parser.py',130),
-  ('expression -> MINUS expression','expression',2,'p_expression_uminus','_parser.py',145),
-  ('expression -> PLUS expression','expression',2,'p_expression_uplus','_parser.py',149),
-  ('expression -> term','expression',1,'p_expression_term','_parser.py',153),
-  ('term -> atom','term',1,'p_term','_parser.py',158),
-  ('term -> attraccess','term',1,'p_term','_parser.py',159),
-  ('term -> functioncall','term',1,'p_term','_parser.py',160),
-  ('attraccess -> atom PERIOD NAME','attraccess',3,'p_attraccess','_parser.py',165),
-  ('functioncall -> atom LPAREN RPAREN','functioncall',3,'p_functioncall','_parser.py',170),
-  ('functioncall -> atom LPAREN expression RPAREN','functioncall',4,'p_functioncall','_parser.py',171),
-  ('atom -> number','atom',1,'p_atom','_parser.py',182),
-  ('atom -> name','atom',1,'p_atom','_parser.py',183),
-  ('atom -> group','atom',1,'p_atom','_parser.py',184),
-  ('number -> INTEGER','number',1,'p_number','_parser.py',190),
-  ('number -> FLOAT','number',1,'p_number','_parser.py',191),
-  ('name -> NAME','name',1,'p_name','_parser.py',196),
-  ('group -> LPAREN expression RPAREN','group',3,'p_group','_parser.py',200),
+  ('statement -> expression','statement',1,'p_statement_expr','_parser.py',107),
+  ('expression -> expression PLUS expression','expression',3,'p_expression_binop','_parser.py',112),
+  ('expression -> expression MINUS expression','expression',3,'p_expression_binop','_parser.py',113),
+  ('expression -> expression TIMES expression','expression',3,'p_expression_binop','_parser.py',114),
+  ('expression -> expression DIVIDE expression','expression',3,'p_expression_binop','_parser.py',115),
+  ('expression -> expression EXP expression','expression',3,'p_expression_binop','_parser.py',116),
+  ('expression -> MINUS expression','expression',2,'p_expression_uminus','_parser.py',131),
+  ('expression -> PLUS expression','expression',2,'p_expression_uplus','_parser.py',135),
+  ('expression -> term','expression',1,'p_expression_term','_parser.py',139),
+  ('term -> atom','term',1,'p_term','_parser.py',144),
+  ('term -> attraccess','term',1,'p_term','_parser.py',145),
+  ('term -> functioncall','term',1,'p_term','_parser.py',146),
+  ('atom -> INTEGER','atom',1,'p_atom','_parser.py',152),
+  ('atom -> FLOAT','atom',1,'p_atom','_parser.py',153),
+  ('atom -> STRING','atom',1,'p_atom','_parser.py',154),
+  ('atom -> global','atom',1,'p_atom','_parser.py',155),
+  ('atom -> group','atom',1,'p_atom','_parser.py',156),
+  ('global -> NAME','global',1,'p_global','_parser.py',161),
+  ('group -> LPAREN expression RPAREN','group',3,'p_group','_parser.py',165),
+  ('attraccess -> atom PERIOD NAME','attraccess',3,'p_attraccess','_parser.py',169),
+  ('functioncall -> atom LPAREN RPAREN','functioncall',3,'p_functioncall','_parser.py',174),
+  ('functioncall -> atom LPAREN arglist RPAREN','functioncall',4,'p_functioncall','_parser.py',175),
+  ('arglist -> arglist COMMA expression','arglist',3,'p_arglist','_parser.py',186),
+  ('arglist -> expression','arglist',1,'p_arglist','_parser.py',187),
 ]
