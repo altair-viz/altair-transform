@@ -28,6 +28,9 @@ class Bunch(object):
         for key, val in kwargs.items():
             setattr(self, key, val)
 
+    def __getitem__(self, item):
+        return getattr(self, item)
+
 
 @pytest.fixture
 def parser():
@@ -51,6 +54,9 @@ def test_attribute_access(parser):
     expression = 'A.B + C / 5'
     assert eval(expression, names) == parser.parse(expression, names)
 
+    expression = 'A["B"] + C / 5'
+    assert eval(expression, names) == parser.parse(expression, names)
+
     expression = '(A).B + C * 10'
     assert eval(expression, names) == parser.parse(expression, names)
 
@@ -72,10 +78,6 @@ def test_function_calls(parser):
 
 
 def test_string_variants(parser):
-    names = {'f': lambda x: x}
-
-    expression = 'f("abc")'
-    assert eval(expression, names) == parser.parse(expression, names)
-
-    expression = "f('abc')"
+    names = {'f': lambda *args: args}
+    expression = r"""f("abc", 'abc', "a\"b\"c", 'a\'b\'c', 'abc\\', "abc\\")"""
     assert eval(expression, names) == parser.parse(expression, names)

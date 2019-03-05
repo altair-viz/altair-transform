@@ -10,7 +10,9 @@ import ply.yacc as yacc
 
 # TODO: 
 # - square brackets,
-# - JS operators
+# - list literals
+# - object literals
+# - JS operators (inequalities, ternary)
 
 
 def _decode_escapes(s):
@@ -61,7 +63,7 @@ class Parser(ParserBase):
     tokens = (
         'NAME', 'FLOAT', 'INTEGER', 'STRING',
         'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'PERIOD',
-        'LPAREN', 'RPAREN', 'COMMA',
+        'LBRACKET', 'RBRACKET', 'LPAREN', 'RPAREN', 'COMMA',
     )
 
     # Tokens
@@ -73,6 +75,8 @@ class Parser(ParserBase):
     t_DIVIDE = r'/'
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
+    t_LBRACKET = r'\['
+    t_RBRACKET = r'\]'
     t_PERIOD = r'\.'
     t_COMMA = r','
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
@@ -151,6 +155,7 @@ class Parser(ParserBase):
         term : atom
              | attraccess
              | functioncall
+             | indexing
         """
         p[0] = p[1]
 
@@ -174,6 +179,10 @@ class Parser(ParserBase):
 
     def p_attraccess(self, p):
         'attraccess : atom PERIOD NAME'
+        p[0] = getattr(p[1], p[3])
+
+    def p_indexing(self, p):
+        'indexing : atom LBRACKET expression RBRACKET'
         p[0] = getattr(p[1], p[3])
 
     def p_functioncall(self, p):
