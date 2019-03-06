@@ -132,6 +132,7 @@ B.1
 [1;2]
 009
 0x01FG
+00.56
 """
 
 JSONLY_EXPRESSIONS = [

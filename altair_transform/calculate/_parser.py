@@ -62,7 +62,7 @@ class ParserBase(object):
 class Parser(ParserBase):
 
     tokens = (
-        'NAME', 'FLOAT', 'INTEGER', 'STRING', 'BINARY', 'OCTAL', 'HEX',
+        'NAME', 'STRING', 'FLOAT', 'BINARY', 'OCTAL', 'HEX',
         'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'MODULO',
         'PERIOD', 'COMMA', 'COLON',
         'LPAREN', 'RPAREN',
@@ -89,11 +89,6 @@ class Parser(ParserBase):
     t_COLON = r'\:'
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
-    def t_FLOAT(self, t):
-        r'((\d+\.(\d*)?|\.\d+)([eE]\d+)?|[1-9]\d*[eE]\d+)'
-        t.value = float(t.value)
-        return t
-
     def t_BINARY(self, t):
         r'0[bB][01]+'
         t.value = int(t.value, 2)
@@ -109,9 +104,9 @@ class Parser(ParserBase):
         t.value = int(t.value, 16)
         return t
 
-    def t_INTEGER(self, t):
-        r'(0|[1-9]\d*)'
-        t.value = int(t.value)
+    def t_FLOAT(self, t):
+        r'([1-9]\d*(\.\d*)?|0?\.\d+|0)([eE]\d+)?'
+        t.value = float(t.value)
         return t
 
     def t_STRING(self, t):
@@ -179,7 +174,6 @@ class Parser(ParserBase):
         number : HEX
                | OCTAL
                | BINARY
-               | INTEGER
                | FLOAT
         """
         p[0] = p[1]
@@ -245,8 +239,7 @@ class Parser(ParserBase):
         """
         objectkey : NAME
                   | STRING
-                  | INTEGER
-                  | FLOAT
+                  | number
         """ 
         p[0] = p[1]
 
@@ -262,8 +255,8 @@ class Parser(ParserBase):
         'indexing : atom LBRACKET expression RBRACKET'
         obj = p[1]
         ind = p[3]
-        if isinstance(obj, list) and isinstance(ind, int):
-            p[0] = obj[ind]
+        if isinstance(obj, list) and isinstance(ind, float) and ind % 1 == 0:
+            p[0] = obj[int(ind)]
         else:
             p[0] = getattr(obj, ind)
 
