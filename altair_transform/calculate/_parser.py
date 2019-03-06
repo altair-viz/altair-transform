@@ -28,9 +28,9 @@ class ParserBase(object):
     tokens = ()
     precedence = ()
 
-    def __init__(self, **kw):
+    def __init__(self, names=None, **kw):
         self.debug = kw.get('debug', 0)
-        self.names = {}
+        self.names = names or {}
         try:
             modname = os.path.split(os.path.splitext(__file__)[0])[
                 1] + "_" + self.__class__.__name__
@@ -46,14 +46,8 @@ class ParserBase(object):
                   debugfile=self.debugfile,
                   tabmodule=self.tabmodule)
 
-    def parse(self, expression, names=None):
-        original_names = self.names
-        self.names = names or {}
-        try:
-            result = yacc.parse(expression)
-        finally:
-            self.names = original_names
-        return result
+    def parse(self, expression):
+        return yacc.parse(expression)
 
 
 class Parser(ParserBase):
@@ -264,7 +258,12 @@ class Parser(ParserBase):
 
     def p_indexing(self, p):
         'indexing : atom LBRACKET expression RBRACKET'
-        p[0] = getattr(p[1], p[3])
+        obj = p[1]
+        ind = p[3]
+        if isinstance(obj, list) and isinstance(ind, int):
+            p[0] = obj[ind]
+        else:
+            p[0] = getattr(obj, ind)
 
     def p_functioncall(self, p):
         """

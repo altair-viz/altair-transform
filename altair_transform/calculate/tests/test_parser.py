@@ -15,6 +15,21 @@ class Bunch(object):
     def __getitem__(self, item):
         return getattr(self, item)
 
+NAMES = {
+    'A': 10,
+    'B': 20,
+    'C': 30,
+    'obj': Bunch(foo=1, bar=2),
+    'foo': 'bar',
+    'bar': 'baz',
+    'sum': lambda *args: sum(args),
+    'prod': lambda *args: functools.reduce(operator.mul, args),
+    '_123': 2.0,
+    'abc_123': 'hello',
+    'true': True,
+    'false': False,
+}
+
 EXPRESSIONS = r"""
 # Integers
 0
@@ -64,8 +79,8 @@ abc_123
 +B
 # Binary operations
 1 + 1
-2 - 1
-3 * 5.0
+2E3 - 1
+0xF * 5.0
 A / B
 2 ** 3
 # Compound operations
@@ -96,8 +111,9 @@ A * prod(B, sum(B, C))
 # Attribute access
 obj.foo + C / 5
 obj["foo"] + C / 5
-(obj).foo + C * 2
-(obj)['foo'] + C * 2
+(obj).bar + C * 2
+(obj)['bar'] + C * 2
+['a', 'b', 'c'][1]
 """
 
 BAD_EXPRESSIONS = r"""
@@ -110,6 +126,8 @@ BAD_EXPRESSIONS = r"""
 B.1
 (1 + 2)[]
 [1;2]
+009
+0x01FG
 """
 
 JSONLY_EXPRESSIONS = [
@@ -124,37 +142,25 @@ def extract(expressions):
 
 @pytest.fixture
 def names():
-    return {
-        'A': 10,
-        'B': 20,
-        'C': 30,
-        'obj': Bunch(foo=1, bar=2),
-        'foo': 'bar',
-        'bar': 'baz',
-        'sum': lambda *args: sum(args),
-        'prod': lambda *args: functools.reduce(operator.mul, args),
-        '_123': 2.0,
-        'abc_123': 'hello',
-        'true': True,
-        'false': False,
-    }
+    return NAMES
 
 
 @pytest.fixture
-def parser():
-    return Parser()
+def parser(names):
+    return Parser(names)
 
 
 @pytest.mark.parametrize('expression', extract(EXPRESSIONS))
 def test_expressions(expression, parser, names):
-    assert eval(expression, names) == parser.parse(expression, names)
+    assert eval(expression, names) == parser.parse(expression)
 
 
 @pytest.mark.parametrize('bad_expression', extract(BAD_EXPRESSIONS))
-def test_bad_expressions(bad_expression, parser, names):
+def test_bad_expressions(bad_expression, parser):
     with pytest.raises(ValueError):
-        parser.parse(bad_expression, names)
+        parser.parse(bad_expression)
+
 
 @pytest.mark.parametrize('expression,output', JSONLY_EXPRESSIONS)
-def test_jsonly_expressions(expression, output, parser, names):
-    assert parser.parse(expression, names) == output
+def test_jsonly_expressions(expression, output, parser):
+    assert parser.parse(expression) == output
