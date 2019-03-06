@@ -159,6 +159,8 @@ JSONLY_EXPRESSIONS = [
     ("-12 >>> 2", -3),
     ("A === 10", True),
     ("A !== 10", False),
+    ("true ? 0 + 1 : 1 + 1", 1),
+    ("!true ? 0 + 1 : 1 | 2", 3),
 ]
 
 def extract(expressions):

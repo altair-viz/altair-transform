@@ -10,10 +10,6 @@ import ply.lex as lex
 import ply.yacc as yacc
 
 
-# TODO: 
-# - Ternary operator
-
-
 def int_inputs(func):
     @wraps(func)
     def wrapper(*args):
@@ -103,7 +99,7 @@ class Parser(ParserBase):
     tokens = (
         'NAME', 'STRING', 'FLOAT', 'BINARY', 'OCTAL', 'HEX',
         'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'MODULO',
-        'PERIOD', 'COMMA', 'COLON',
+        'PERIOD', 'COMMA', 'COLON', 'QUESTION',
         'LPAREN', 'RPAREN',
         'LBRACKET', 'RBRACKET',
         'LBRACE', 'RBRACE',
@@ -132,6 +128,7 @@ class Parser(ParserBase):
     t_PERIOD = r'\.'
     t_COMMA = r','
     t_COLON = r'\:'
+    t_QUESTION = r'\?'
     t_LOGICAL_OR = r'\|\|'
     t_BITWISE_OR = r'\|'
     t_LOGICAL_AND = r'&&'
@@ -189,6 +186,7 @@ class Parser(ParserBase):
     # Parsing rules
 
     precedence = (
+        ('right', 'QUESTION'),
         ('left', 'LOGICAL_OR'),
         ('left', 'LOGICAL_AND'),
         ('left', 'BITWISE_OR'),
@@ -234,6 +232,10 @@ class Parser(ParserBase):
         """
         op = BINARY_OPERATORS[p[2]]
         p[0] = op(p[1], p[3])
+
+    def p_expression_ternary(self, p):
+        'expression : expression QUESTION expression COLON expression'
+        p[0] = p[3] if p[1] else p[5]
 
     def p_expression_unaryop(self, p):
         """
