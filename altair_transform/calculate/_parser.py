@@ -9,9 +9,7 @@ import ply.yacc as yacc
 
 
 # TODO: 
-# - square brackets,
-# - list literals
-# - object literals
+# - oct & hex
 # - JS operators (inequalities, ternary)
 
 
@@ -61,7 +59,7 @@ class ParserBase(object):
 class Parser(ParserBase):
 
     tokens = (
-        'NAME', 'FLOAT', 'INTEGER', 'STRING',
+        'NAME', 'FLOAT', 'INTEGER', 'STRING', 'BINARY', 'OCTAL', 'HEX',
         'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE',
         'PERIOD', 'COMMA', 'COLON',
         'LPAREN', 'RPAREN',
@@ -88,12 +86,27 @@ class Parser(ParserBase):
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
     def t_FLOAT(self, t):
-        r'(\d+(\.\d*)?|\.\d+)'
+        r'((\d+\.(\d*)?|\.\d+)([eE]\d+)?|[1-9]\d*[eE]\d+)'
         t.value = float(t.value)
         return t
 
+    def t_BINARY(self, t):
+        r'0[bB][01]+'
+        t.value = int(t.value, 2)
+        return t
+
+    def t_OCTAL(self, t):
+        r'0[oO]?[0-7]+'
+        t.value = int(t.value, 8)
+        return t
+
+    def t_HEX(self, t):
+        r'0[xX][0-9A-Fa-f]+'
+        t.value = int(t.value, 16)
+        return t
+
     def t_INTEGER(self, t):
-        r'\d+'
+        r'(0|[1-9]\d*)'
         t.value = int(t.value)
         return t
 
@@ -165,10 +178,19 @@ class Parser(ParserBase):
         """
         p[0] = p[1]
 
+    def p_number(self, p):
+        """
+        number : HEX
+               | OCTAL
+               | BINARY
+               | INTEGER
+               | FLOAT
+        """
+        p[0] = p[1]
+
     def p_atom(self, p):
         """
-        atom : INTEGER
-             | FLOAT
+        atom : number
              | STRING
              | global
              | list
