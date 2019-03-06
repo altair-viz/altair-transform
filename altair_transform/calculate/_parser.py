@@ -4,21 +4,31 @@ Simple parser based on ply:
 import sys
 import os
 import operator
+from contextlib import wraps
 
 import ply.lex as lex
 import ply.yacc as yacc
 
 
 # TODO: 
-# - JS operators (inequalities, ternary)
+# - Ternary operator
 
+
+def int_inputs(func):
+    @wraps(func)
+    def wrapper(*args):
+        return float(func(*map(int, args)))
+    return wrapper
+
+
+@int_inputs
 def zerofill_rshift(a, b):
     # TODO: make this work correctly
     return operator.rshift(a, b)
 
 
 UNARY_OPERATORS = {
-    '~': operator.inv,
+    '~': int_inputs(operator.inv),
     '-': operator.neg,
     '+': operator.pos,
     '!': operator.not_,
@@ -32,11 +42,11 @@ BINARY_OPERATORS = {
     "/": operator.truediv,
     "**": operator.pow,
     "%": operator.mod,
-    "&": operator.and_,
-    "|": operator.or_,
-    "^": operator.xor,
-    "<<": operator.lshift,
-    ">>": operator.rshift,
+    "&": int_inputs(operator.and_),
+    "|": int_inputs(operator.or_),
+    "^": int_inputs(operator.xor),
+    "<<": int_inputs(operator.lshift),
+    ">>": int_inputs(operator.rshift),
     ">>>": zerofill_rshift,
     "<": operator.lt,
     "<=": operator.le,
@@ -46,6 +56,8 @@ BINARY_OPERATORS = {
     "===": operator.eq,
     "!=": operator.ne,
     "!==": operator.ne,
+    "&&": lambda a, b: a and b,
+    "||": lambda a, b: a or b,
 }
 
 
@@ -95,12 +107,12 @@ class Parser(ParserBase):
         'LPAREN', 'RPAREN',
         'LBRACKET', 'RBRACKET',
         'LBRACE', 'RBRACE',
-        # 'LOGICAL_OR', 'LOGICAL_AND',
+        'LOGICAL_OR', 'LOGICAL_AND',
         'LOGICAL_NOT', 'BITWISE_NOT',
-        # 'BITWISE_OR', 'BITWISE_AND', 'BITWISE_XOR', 
-        # 'LSHIFT', 'RSHIFT', 'ZFRSHIFT',
-        # 'GREATER_EQUAL', 'GREATER', 'LESS_EQUAL', 'LESS',
-        # 'IDENT', 'NIDENT', 'EQUAL', 'NEQUAL',
+        'BITWISE_OR', 'BITWISE_AND', 'BITWISE_XOR', 
+        'LSHIFT', 'RSHIFT', 'ZFRSHIFT',
+        'GREATER_EQUAL', 'GREATER', 'LESS_EQUAL', 'LESS',
+        'IDENT', 'NIDENT', 'EQUAL', 'NEQUAL',
     )
 
     # Tokens
@@ -120,23 +132,23 @@ class Parser(ParserBase):
     t_PERIOD = r'\.'
     t_COMMA = r','
     t_COLON = r'\:'
-    # t_LOGICAL_OR = r'\|\|'
-    # t_BITWISE_OR = r'\|'
-    # t_LOGICAL_AND = r'&&'
-    # t_BITWISE_AND = r'&'
-    # t_BITWISE_XOR = r'^'
+    t_LOGICAL_OR = r'\|\|'
+    t_BITWISE_OR = r'\|'
+    t_LOGICAL_AND = r'&&'
+    t_BITWISE_AND = r'&'
+    t_BITWISE_XOR = r'\^'
     t_BITWISE_NOT = r'~'
-    # t_LSHIFT = r"<<"
-    # t_ZFRSHIFT = r">>>"
-    # t_RSHIFT = r">>"
-    # t_GREATER_EQUAL = r">="
-    # t_GREATER = r">"
-    # t_LESS_EQUAL = r"<="
-    # t_LESS = r"<"
-    # t_IDENT = r"==="
-    # t_EQUAL = r"=="
-    # t_NIDENT = r"!=="
-    # t_NEQUAL = r"!="
+    t_LSHIFT = r"<<"
+    t_ZFRSHIFT = r">>>"
+    t_RSHIFT = r">>"
+    t_GREATER_EQUAL = r">="
+    t_GREATER = r">"
+    t_LESS_EQUAL = r"<="
+    t_LESS = r"<"
+    t_IDENT = r"==="
+    t_EQUAL = r"=="
+    t_NIDENT = r"!=="
+    t_NEQUAL = r"!="
     t_LOGICAL_NOT = r"!"
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
@@ -177,6 +189,14 @@ class Parser(ParserBase):
     # Parsing rules
 
     precedence = (
+        ('left', 'LOGICAL_OR'),
+        ('left', 'LOGICAL_AND'),
+        ('left', 'BITWISE_OR'),
+        ('left', 'BITWISE_XOR'),
+        ('left', 'BITWISE_AND'),
+        ('left', 'EQUAL', 'NEQUAL', 'IDENT', 'NIDENT'),
+        ('left', 'LESS', 'LESS_EQUAL', 'GREATER', 'GREATER_EQUAL'),
+        ('left', 'LSHIFT', 'RSHIFT', 'ZFRSHIFT'),
         ('left', 'PLUS', 'MINUS'),
         ('left', 'TIMES', 'DIVIDE', 'MODULO'),
         ('left', 'EXP'),
@@ -195,6 +215,22 @@ class Parser(ParserBase):
                    | expression DIVIDE expression
                    | expression EXP expression
                    | expression MODULO expression
+                   | expression LESS expression
+                   | expression LESS_EQUAL expression
+                   | expression GREATER expression
+                   | expression GREATER_EQUAL expression
+                   | expression LSHIFT expression
+                   | expression RSHIFT expression
+                   | expression ZFRSHIFT expression
+                   | expression EQUAL expression
+                   | expression IDENT expression
+                   | expression NEQUAL expression
+                   | expression NIDENT expression
+                   | expression BITWISE_AND expression
+                   | expression BITWISE_OR expression
+                   | expression BITWISE_XOR expression
+                   | expression LOGICAL_OR expression
+                   | expression LOGICAL_AND expression
         """
         op = BINARY_OPERATORS[p[2]]
         p[0] = op(p[1], p[3])

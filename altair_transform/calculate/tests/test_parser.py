@@ -84,6 +84,19 @@ abc_123
 0xF * 5.0
 A / B
 2 ** 3
+# Comparisons
+1 < 2
+A > B
+5 <= 5
+A >= 10
+A == 10
+A != 10
+# Bitwise
+3 | 4
+3 & 4
+3 ^ 4
+4 << 2
+4 >> 2
 # Compound operations
 2 * 3 % 4 / 5
 2 % 3 * 4 / 5
@@ -97,6 +110,7 @@ B * 3 ** 4
 1.5 + 2. * .3
 -0.6 * (C / 1.5)
 3 * (4 + C)
+A & B | ~C + 4 * 5
 # Functions
 prod(1, 2, 3)
 sum(1, 2, 3)
@@ -140,6 +154,11 @@ JSONLY_EXPRESSIONS = [
     ("{A, B, C: 3, 'd': 4, 1: 5}", {'A': 10, 'B': 20, 'C': 3, 'd': 4, 1: 5}),
     ("!true", False),
     ("!false", True),
+    ("true && false", False),
+    ("true || false", True),
+    ("-12 >>> 2", -3),
+    ("A === 10", True),
+    ("A !== 10", False),
 ]
 
 def extract(expressions):
