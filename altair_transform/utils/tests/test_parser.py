@@ -3,7 +3,7 @@ import functools
 
 import pytest
 
-from altair_transform.calculate import Parser
+from altair_transform.utils import Parser
 
 
 class Bunch(object):
@@ -148,6 +148,7 @@ B.1
 009
 0x01FG
 00.56
+true : 3 ? 4
 """
 
 JSONLY_EXPRESSIONS = [
@@ -161,6 +162,9 @@ JSONLY_EXPRESSIONS = [
     ("A !== 10", False),
     ("true ? 0 + 1 : 1 + 1", 1),
     ("!true ? 0 + 1 : 1 | 2", 3),
+    ("(true ? 1 : 2) ? 3 : 4", 3),
+    ("true ? 1 : (2 ? 3 : 4)", 1),
+    ("true ? 1 : 2 ? 3 : 4", 1),
 ]
 
 def extract(expressions):
