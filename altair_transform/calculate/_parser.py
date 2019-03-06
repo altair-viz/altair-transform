@@ -9,7 +9,6 @@ import ply.yacc as yacc
 
 
 # TODO: 
-# - oct & hex
 # - JS operators (inequalities, ternary)
 
 
@@ -54,7 +53,7 @@ class Parser(ParserBase):
 
     tokens = (
         'NAME', 'FLOAT', 'INTEGER', 'STRING', 'BINARY', 'OCTAL', 'HEX',
-        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE',
+        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'MODULO',
         'PERIOD', 'COMMA', 'COLON',
         'LPAREN', 'RPAREN',
         'LBRACKET', 'RBRACKET',
@@ -68,6 +67,7 @@ class Parser(ParserBase):
     t_EXP = r'\*\*'
     t_TIMES = r'\*'
     t_DIVIDE = r'/'
+    t_MODULO = r'%'
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
     t_LBRACKET = r'\['
@@ -122,7 +122,7 @@ class Parser(ParserBase):
 
     precedence = (
         ('left', 'PLUS', 'MINUS'),
-        ('left', 'TIMES', 'DIVIDE'),
+        ('left', 'TIMES', 'DIVIDE', 'MODULO'),
         ('left', 'EXP'),
         ('right', 'UMINUS', 'UPLUS'),
     )
@@ -138,8 +138,8 @@ class Parser(ParserBase):
                    | expression TIMES expression
                    | expression DIVIDE expression
                    | expression EXP expression
+                   | expression MODULO expression
         """
-        # print [repr(p[i]) for i in range(0,4)]
         if p[2] == '+':
             p[0] = p[1] + p[3]
         elif p[2] == '-':
@@ -150,6 +150,8 @@ class Parser(ParserBase):
             p[0] = p[1] / p[3]
         elif p[2] == '**':
             p[0] = p[1] ** p[3]
+        elif p[2] == '%':
+            p[0] = p[1] % p[3]
 
     def p_expression_uminus(self, p):
         'expression : MINUS expression %prec UMINUS'
