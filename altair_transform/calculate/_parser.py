@@ -3,6 +3,7 @@ Simple parser based on ply:
 """
 import sys
 import os
+import operator
 
 import ply.lex as lex
 import ply.yacc as yacc
@@ -10,6 +11,15 @@ import ply.yacc as yacc
 
 # TODO: 
 # - JS operators (inequalities, ternary)
+
+OPERATORS = {
+    "+": operator.add,
+    "-": operator.sub,
+    "*": operator.mul,
+    "/": operator.truediv,
+    "**": operator.pow,
+    "%": operator.mod
+}
 
 
 def _decode_escapes(s):
@@ -140,18 +150,8 @@ class Parser(ParserBase):
                    | expression EXP expression
                    | expression MODULO expression
         """
-        if p[2] == '+':
-            p[0] = p[1] + p[3]
-        elif p[2] == '-':
-            p[0] = p[1] - p[3]
-        elif p[2] == '*':
-            p[0] = p[1] * p[3]
-        elif p[2] == '/':
-            p[0] = p[1] / p[3]
-        elif p[2] == '**':
-            p[0] = p[1] ** p[3]
-        elif p[2] == '%':
-            p[0] = p[1] % p[3]
+        op = OPERATORS[p[2]]
+        p[0] = op(p[1], p[3])
 
     def p_expression_uminus(self, p):
         'expression : MINUS expression %prec UMINUS'
