@@ -77,6 +77,7 @@ abc_123
 +3.5
 -A
 +B
+~0b0101
 # Binary operations
 1 + 1
 2E3 - 1
@@ -136,7 +137,9 @@ B.1
 """
 
 JSONLY_EXPRESSIONS = [
-    ("{A, B, C: 3, 'd': 4, 1: 5}", {'A': 10, 'B': 20, 'C': 3, 'd': 4, 1: 5})
+    ("{A, B, C: 3, 'd': 4, 1: 5}", {'A': 10, 'B': 20, 'C': 3, 'd': 4, 1: 5}),
+    ("!true", False),
+    ("!false", True),
 ]
 
 def extract(expressions):

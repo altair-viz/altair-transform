@@ -12,13 +12,40 @@ import ply.yacc as yacc
 # TODO: 
 # - JS operators (inequalities, ternary)
 
-OPERATORS = {
+def zerofill_rshift(a, b):
+    # TODO: make this work correctly
+    return operator.rshift(a, b)
+
+
+UNARY_OPERATORS = {
+    '~': operator.inv,
+    '-': operator.neg,
+    '+': operator.pos,
+    '!': operator.not_,
+}
+
+
+BINARY_OPERATORS = {
     "+": operator.add,
     "-": operator.sub,
     "*": operator.mul,
     "/": operator.truediv,
     "**": operator.pow,
-    "%": operator.mod
+    "%": operator.mod,
+    "&": operator.and_,
+    "|": operator.or_,
+    "^": operator.xor,
+    "<<": operator.lshift,
+    ">>": operator.rshift,
+    ">>>": zerofill_rshift,
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+    "==": operator.eq,
+    "===": operator.eq,
+    "!=": operator.ne,
+    "!==": operator.ne,
 }
 
 
@@ -67,7 +94,13 @@ class Parser(ParserBase):
         'PERIOD', 'COMMA', 'COLON',
         'LPAREN', 'RPAREN',
         'LBRACKET', 'RBRACKET',
-        'LBRACE', 'RBRACE'
+        'LBRACE', 'RBRACE',
+        # 'LOGICAL_OR', 'LOGICAL_AND',
+        'LOGICAL_NOT', 'BITWISE_NOT',
+        # 'BITWISE_OR', 'BITWISE_AND', 'BITWISE_XOR', 
+        # 'LSHIFT', 'RSHIFT', 'ZFRSHIFT',
+        # 'GREATER_EQUAL', 'GREATER', 'LESS_EQUAL', 'LESS',
+        # 'IDENT', 'NIDENT', 'EQUAL', 'NEQUAL',
     )
 
     # Tokens
@@ -87,6 +120,24 @@ class Parser(ParserBase):
     t_PERIOD = r'\.'
     t_COMMA = r','
     t_COLON = r'\:'
+    # t_LOGICAL_OR = r'\|\|'
+    # t_BITWISE_OR = r'\|'
+    # t_LOGICAL_AND = r'&&'
+    # t_BITWISE_AND = r'&'
+    # t_BITWISE_XOR = r'^'
+    t_BITWISE_NOT = r'~'
+    # t_LSHIFT = r"<<"
+    # t_ZFRSHIFT = r">>>"
+    # t_RSHIFT = r">>"
+    # t_GREATER_EQUAL = r">="
+    # t_GREATER = r">"
+    # t_LESS_EQUAL = r"<="
+    # t_LESS = r"<"
+    # t_IDENT = r"==="
+    # t_EQUAL = r"=="
+    # t_NIDENT = r"!=="
+    # t_NEQUAL = r"!="
+    t_LOGICAL_NOT = r"!"
     t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
     def t_BINARY(self, t):
@@ -129,7 +180,7 @@ class Parser(ParserBase):
         ('left', 'PLUS', 'MINUS'),
         ('left', 'TIMES', 'DIVIDE', 'MODULO'),
         ('left', 'EXP'),
-        ('right', 'UMINUS', 'UPLUS'),
+        ('right', 'UMINUS', 'UPLUS', 'LOGICAL_NOT', 'BITWISE_NOT'),
     )
 
     def p_statement_expr(self, p):
@@ -145,16 +196,18 @@ class Parser(ParserBase):
                    | expression EXP expression
                    | expression MODULO expression
         """
-        op = OPERATORS[p[2]]
+        op = BINARY_OPERATORS[p[2]]
         p[0] = op(p[1], p[3])
 
-    def p_expression_uminus(self, p):
-        'expression : MINUS expression %prec UMINUS'
-        p[0] = -p[2]
-
-    def p_expression_uplus(self, p):
-        'expression : PLUS expression %prec UPLUS'
-        p[0] = +p[2]
+    def p_expression_unaryop(self, p):
+        """
+        expression : MINUS expression %prec UMINUS
+                   | PLUS expression %prec UPLUS
+                   | BITWISE_NOT expression
+                   | LOGICAL_NOT expression
+        """
+        op = UNARY_OPERATORS[p[1]]
+        p[0] = op(p[2])
 
     def p_expression_term(self, p):
         'expression : term'
