@@ -1,5 +1,5 @@
 """Functionality to evaluate contents of the ast"""
-from functools import  wraps
+from functools import wraps
 import operator
 
 from altair_transform.utils import ast, Parser
@@ -29,22 +29,21 @@ class EvalJS():
     @visit.register(ast.BinOp)
     def _(self, obj):
         if obj.op not in BINARY_OPERATORS:
-            raise NotImplementedError("Binary Operator A{0}B".format(obj.op))
+            raise NotImplementedError(f"Binary Operator A {obj.op} B")
         op = BINARY_OPERATORS[obj.op]
         return op(self.visit(obj.lhs), self.visit(obj.rhs))
 
     @visit.register(ast.UnOp)
     def _(self, obj):
         if obj.op not in UNARY_OPERATORS:
-            raise NotImplementedError("Unary Operator {0}x".format(obj.op))
+            raise NotImplementedError(f"Unary Operator {obj.op}x")
         op = UNARY_OPERATORS[obj.op]
         return op(self.visit(obj.rhs))
 
     @visit.register(ast.TernOp)
     def _(self, obj):
         if obj.op != ('?', ':'):
-            raise NotImplementedError("Ternary Operator A {0} B {1} C",
-                                      *obj.op)
+            raise NotImplementedError(f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
         return (self.visit(obj.mid) if self.visit(obj.lhs)
                 else self.visit(obj.rhs))
 
@@ -112,8 +111,7 @@ def int_inputs(func):
 
 @int_inputs
 def zerofill_rshift(a, b):
-    # TODO: make this work correctly
-    return operator.rshift(a, b)
+    return a>>b if a >= 0 else (a+0x100000000)>>b
 
 
 UNARY_OPERATORS = {
