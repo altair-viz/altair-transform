@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import typing
 
 
-class Node(object):
+class Node:
     pass
 
 

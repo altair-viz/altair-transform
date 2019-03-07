@@ -1,6 +1,7 @@
 """
 Simplified Javascript expression parser.
 """
+# pylint: disable=W,C,R
 import os
 
 from typing import Tuple
@@ -11,7 +12,7 @@ import ply.yacc as yacc
 from altair_transform.utils import ast
 
 
-class ParserBase(object):
+class ParserBase:
     """
     Base class for a lexer/parser that has the rules defined as methods
     """
