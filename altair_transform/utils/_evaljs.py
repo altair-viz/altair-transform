@@ -1,8 +1,9 @@
 """Functionality to evaluate contents of the ast"""
-from functools import singledispatch, wraps
+from functools import  wraps
 import operator
 
 from altair_transform.utils import ast, Parser
+from altair_transform.utils._tools import singledispatch_method
 
 
 def evaljs(expression, namespace=None):
@@ -17,16 +18,7 @@ class EvalJS():
     def __init__(self, namespace=None):
         self.namespace = namespace or {}
 
-    def __dispatch(func):
-        """single dispatch decorator for class methods"""
-        disp = singledispatch(func)
-        @wraps(func)
-        def wrapper(*args, **kw):
-            return disp.dispatch(type(args[1]))(*args, **kw)
-        wrapper.register = disp.register
-        return wrapper
-
-    @__dispatch
+    @singledispatch_method
     def visit(self, obj):
         return obj
 

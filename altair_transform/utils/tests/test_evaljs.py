@@ -23,5 +23,4 @@ def test_jsonly_expressions(expression, output, names):
 def test_string_vs_ast():
     expression = "2 * (3 + 4)"
     parsed = parser.parse(expression)
-
     assert evaljs(expression) == evaljs(parsed)
