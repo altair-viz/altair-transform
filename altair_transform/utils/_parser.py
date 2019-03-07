@@ -249,6 +249,20 @@ class Parser(ParserBase):
         """
         p[0] = p[1]
 
+    def p_atom(self, p):
+        """
+        atom : number
+             | string
+             | global
+             | list
+             | object
+             | group
+             | attraccess
+             | functioncall
+             | indexing
+        """
+        p[0] = p[1]
+
     def p_number(self, p):
         """
         number : HEX
@@ -258,18 +272,8 @@ class Parser(ParserBase):
         """
         p[0] = p[1]
 
-    def p_atom(self, p):
-        """
-        atom : number
-             | STRING
-             | global
-             | list
-             | object
-             | group
-             | attraccess
-             | functioncall
-             | indexing
-        """
+    def p_string(self, p):
+        'string : STRING'
         p[0] = p[1]
 
     def p_global(self, p):
@@ -321,7 +325,7 @@ class Parser(ParserBase):
     def p_objectkey(self, p):
         """
         objectkey : NAME
-                  | STRING
+                  | string
                   | number
         """ 
         p[0] = p[1]
