@@ -105,3 +105,9 @@ venv.bak/
 
 # ply files
 altair_transform/parser.out
+
+# emacs
+*~
+
+# jupyter
+Untitled*.ipynb

@@ -3,7 +3,7 @@ import functools
 
 import pytest
 
-from altair_transform.utils import Parser
+from altair_transform.utils import ast, Parser
 
 
 class Bunch(object):
@@ -184,17 +184,25 @@ def parser(names):
     return Parser(names)
 
 
-@pytest.mark.parametrize('expression', extract(EXPRESSIONS))
-def test_expressions(expression, parser, names):
-    assert eval(expression, names) == parser.parse(expression)
+# @pytest.mark.parametrize('expression', extract(EXPRESSIONS))
+# def test_expressions(expression, parser, names):
+#     assert eval(expression, names) == parser.parse(expression)
 
+# @pytest.mark.parametrize('expression,output', JSONLY_EXPRESSIONS)
+# def test_jsonly_expressions(expression, output, parser):
+#     assert parser.parse(expression) == output
 
 @pytest.mark.parametrize('bad_expression', extract(BAD_EXPRESSIONS))
 def test_bad_expressions(bad_expression, parser):
     with pytest.raises(ValueError):
         parser.parse(bad_expression)
 
+@pytest.mark.parametrize('expression', extract(EXPRESSIONS))
+def test_expressions(expression, parser, names):
+    output = parser.parse(expression)
+    assert isinstance(output, ast.Node)
 
 @pytest.mark.parametrize('expression,output', JSONLY_EXPRESSIONS)
 def test_jsonly_expressions(expression, output, parser):
-    assert parser.parse(expression) == output
+    output = parser.parse(expression)
+    assert isinstance(output, ast.Node)

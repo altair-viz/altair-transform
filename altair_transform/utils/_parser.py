@@ -3,76 +3,23 @@ Simple parser based on ply:
 """
 import sys
 import os
-import operator
-from contextlib import wraps
+
+from typing import Tuple, Dict
 
 import ply.lex as lex
 import ply.yacc as yacc
 
-
-def int_inputs(func):
-    @wraps(func)
-    def wrapper(*args):
-        return float(func(*map(int, args)))
-    return wrapper
-
-
-@int_inputs
-def zerofill_rshift(a, b):
-    # TODO: make this work correctly
-    return operator.rshift(a, b)
-
-
-UNARY_OPERATORS = {
-    '~': int_inputs(operator.inv),
-    '-': operator.neg,
-    '+': operator.pos,
-    '!': operator.not_,
-}
-
-
-BINARY_OPERATORS = {
-    "+": operator.add,
-    "-": operator.sub,
-    "*": operator.mul,
-    "/": operator.truediv,
-    "**": operator.pow,
-    "%": operator.mod,
-    "&": int_inputs(operator.and_),
-    "|": int_inputs(operator.or_),
-    "^": int_inputs(operator.xor),
-    "<<": int_inputs(operator.lshift),
-    ">>": int_inputs(operator.rshift),
-    ">>>": zerofill_rshift,
-    "<": operator.lt,
-    "<=": operator.le,
-    ">": operator.gt,
-    ">=": operator.ge,
-    "==": operator.eq,
-    "===": operator.eq,
-    "!=": operator.ne,
-    "!==": operator.ne,
-    "&&": lambda a, b: a and b,
-    "||": lambda a, b: a or b,
-}
-
-
-def _decode_escapes(s):
-    """Decode string escape sequences"""
-    if sys.version_info[0] == 2:
-        return s.decode("string-escape")
-    else:
-        return bytes(s, "utf-8").decode("unicode_escape")
+from altair_transform.utils import ast
 
 
 class ParserBase(object):
     """
     Base class for a lexer/parser that has the rules defined as methods
     """
-    tokens = ()
-    precedence = ()
+    tokens : Tuple = ()
+    precedence : Tuple = ()
 
-    def __init__(self, names=None, **kw):
+    def __init__(self, names : Dict=None, **kw):
         self.debug = kw.get('debug', 0)
         self.names = names or {}
         try:
@@ -171,7 +118,7 @@ class Parser(ParserBase):
 
     def t_STRING(self, t):
         r'''(?P<openquote>["'])((\\{2})*|(.*?[^\\](\\{2})*))(?P=openquote)'''
-        t.value = _decode_escapes(t.value[1:-1])
+        t.value = bytes(t.value[1:-1], "utf-8").decode("unicode_escape")
         return t
 
     t_ignore = " \t"
@@ -226,12 +173,11 @@ class Parser(ParserBase):
                    | expression LOGICAL_OR expression
                    | expression LOGICAL_AND expression
         """
-        op = BINARY_OPERATORS[p[2]]
-        p[0] = op(p[1], p[3])
+        p[0] = ast.BinOp(lhs=p[1], op=p[2], rhs=p[3])
 
     def p_expression_ternary(self, p):
         'expression : expression QUESTION expression COLON expression'
-        p[0] = p[3] if p[1] else p[5]
+        p[0] = ast.TernOp(op=(p[2], p[4]), lhs=p[1], mid=p[2], rhs=p[5])
 
     def p_expression_unaryop(self, p):
         """
@@ -240,8 +186,7 @@ class Parser(ParserBase):
                    | BITWISE_NOT expression
                    | LOGICAL_NOT expression
         """
-        op = UNARY_OPERATORS[p[1]]
-        p[0] = op(p[2])
+        p[0] = ast.UnOp(op=p[1], rhs=p[2])
 
     def p_expression_atom(self, p):
         """
@@ -270,15 +215,19 @@ class Parser(ParserBase):
                | BINARY
                | FLOAT
         """
-        p[0] = p[1]
+        p[0] = ast.Number(p[1])
 
     def p_string(self, p):
         'string : STRING'
-        p[0] = p[1]
+        p[0] = ast.String(p[1])
 
     def p_global(self, p):
         'global : NAME'
-        p[0] = self.names[p[1]]
+        p[0] = ast.Global(p[1])
+
+    def p_name(self, p):
+        'name : NAME'
+        p[0] = ast.Name(p[1])
 
     def p_list(self, p):
         """
@@ -286,11 +235,9 @@ class Parser(ParserBase):
              | LBRACKET arglist RBRACKET
         """
         if len(p) == 3:
-            p[0] = []
+            p[0] = ast.List([])
         elif len(p) == 4:
-            p[0] = list(p[2])
-        else:
-            raise NotImplementedError()
+            p[0] = ast.List(p[2])
 
     def p_object(self, p):
         """
@@ -298,9 +245,9 @@ class Parser(ParserBase):
                | LBRACE objectarglist RBRACE
         """
         if len(p) == 3:
-            p[0] = {}
+            p[0] = ast.Object([])
         elif len(p) == 4:
-            p[0] = dict(p[2])
+            p[0] = ast.Object(p[2])
 
     def p_objectarglist(self, p):
         """
@@ -315,16 +262,16 @@ class Parser(ParserBase):
     def p_objectarg(self, p):
         """
         objectarg : objectkey COLON expression
-                  | NAME
+                  | name
         """
-        if len(p) == 2:
-            p[0] = (p[1], self.names[p[1]])
-        elif len(p) == 4:
+        if len(p) == 4:
             p[0] = (p[1], p[3])
+        elif len(p) == 2:
+            p[0] = p[1]
 
     def p_objectkey(self, p):
         """
-        objectkey : NAME
+        objectkey : name
                   | string
                   | number
         """ 
@@ -336,16 +283,11 @@ class Parser(ParserBase):
 
     def p_attraccess(self, p):
         'attraccess : atom PERIOD NAME'
-        p[0] = getattr(p[1], p[3])
+        p[0] = ast.Attr(obj=p[1], attr=p[3])
 
     def p_indexing(self, p):
         'indexing : atom LBRACKET expression RBRACKET'
-        obj = p[1]
-        ind = p[3]
-        if isinstance(obj, list) and isinstance(ind, float) and ind % 1 == 0:
-            p[0] = obj[int(ind)]
-        else:
-            p[0] = getattr(obj, ind)
+        p[0] = ast.Item(obj=p[1], item=p[3])
 
     def p_functioncall(self, p):
         """
@@ -353,11 +295,9 @@ class Parser(ParserBase):
                      | atom LPAREN arglist RPAREN
         """
         if len(p) == 4:
-            p[0] = p[1]()
+            p[0] = ast.Func(func=p[1], args=[])
         elif len(p) == 5:
-            p[0] = p[1](*p[3])
-        else:
-            raise NotImplementedError()
+            p[0] = ast.Func(func=p[1], args=p[3])
 
     def p_arglist(self, p):
         """
