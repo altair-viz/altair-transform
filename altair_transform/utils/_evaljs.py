@@ -1,5 +1,5 @@
 """Functionality to evaluate contents of the ast"""
-from functools import wraps
+from functools import singledispatch, wraps
 import operator
 
 from altair_transform.utils import ast, Parser
@@ -9,73 +9,86 @@ def evaljs(expression, namespace=None):
     if isinstance(expression, str):
         parser = Parser()
         expression = parser.parse(expression)
-    return Evaluate(namespace).visit(expression)
+    return EvalJS(namespace).visit(expression)
 
 
-class Visitor:
-    """Class implementing the external visitor pattern"""
-    def visit(self, obj, *args, **kwargs):
-        methods = (getattr(self, 'visit_' + cls.__name__, None)
-                   for cls in obj.__class__.__mro__)
-        method = next((m for m in methods if m), self.generic_visit)
-        return method(obj, *args, **kwargs)
-
-    def generic_visit(self, obj, *args, **kwargs):
-        raise NotImplementedError("visitor for {0}".format(obj))
-
-
-class Evaluate(Visitor):
+class EvalJS():
+    """Visitor pattern to evaluate ASTs of javascript expressions."""
     def __init__(self, namespace=None):
         self.namespace = namespace or {}
 
-    def visit_Expr(self, obj):
+    def __dispatch(func):
+        """single dispatch decorator for class methods"""
+        disp = singledispatch(func)
+        @wraps(func)
+        def wrapper(*args, **kw):
+            return disp.dispatch(type(args[1]))(*args, **kw)
+        wrapper.register = disp.register
+        return wrapper
+
+    @__dispatch
+    def visit(self, obj):
+        return obj
+
+    @visit.register(ast.Expr)
+    def _(self, obj):
         return obj.value
 
-    def visit_BinOp(self, obj):
+    @visit.register(ast.BinOp)
+    def _(self, obj):
         if obj.op not in BINARY_OPERATORS:
             raise NotImplementedError("Binary Operator A{0}B".format(obj.op))
         op = BINARY_OPERATORS[obj.op]
         return op(self.visit(obj.lhs), self.visit(obj.rhs))
 
-    def visit_UnOp(self, obj):
+    @visit.register(ast.UnOp)
+    def _(self, obj):
         if obj.op not in UNARY_OPERATORS:
             raise NotImplementedError("Unary Operator {0}x".format(obj.op))
         op = UNARY_OPERATORS[obj.op]
         return op(self.visit(obj.rhs))
 
-    def visit_TernOp(self, obj):
+    @visit.register(ast.TernOp)
+    def _(self, obj):
         if obj.op != ('?', ':'):
             raise NotImplementedError("Ternary Operator A {0} B {1} C",
                                       *obj.op)
         return (self.visit(obj.mid) if self.visit(obj.lhs)
                 else self.visit(obj.rhs))
 
-    def visit_Number(self, obj):
+    @visit.register(ast.Number)
+    def _(self, obj):
         return obj.value
 
-    def visit_String(self, obj):
+    @visit.register(ast.String)
+    def _(self, obj):
         return obj.value
 
-    def visit_Global(self, obj):
+    @visit.register(ast.Global)
+    def _(self, obj):
         if obj.name not in self.namespace:
             raise NameError("{0} is not a valid name".format(obj.name))
         return self.namespace[obj.name]
 
-    def visit_Name(self, obj):
+    @visit.register(ast.Name)
+    def _(self, obj):
         return obj.name
 
-    def visit_List(self, obj):
+    @visit.register(ast.List)
+    def _(self, obj):
         return [self.visit(entry) for entry in obj.entries]
 
-    def visit_Object(self, obj):
+    @visit.register(ast.Object)
+    def _(self, obj):
         def visit(entry):
             if isinstance(entry, tuple):
                 return tuple(self.visit(e) for e in entry)
             elif isinstance(entry, ast.Name):
-                return (self.visit(entry), self.visit_Global(entry))
+                return (self.visit(entry), self.visit(ast.Global(entry.name)))
         return dict(visit(entry) for entry in obj.entries)
 
-    def visit_Attr(self, obj):
+    @visit.register(ast.Attr)
+    def _(self, obj):
         obj_ = self.visit(obj.obj)
         attr = self.visit(obj.attr)
         if isinstance(obj_, dict):
@@ -83,20 +96,19 @@ class Evaluate(Visitor):
         else:
             return getattr(obj_, attr)
 
-    def visit_Item(self, obj):
+    @visit.register(ast.Item)
+    def _(self, obj):
         obj_ = self.visit(obj.obj)
         item = self.visit(obj.item)
         if isinstance(obj_, list) and isinstance(item, float):
             item = int(item)
         return obj_[item]
 
-    def visit_Func(self, obj):
+    @visit.register(ast.Func)
+    def _(self, obj):
         func = self.visit(obj.func)
         args = [self.visit(arg) for arg in obj.args]
         return func(*args)
-
-    def generic_visit(self, obj):
-        return obj
 
 
 def int_inputs(func):
