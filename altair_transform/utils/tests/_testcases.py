@@ -11,7 +11,7 @@ def extract(expressions):
             if line.strip() and not line.startswith('#'))
 
 
-class Bunch(object):
+class Bunch:
     """A simple class to enable testing of attribute access"""
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
@@ -27,7 +27,7 @@ NAMES = {
     'C': 30,
     'obj': Bunch(foo=1, bar=2, func=lambda x: x),
     'foo': 'bar',
-    'bar': 'baz',   
+    'bar': 'baz',
     'sum': lambda *args: sum(args),
     'prod': lambda *args: functools.reduce(operator.mul, args),
     '_123': 2.0,
@@ -165,6 +165,7 @@ JSONLY_EXPRESSIONS = [
     ("true && false", False),
     ("true || false", True),
     ("-12 >>> 2", 1073741821),
+    ("12 >>> 2", 3),
     ("A === 10", True),
     ("A !== 10", False),
     ("true ? 0 + 1 : 1 + 1", 1),

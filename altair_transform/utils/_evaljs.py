@@ -42,10 +42,13 @@ class EvalJS():
 
     @visit.register(ast.TernOp)
     def _(self, obj):
-        if obj.op != ('?', ':'):
-            raise NotImplementedError(f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
-        return (self.visit(obj.mid) if self.visit(obj.lhs)
-                else self.visit(obj.rhs))
+        if obj.op not in TERNARY_OPERATORS:
+            raise NotImplementedError(
+                f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
+        op = TERNARY_OPERATORS[obj.op]
+        return op(self.visit(obj.lhs),
+                  self.visit(obj.mid),
+                  self.visit(obj.rhs))
 
     @visit.register(ast.Number)
     def _(self, obj):
@@ -74,7 +77,7 @@ class EvalJS():
         def visit(entry):
             if isinstance(entry, tuple):
                 return tuple(self.visit(e) for e in entry)
-            elif isinstance(entry, ast.Name):
+            if isinstance(entry, ast.Name):
                 return (self.visit(entry), self.visit(ast.Global(entry.name)))
         return dict(visit(entry) for entry in obj.entries)
 
@@ -84,8 +87,7 @@ class EvalJS():
         attr = self.visit(obj.attr)
         if isinstance(obj_, dict):
             return obj_[attr]
-        else:
-            return getattr(obj_, attr)
+        return getattr(obj_, attr)
 
     @visit.register(ast.Item)
     def _(self, obj):
@@ -110,8 +112,10 @@ def int_inputs(func):
 
 
 @int_inputs
-def zerofill_rshift(a, b):
-    return a>>b if a >= 0 else (a+0x100000000)>>b
+def zerofill_rshift(lhs, rhs):
+    if lhs < 0:
+        lhs = lhs + 0x100000000
+    return lhs >> rhs
 
 
 UNARY_OPERATORS = {
@@ -145,4 +149,9 @@ BINARY_OPERATORS = {
     "!==": operator.ne,
     "&&": lambda a, b: a and b,
     "||": lambda a, b: a or b,
+}
+
+
+TERNARY_OPERATORS = {
+    ("?", ":"): lambda a, b, c: b if a else c
 }
