@@ -176,7 +176,7 @@ class Parser(ParserBase):
 
     def p_expression_ternary(self, p):
         'expression : expression QUESTION expression COLON expression'
-        p[0] = ast.TernOp(op=(p[2], p[4]), lhs=p[1], mid=p[2], rhs=p[5])
+        p[0] = ast.TernOp(op=(p[2], p[4]), lhs=p[1], mid=p[3], rhs=p[5])
 
     def p_expression_unaryop(self, p):
         """
@@ -313,3 +313,5 @@ class Parser(ParserBase):
             raise ValueError("Syntax error at '%s'" % p.value)
         else:
             raise ValueError("Syntax error at EOF")
+
+parser = Parser()
