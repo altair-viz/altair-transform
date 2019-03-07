@@ -19,9 +19,8 @@ class ParserBase(object):
     tokens : Tuple = ()
     precedence : Tuple = ()
 
-    def __init__(self, names : Dict=None, **kw):
+    def __init__(self, **kw):
         self.debug = kw.get('debug', 0)
-        self.names = names or {}
         try:
             modname = os.path.split(os.path.splitext(__file__)[0])[
                 1] + "_" + self.__class__.__name__

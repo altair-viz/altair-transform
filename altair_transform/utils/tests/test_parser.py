@@ -180,8 +180,8 @@ def names():
 
 
 @pytest.fixture
-def parser(names):
-    return Parser(names)
+def parser():
+    return Parser()
 
 
 # @pytest.mark.parametrize('expression', extract(EXPRESSIONS))
