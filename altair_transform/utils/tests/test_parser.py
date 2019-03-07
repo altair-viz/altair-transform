@@ -1,10 +1,8 @@
-import operator
-import functools
-
 import pytest
 
 from altair_transform.utils import ast, Parser
-from ._testcases import extract, EXPRESSIONS, BAD_EXPRESSIONS, JSONLY_EXPRESSIONS
+from ._testcases import extract
+from ._testcases import EXPRESSIONS, BAD_EXPRESSIONS, JSONLY_EXPRESSIONS
 
 
 @pytest.fixture

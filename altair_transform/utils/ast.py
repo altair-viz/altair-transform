@@ -2,65 +2,80 @@
 from dataclasses import dataclass
 import typing
 
-class Node(object): pass
+
+class Node(object):
+    pass
+
 
 @dataclass
 class Expr(Node):
-    value : Node
+    value: Node
+
 
 @dataclass
 class BinOp(Node):
-    op : str
-    lhs : Expr
-    rhs : Expr
+    op: str
+    lhs: Expr
+    rhs: Expr
+
 
 @dataclass
 class UnOp(Node):
-    op : str
-    rhs : Expr
+    op: str
+    rhs: Expr
+
 
 @dataclass
 class TernOp(Node):
-    op : typing.Tuple[str, str]
-    lhs : Expr
-    mid : Expr
-    rhs : Expr
+    op: typing.Tuple[str, str]
+    lhs: Expr
+    mid: Expr
+    rhs: Expr
+
 
 @dataclass
 class Number(Node):
-    value : float
+    value: float
+
 
 @dataclass
 class String(Node):
-    value : str
+    value: str
+
 
 @dataclass
 class Global(Node):
-    name : str
+    name: str
+
 
 @dataclass
 class Name(Node):
-    name : str
+    name: str
+
 
 @dataclass
 class List(Node):
-    entries : typing.List[Expr]
+    entries: typing.List[Expr]
+
 
 @dataclass
 class Object(Node):
-    entries : typing.List[typing.Union[Name, typing.Tuple[Expr, Expr]]]
+    entries: typing.List[typing.Union[Name, typing.Tuple[Expr, Expr]]]
+
 
 @dataclass
 class Attr(Node):
-    obj : Expr
-    attr : Name
+    obj: Expr
+    attr: Name
+
 
 @dataclass
 class Item(Node):
-    obj : Expr
-    item : Expr
+    obj: Expr
+    item: Expr
+
 
 @dataclass
 class Func(Node):
-    func : Expr
-    args : typing.List[Expr]
+    func: Expr
+    args: typing.List[Expr]

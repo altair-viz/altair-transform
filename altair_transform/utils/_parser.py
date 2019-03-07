@@ -1,10 +1,9 @@
 """
-Simple parser based on ply: 
+Simplified Javascript expression parser.
 """
-import sys
 import os
 
-from typing import Tuple, Dict
+from typing import Tuple
 
 import ply.lex as lex
 import ply.yacc as yacc
@@ -16,15 +15,15 @@ class ParserBase(object):
     """
     Base class for a lexer/parser that has the rules defined as methods
     """
-    tokens : Tuple = ()
-    precedence : Tuple = ()
+    tokens: Tuple = ()
+    precedence: Tuple = ()
 
     def __init__(self, **kw):
         self.debug = kw.get('debug', 0)
         try:
             modname = os.path.split(os.path.splitext(__file__)[0])[
                 1] + "_" + self.__class__.__name__
-        except:
+        except ValueError:
             modname = "parser" + "_" + self.__class__.__name__
         self.debugfile = modname + ".dbg"
         self.tabmodule = modname + "_" + "parsetab"
@@ -51,7 +50,7 @@ class Parser(ParserBase):
         'LBRACE', 'RBRACE',
         'LOGICAL_OR', 'LOGICAL_AND',
         'LOGICAL_NOT', 'BITWISE_NOT',
-        'BITWISE_OR', 'BITWISE_AND', 'BITWISE_XOR', 
+        'BITWISE_OR', 'BITWISE_AND', 'BITWISE_XOR',
         'LSHIFT', 'RSHIFT', 'ZFRSHIFT',
         'GREATER_EQUAL', 'GREATER', 'LESS_EQUAL', 'LESS',
         'IDENT', 'NIDENT', 'EQUAL', 'NEQUAL',
@@ -273,7 +272,7 @@ class Parser(ParserBase):
         objectkey : name
                   | string
                   | number
-        """ 
+        """
         p[0] = p[1]
 
     def p_group(self, p):
@@ -313,5 +312,6 @@ class Parser(ParserBase):
             raise ValueError("Syntax error at '%s'" % p.value)
         else:
             raise ValueError("Syntax error at EOF")
+
 
 parser = Parser()

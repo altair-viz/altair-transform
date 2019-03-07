@@ -45,8 +45,10 @@ class Evaluate(Visitor):
 
     def visit_TernOp(self, obj):
         if obj.op != ('?', ':'):
-            raise NotImplememntedError("Ternary Operator A {0} B {1} C", *obj.op)
-        return self.visit(obj.mid) if self.visit(obj.lhs) else self.visit(obj.rhs)
+            raise NotImplementedError("Ternary Operator A {0} B {1} C",
+                                      *obj.op)
+        return (self.visit(obj.mid) if self.visit(obj.lhs)
+                else self.visit(obj.rhs))
 
     def visit_Number(self, obj):
         return obj.value

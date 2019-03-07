@@ -10,6 +10,7 @@ def extract(expressions):
     return (line for line in expressions.splitlines()
             if line.strip() and not line.startswith('#'))
 
+
 class Bunch(object):
     """A simple class to enable testing of attribute access"""
     def __init__(self, **kwargs):
@@ -18,6 +19,7 @@ class Bunch(object):
 
     def __getitem__(self, item):
         return getattr(self, item)
+
 
 NAMES = {
     'A': 10,
