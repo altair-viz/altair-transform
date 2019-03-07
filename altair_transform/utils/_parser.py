@@ -201,10 +201,6 @@ class Parser(ParserBase):
         ('right', 'UMINUS', 'UPLUS', 'LOGICAL_NOT', 'BITWISE_NOT'),
     )
 
-    def p_statement_expr(self, p):
-        'statement : expression'
-        p[0] = p[1]
-
     def p_expression_binop(self, p):
         """
         expression : expression PLUS expression
@@ -247,16 +243,9 @@ class Parser(ParserBase):
         op = UNARY_OPERATORS[p[1]]
         p[0] = op(p[2])
 
-    def p_expression_term(self, p):
-        'expression : term'
-        p[0] = p[1]
-
-    def p_term(self, p):
+    def p_expression_atom(self, p):
         """
-        term : atom
-             | attraccess
-             | functioncall
-             | indexing
+        expression : atom
         """
         p[0] = p[1]
 
@@ -277,6 +266,9 @@ class Parser(ParserBase):
              | list
              | object
              | group
+             | attraccess
+             | functioncall
+             | indexing
         """
         p[0] = p[1]
 

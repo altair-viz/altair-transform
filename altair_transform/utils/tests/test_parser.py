@@ -19,7 +19,7 @@ NAMES = {
     'A': 10,
     'B': 20,
     'C': 30,
-    'obj': Bunch(foo=1, bar=2),
+    'obj': Bunch(foo=1, bar=2, func=lambda x: x),
     'foo': 'bar',
     'bar': 'baz',
     'sum': lambda *args: sum(args),
@@ -118,6 +118,7 @@ prod(1, 2 * 4, -6)
 sum(1, (2 * 4), -6)
 A * prod(B, C)
 A * prod(B, sum(B, C))
+obj.func(2)
 # Lists
 []
 [2]
