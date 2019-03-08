@@ -6,13 +6,13 @@ import operator
 
 
 def extract(expressions):
-    """Extract expressions from strings"""
+    """Extract expressions from multi-line strings"""
     return (line for line in expressions.splitlines()
             if line.strip() and not line.startswith('#'))
 
 
 class Bunch:
-    """A simple class to enable testing of attribute access"""
+    """A simple class to enable testing of attribute & item access"""
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)

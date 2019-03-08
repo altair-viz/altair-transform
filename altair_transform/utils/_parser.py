@@ -12,6 +12,9 @@ import ply.yacc as yacc
 from altair_transform.utils import ast
 
 
+# TODO: regexp literals?
+
+
 class ParserBase:
     """
     Base class for a lexer/parser that has the rules defined as methods
