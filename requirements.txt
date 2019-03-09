@@ -1,2 +1,4 @@
 ply
 altair
+numpy
+pandas

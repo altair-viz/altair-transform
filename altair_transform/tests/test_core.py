@@ -4,6 +4,15 @@ import numpy as np
 import pandas as pd
 
 from altair_transform import apply_transform
+from altair_transform.core import AGG_REPLACEMENTS
+
+
+AGGREGATES = ['argmax', 'argmin', 'average', 'count', 'distinct',
+              'max', 'mean',  'median', 'min', 'missing', 'q1',
+              'q3', 'ci0', 'ci1', 'stderr', 'stdev', 'stdevp',
+              'sum', 'valid', 'values', 'variance', 'variancep']
+
+AGG_SKIP = ['ci0', 'ci1']
 
 
 @pytest.fixture
@@ -37,8 +46,8 @@ def test_filter_transform(data):
 
 
 @pytest.mark.parametrize('groupby', [True, False])
-def test_aggregate_transform(data, groupby):
-    op = 'sum'
+@pytest.mark.parametrize('op', set(AGGREGATES) - set(AGG_SKIP))
+def test_aggregate_transform(data, groupby, op):
     field = 'x'
     col = 'z'
     group = 'c'
@@ -46,9 +55,13 @@ def test_aggregate_transform(data, groupby):
     transform = {'aggregate': [{'op': op, 'field': field, 'as': col}]}
     if groupby:
         transform['groupby'] = [group]
-    
+
+    op = AGG_REPLACEMENTS.get(op, op)
     out = apply_transform(data, transform)
-    validate = lambda group: group[field].aggregate(op) == group[col]
+
+    def validate(group):
+        return group[field].aggregate(op) == group[col]
+
     if groupby:
         assert out.groupby(group).apply(validate).all()
     else:

@@ -4,9 +4,9 @@ Evaluate vega expressions language
 import datetime
 import math
 import random
-import re
 import sys
 import pandas as pd
+from typing import Pattern
 
 from altair_transform.utils import evaljs
 
@@ -39,7 +39,7 @@ VEGAJS_NAMESPACE = {
     "isDate": lambda x: isinstance(x, datetime.datetime),
     "isNumber": lambda x: isinstance(x, (int, float)),
     "isObject": lambda x: isinstance(x, dict),
-    "isRegExp": lambda x: isinstance(x, re.Pattern),
+    "isRegExp": lambda x: isinstance(x, Pattern),
     "isString": lambda x: isinstance(x, str),
 
     # Type Coercion
@@ -77,7 +77,7 @@ VEGAJS_NAMESPACE = {
     # TODOs:
     # Date/Time Functions
     # Array Functions
-    # String Functions 
+    # String Functions
     # Object Functions
     # Formatting Functions
     # RegExp Functions
