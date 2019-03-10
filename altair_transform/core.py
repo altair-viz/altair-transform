@@ -3,30 +3,31 @@ from functools import singledispatch
 import altair as alt
 from altair_transform.vegaexpr import eval_vegajs
 
-
-def confidence_interval(x, level):
-    from scipy import stats
-    return stats.t.interval(level, len(x)-1, loc=x.mean(), scale=x.sem())
+__all__ = ['apply_transform']
 
 
-AGG_REPLACEMENTS = {
-    'argmin': 'idxmin',
-    'argmax': 'idxmax',
-    'average': 'mean',
-    'ci0': lambda x: confidence_interval(x, 0.05),
-    'ci1': lambda x: confidence_interval(x, 0.95),
-    'distinct': 'nunique',
-    'stderr': 'sem',
-    'stdev': 'std',
-    'stdevp': lambda x: x.std(ddof=0),
-    'missing': lambda x: x.isnull().sum(),
-    'q1': lambda x: x.quantile(0.25),
-    'q3': lambda x: x.quantile(0.75),
-    'valid': 'count',
-    'values': 'count',
-    'variance': 'var',
-    'variancep': lambda x: x.var(ddof=0)
-}
+def apply_transform(df, transform, inplace=False):
+    """Apply transform or transforms to dataframe.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+    transform : list|dict
+        A transform specification or list of transform specifications.
+        Each specification must be valid according to Altair's transform
+        schema.
+    inplace : bool
+        If True, then dataframe may be modified in-place. Default: False.
+
+    Returns
+    -------
+    df_transform : pd.DataFrame
+        The transformed dataframe.
+    """
+    if not inplace:
+        df = df.copy()
+    return visit(transform, df)
+
 
 @singledispatch
 def visit(transform, df):
@@ -84,7 +85,26 @@ def _(transform, df):
     return df
 
 
-def apply_transform(df, transforms, inplace=False):
-    if not inplace:
-        df = df.copy()
-    return visit(transforms, df)
+def confidence_interval(x, level):
+    from scipy import stats
+    return stats.t.interval(level, len(x)-1, loc=x.mean(), scale=x.sem())
+
+
+AGG_REPLACEMENTS = {
+    'argmin': 'idxmin',
+    'argmax': 'idxmax',
+    'average': 'mean',
+    'ci0': lambda x: confidence_interval(x, 0.05),
+    'ci1': lambda x: confidence_interval(x, 0.95),
+    'distinct': 'nunique',
+    'stderr': 'sem',
+    'stdev': 'std',
+    'stdevp': lambda x: x.std(ddof=0),
+    'missing': lambda x: x.isnull().sum(),
+    'q1': lambda x: x.quantile(0.25),
+    'q3': lambda x: x.quantile(0.75),
+    'valid': 'count',
+    'values': 'count',
+    'variance': 'var',
+    'variancep': lambda x: x.var(ddof=0)
+}
