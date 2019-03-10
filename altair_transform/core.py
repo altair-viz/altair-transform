@@ -1,3 +1,5 @@
+from functools import singledispatch
+
 import altair as alt
 from altair_transform.vegaexpr import eval_vegajs
 
@@ -26,44 +28,63 @@ AGG_REPLACEMENTS = {
     'variancep': lambda x: x.var(ddof=0)
 }
 
+@singledispatch
+def visit(transform, df):
+    raise NotImplementedError("transform of type {0}".format(type(transform)))
+
+
+@visit.register(list)
+def _1(transform, df):
+    for t in transform:
+        df = visit(t, df)
+    return df
+
+
+@visit.register(dict)
+def _2(transform, df):
+    transform = alt.Transform.from_dict(transform)
+    return visit(transform, df)
+
+
+@visit.register(alt.CalculateTransform)
+def _3(transform, df):
+    col = transform['as']
+    df[col] = df.apply(
+        lambda datum: eval_vegajs(transform.calculate, datum),
+        axis=1)
+    return df
+
+
+@visit.register(alt.FilterTransform)
+def _4(transform, df):
+    if not isinstance(transform.filter, str):
+        raise NotImplementedError("non-string filter")
+    mask = df.apply(
+        lambda datum: eval_vegajs(transform.filter, datum),
+        axis=1).astype(bool)
+    return df[mask]
+
+
+@visit.register(alt.AggregateTransform)
+def _(transform, df):
+    groupby = transform['groupby']
+    for aggregate in transform['aggregate']:
+        op = aggregate['op'].to_dict()
+        field = aggregate['field']
+        col = aggregate['as']
+
+        op = AGG_REPLACEMENTS.get(op, op)
+
+        if groupby is alt.Undefined:
+            df[col] = df[field].aggregate(op)
+        else:
+            result = df.groupby(groupby)[field].aggregate(op)
+            result.name = col
+            df = df.join(result, on=groupby)
+    return df
+
 
 def apply_transform(df, transforms, inplace=False):
     if not inplace:
         df = df.copy()
-
-    if isinstance(transforms, dict):
-        transforms = [transforms]
-
-    for transform in transforms:
-        transform = alt.Transform.from_dict(transform)
-        if isinstance(transform, alt.CalculateTransform):
-            df[transform['as']] = df.apply(
-                lambda datum: eval_vegajs(transform.calculate, datum),
-                axis=1)
-        elif isinstance(transform, alt.FilterTransform):
-            if not isinstance(transform.filter, str):
-                raise NotImplementedError("non-string filter")
-            mask = df.apply(
-                lambda datum: eval_vegajs(transform.filter, datum),
-                axis=1).astype(bool)
-            df = df[mask]
-        elif isinstance(transform, alt.AggregateTransform):
-            groupby = transform['groupby']
-            for aggregate in transform['aggregate']:
-                op = aggregate['op'].to_dict()
-                field = aggregate['field']
-                col = aggregate['as']
-
-                op = AGG_REPLACEMENTS.get(op, op)
-
-                if groupby is alt.Undefined:
-                    df[col] = df[field].aggregate(op)
-                else:
-                    result = df.groupby(groupby)[field].aggregate(op)
-                    result.name = col
-                    df = df.join(result, on=groupby)
-        else:
-            raise NotImplementedError(
-                f"{transform.__class__.__name__} not implemented.")
-
-    return df
+    return visit(transforms, df)

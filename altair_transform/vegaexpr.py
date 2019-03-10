@@ -6,7 +6,7 @@ import math
 import random
 import sys
 import pandas as pd
-import time
+import time as timemod
 from typing import Pattern
 
 from altair_transform.utils import evaljs
@@ -112,7 +112,7 @@ def toString(value):
 # Date/Time Functions
 def now():
     """Returns the timestamp for the current time."""
-    return round(time.time() * 1000, 0)
+    return round(timemod.time() * 1000, 0)
 
 
 def datetime(year, month, day=0, hour=0, min=0, sec=0, millisec=0):
@@ -194,7 +194,7 @@ def time(datetime):
 
 def timezoneoffset(datetime):
     # TODO: use tzlocal?
-    raise NotImplementedError()
+    raise NotImplementedError("timezoneoffset()")
 
 
 def utc(year, month, day=0, hour=0, min=0, sec=0, millisec=0):
@@ -598,6 +598,7 @@ VEGAJS_NAMESPACE = {
     "time": time,
     "timezoneoffset": timezoneoffset,
     "utc": utc,
+    
     # TODOs:
     # Remaining Date/Time Functions
     # Array Functions
