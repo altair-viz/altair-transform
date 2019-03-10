@@ -1,5 +1,7 @@
 from functools import singledispatch
 
+import pandas as pd
+
 import altair as alt
 from altair_transform.vegaexpr import eval_vegajs
 
@@ -35,14 +37,14 @@ def visit(transform, df):
 
 
 @visit.register(list)
-def _1(transform, df):
+def visit_list(transform, df):
     for t in transform:
         df = visit(t, df)
     return df
 
 
 @visit.register(dict)
-def _2(transform, df):
+def visit_dict(transform, df):
     transform = alt.Transform.from_dict(transform)
     return visit(transform, df)
 
@@ -57,7 +59,7 @@ def _3(transform, df):
 
 
 @visit.register(alt.FilterTransform)
-def _4(transform, df):
+def visit_filter(transform, df):
     if not isinstance(transform.filter, str):
         raise NotImplementedError("non-string filter")
     mask = df.apply(
@@ -67,7 +69,7 @@ def _4(transform, df):
 
 
 @visit.register(alt.AggregateTransform)
-def _(transform, df):
+def visit_agg(transform, df):
     groupby = transform['groupby']
     for aggregate in transform['aggregate']:
         op = aggregate['op'].to_dict()
@@ -83,6 +85,32 @@ def _(transform, df):
             result.name = col
             df = df.join(result, on=groupby)
     return df
+
+
+@visit.register(alt.LookupTransform)
+def visit_lookup(transform, df):
+    other_data = transform['from']
+    data = other_data.data
+    key = other_data.key
+    # TODO: handle null fields
+    fields = other_data.fields
+    if not isinstance(data, alt.InlineData):
+        raise NotImplementedError(f"Lookup data of type {type(data)}")
+    other_df = pd.DataFrame(data.values)
+    if key not in fields:
+        fields = [key] + fields
+    other_df = other_df[fields]
+
+    lookup = transform.lookup
+    # TODO: where to apply default?
+    # default = transform.default
+    # TODO: use as_ if fields are not specified
+    # as_ = transform['as']
+
+    merged = pd.merge(df, other_df, left_on=lookup, right_on=key)
+    # TODO: don't drop if in fields
+    merged = merged.drop(key, axis=1)
+    return merged
 
 
 def confidence_interval(x, level):

@@ -68,6 +68,24 @@ def test_aggregate_transform(data, groupby, op):
         assert validate(out).all()
 
 
+def test_lookup_transform(data):
+    lookup = pd.DataFrame({
+        'c2': list('ABC'),
+        'z': [3, 1, 4]
+    })
+    transform = {
+        'lookup': 'c',
+        'from': {
+            'data': {'values': lookup.to_dict(orient='records')},
+            'key': 'c2',
+            'fields': ['z']
+        }
+    }
+    out1 = apply_transform(data, transform)
+    out2 = pd.merge(data, lookup, left_on='c', right_on='c2')
+    assert out1.equals(out2.drop('c2', axis=1))
+
+
 def test_multiple_transforms(data):
     transform = [
         {'calculate': '0.5 * (datum.x + datum.y)', 'as': 'xy_mean'},
