@@ -118,7 +118,7 @@ def zerofill_rshift(lhs, rhs):
     return lhs >> rhs
 
 
-# TODO: do implicit type conversions?
+# TODO: do implicit type conversions ugh...
 UNARY_OPERATORS = {
     '~': int_inputs(operator.inv),
     '-': operator.neg,

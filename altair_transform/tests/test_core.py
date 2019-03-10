@@ -66,3 +66,16 @@ def test_aggregate_transform(data, groupby, op):
         assert out.groupby(group).apply(validate).all()
     else:
         assert validate(out).all()
+
+
+def test_multiple_transforms(data):
+    transform = [
+        {'calculate': '0.5 * (datum.x + datum.y)', 'as': 'xy_mean'},
+        {'filter': 'datum.x < datum.xy_mean'}
+    ]
+    out1 = apply_transform(data, transform)
+    out2 = data.copy()
+    out2['xy_mean'] = 0.5 * (data.x + data.y)
+    out2 = out2[out2.x < out2.xy_mean]
+
+    assert out1.equals(out2)
