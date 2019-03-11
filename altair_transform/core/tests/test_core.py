@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 from altair.utils.data import to_values
-from altair_transform import apply_transform
-from altair_transform.core import AGG_REPLACEMENTS
+from altair_transform import apply
+from altair_transform.core.aggregate import AGG_REPLACEMENTS
 
 
 AGGREGATES = ['argmax', 'argmin', 'average', 'count', 'distinct',
@@ -28,7 +28,7 @@ def data():
 
 def test_calculate_transform(data):
     transform = {'calculate': 'datum.x + datum.y', 'as': 'z'}
-    out1 = apply_transform(data, transform)
+    out1 = apply(data, transform)
 
     out2 = data.copy()
     out2['z'] = data.x + data.y
@@ -38,7 +38,7 @@ def test_calculate_transform(data):
 
 def test_filter_transform(data):
     transform = {'filter': 'datum.x < datum.y'}
-    out1 = apply_transform(data, transform)
+    out1 = apply(data, transform)
 
     out2 = data.copy()
     out2 = out2[data.x < data.y]
@@ -58,7 +58,7 @@ def test_aggregate_transform(data, groupby, op):
         transform['groupby'] = [group]
 
     op = AGG_REPLACEMENTS.get(op, op)
-    out = apply_transform(data, transform)
+    out = apply(data, transform)
 
     def validate(group):
         return group[field].aggregate(op) == group[col]
@@ -83,7 +83,7 @@ def test_lookup_transform(data, lookup_key):
             'fields': ['z']
         }
     }
-    out1 = apply_transform(data, transform)
+    out1 = apply(data, transform)
     out2 = pd.merge(data, lookup, left_on='c', right_on=lookup_key)
     if lookup_key != 'c':
         out2 = out2.drop(lookup_key, axis=1)
@@ -95,7 +95,7 @@ def test_multiple_transforms(data):
         {'calculate': '0.5 * (datum.x + datum.y)', 'as': 'xy_mean'},
         {'filter': 'datum.x < datum.xy_mean'}
     ]
-    out1 = apply_transform(data, transform)
+    out1 = apply(data, transform)
     out2 = data.copy()
     out2['xy_mean'] = 0.5 * (data.x + data.y)
     out2 = out2[out2.x < out2.xy_mean]
