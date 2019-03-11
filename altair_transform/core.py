@@ -89,27 +89,37 @@ def visit_agg(transform, df):
 
 @visit.register(alt.LookupTransform)
 def visit_lookup(transform, df):
-    other_data = transform['from']
-    data = other_data.data
-    key = other_data.key
+    lookup_data = transform['from']
+    data = lookup_data.data
+    key = lookup_data.key
     # TODO: handle null fields
-    fields = other_data.fields
+    fields = lookup_data.fields
+
     if not isinstance(data, alt.InlineData):
         raise NotImplementedError(f"Lookup data of type {type(data)}")
     other_df = pd.DataFrame(data.values)
-    if key not in fields:
-        fields = [key] + fields
-    other_df = other_df[fields]
+    other_df = other_df[[key] + fields]
 
     lookup = transform.lookup
-    # TODO: where to apply default?
-    # default = transform.default
+    default = transform.default
     # TODO: use as_ if fields are not specified
     # as_ = transform['as']
 
-    merged = pd.merge(df, other_df, left_on=lookup, right_on=key)
+    if default is not alt.Undefined:
+        # TODO: make sure this doesn't conflict
+        indicator = "__merge_indicator"
+    else:
+        indicator = False
+
+    merged = pd.merge(df, other_df, left_on=lookup,
+                      right_on=key, how='left',
+                      indicator=indicator)
     # TODO: don't drop if in fields
-    merged = merged.drop(key, axis=1)
+    if key != lookup:
+        merged = merged.drop(key, axis=1)
+    if indicator:
+        merged.loc[indicator == "left_only", fields] = default
+        merged = merged.drop(indicator, axis=1)
     return merged
 
 

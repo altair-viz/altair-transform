@@ -69,22 +69,25 @@ def test_aggregate_transform(data, groupby, op):
         assert validate(out).all()
 
 
-def test_lookup_transform(data):
+@pytest.mark.parametrize('lookup_key', ['c', 'c2'])
+def test_lookup_transform(data, lookup_key):
     lookup = pd.DataFrame({
-        'c2': list('ABC'),
-        'z': [3, 1, 4]
+        lookup_key: list('ABCD'),
+        'z': [3, 1, 4, 5]
     })
     transform = {
         'lookup': 'c',
         'from': {
             'data': to_values(lookup),
-            'key': 'c2',
+            'key': lookup_key,
             'fields': ['z']
         }
     }
     out1 = apply_transform(data, transform)
-    out2 = pd.merge(data, lookup, left_on='c', right_on='c2')
-    assert out1.equals(out2.drop('c2', axis=1))
+    out2 = pd.merge(data, lookup, left_on='c', right_on=lookup_key)
+    if lookup_key != 'c':
+        out2 = out2.drop(lookup_key, axis=1)
+    assert out1.equals(out2)
 
 
 def test_multiple_transforms(data):
