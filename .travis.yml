@@ -1,0 +1,26 @@
+language: python
+
+cache: pip
+
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
+
+env:
+  global:
+    - TEST_DIR=/tmp/_altair_transform/
+
+before_install:
+  - pip install pip --upgrade;
+  - pip install pytest flake8 mypy
+
+install:
+  - pip install .;
+
+script:
+  - flake8 ./;
+  - mypy ./;
+  - mkdir -p $TEST_DIR
+  - cd $TEST_DIR && python -m pytest --pyargs altair_transform;
