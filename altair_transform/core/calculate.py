@@ -5,9 +5,8 @@ from ..vegaexpr import eval_vegajs
 
 
 @visit.register
-def _(transform: alt.CalculateTransform, df: pd.DataFrame):
+def visit_calculate(transform: alt.CalculateTransform, df: pd.DataFrame):
     col = transform['as']
-    df[col] = df.apply(
-        lambda datum: eval_vegajs(transform.calculate, datum),
-        axis=1)
+    calc = transform['calculate']
+    df[col] = df.apply(lambda datum: eval_vegajs(calc, datum), axis=1)
     return df

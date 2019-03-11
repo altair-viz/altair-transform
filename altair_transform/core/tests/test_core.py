@@ -13,7 +13,7 @@ AGGREGATES = ['argmax', 'argmin', 'average', 'count', 'distinct',
               'q3', 'ci0', 'ci1', 'stderr', 'stdev', 'stdevp',
               'sum', 'valid', 'values', 'variance', 'variancep']
 
-AGG_SKIP = ['ci0', 'ci1']
+AGG_SKIP = ['ci0', 'ci1']  # require scipy
 
 
 @pytest.fixture

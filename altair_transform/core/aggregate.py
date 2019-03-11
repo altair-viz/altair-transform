@@ -4,7 +4,7 @@ from .visitor import visit
 
 
 @visit.register
-def _(transform: alt.AggregateTransform, df: pd.DataFrame):
+def visit_aggregate(transform: alt.AggregateTransform, df: pd.DataFrame):
     groupby = transform['groupby']
     for aggregate in transform['aggregate']:
         op = aggregate['op'].to_dict()

@@ -6,7 +6,7 @@ from .visitor import visit
 
 
 @visit.register
-def _(transform: alt.LookupTransform, df: pd.DataFrame):
+def visit_lookup(transform: alt.LookupTransform, df: pd.DataFrame):
     lookup_data = transform['from']
     data = lookup_data.data
     key = lookup_data.key

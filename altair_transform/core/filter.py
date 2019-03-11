@@ -5,10 +5,9 @@ from ..vegaexpr import eval_vegajs
 
 
 @visit.register
-def _(transform: alt.FilterTransform, df: pd.DataFrame):
-    if not isinstance(transform.filter, str):
+def visit_filter(transform: alt.FilterTransform, df: pd.DataFrame):
+    filt = transform['filter']
+    if not isinstance(filt, str):
         raise NotImplementedError("non-string filter")
-    mask = df.apply(
-        lambda datum: eval_vegajs(transform.filter, datum),
-        axis=1).astype(bool)
-    return df[mask]
+    mask = df.apply(lambda datum: eval_vegajs(filt, datum), axis=1)
+    return df[mask.astype(bool)]

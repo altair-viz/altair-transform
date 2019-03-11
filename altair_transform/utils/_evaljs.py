@@ -5,6 +5,8 @@ from typing import Any, Union
 
 from altair_transform.utils import ast, Parser
 
+__all__ = ['evaljs']
+
 
 def evaljs(expression: Union[str, ast.Expr], namespace: dict = None):
     """Evaluate a javascript expression, optionally with a namespace."""
