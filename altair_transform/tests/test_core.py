@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
+from altair.utils.data import to_values
 from altair_transform import apply_transform
 from altair_transform.core import AGG_REPLACEMENTS
 
@@ -76,7 +77,7 @@ def test_lookup_transform(data):
     transform = {
         'lookup': 'c',
         'from': {
-            'data': {'values': lookup.to_dict(orient='records')},
+            'data': to_values(lookup),
             'key': 'c2',
             'fields': ['z']
         }
