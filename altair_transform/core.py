@@ -1,4 +1,5 @@
 from functools import singledispatch
+from typing import Union, Any
 
 import pandas as pd
 
@@ -8,7 +9,7 @@ from altair_transform.vegaexpr import eval_vegajs
 __all__ = ['apply_transform']
 
 
-def apply_transform(df, transform, inplace=False):
+def apply_transform(df: pd.DataFrame, transform: Any, inplace: bool = False):
     """Apply transform or transforms to dataframe.
 
     Parameters
@@ -32,25 +33,25 @@ def apply_transform(df, transform, inplace=False):
 
 
 @singledispatch
-def visit(transform, df):
+def visit(transform: Any, df: pd.DataFrame):
     raise NotImplementedError("transform of type {0}".format(type(transform)))
 
 
-@visit.register(list)
-def visit_list(transform, df):
+@visit.register
+def visit_list(transform: list, df: pd.DataFrame):
     for t in transform:
         df = visit(t, df)
     return df
 
 
-@visit.register(dict)
-def visit_dict(transform, df):
+@visit.register
+def visit_dict(transform: dict, df: pd.DataFrame):
     transform = alt.Transform.from_dict(transform)
     return visit(transform, df)
 
 
-@visit.register(alt.CalculateTransform)
-def _3(transform, df):
+@visit.register
+def visit_calc(transform: alt.CalculateTransform, df: pd.DataFrame):
     col = transform['as']
     df[col] = df.apply(
         lambda datum: eval_vegajs(transform.calculate, datum),
@@ -58,8 +59,8 @@ def _3(transform, df):
     return df
 
 
-@visit.register(alt.FilterTransform)
-def visit_filter(transform, df):
+@visit.register
+def visit_filter(transform: alt.FilterTransform, df: pd.DataFrame):
     if not isinstance(transform.filter, str):
         raise NotImplementedError("non-string filter")
     mask = df.apply(
@@ -68,8 +69,8 @@ def visit_filter(transform, df):
     return df[mask]
 
 
-@visit.register(alt.AggregateTransform)
-def visit_agg(transform, df):
+@visit.register
+def visit_agg(transform: alt.AggregateTransform, df: pd.DataFrame):
     groupby = transform['groupby']
     for aggregate in transform['aggregate']:
         op = aggregate['op'].to_dict()
@@ -87,8 +88,8 @@ def visit_agg(transform, df):
     return df
 
 
-@visit.register(alt.LookupTransform)
-def visit_lookup(transform, df):
+@visit.register
+def visit_lookup(transform: alt.LookupTransform, df: pd.DataFrame):
     lookup_data = transform['from']
     data = lookup_data.data
     key = lookup_data.key
@@ -105,6 +106,7 @@ def visit_lookup(transform, df):
     # TODO: use as_ if fields are not specified
     # as_ = transform['as']
 
+    indicator: Union[str, bool]
     if default is not alt.Undefined:
         # TODO: make sure this doesn't conflict
         indicator = "__merge_indicator"

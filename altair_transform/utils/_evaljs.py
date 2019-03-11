@@ -7,6 +7,7 @@ from altair_transform.utils._tools import singledispatch_method
 
 
 def evaljs(expression, namespace=None):
+    """Evaluate a javascript expression, optionally with a namespace."""
     if isinstance(expression, str):
         parser = Parser()
         expression = parser.parse(expression)
