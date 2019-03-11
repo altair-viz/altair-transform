@@ -1,108 +1,117 @@
 """Functionality to evaluate contents of the ast"""
-from functools import wraps
+from functools import singledispatch, wraps
 import operator
+from typing import Any, Union
 
 from altair_transform.utils import ast, Parser
-from altair_transform.utils._tools import singledispatch_method
 
 
-def evaljs(expression, namespace=None):
+def evaljs(expression: Union[str, ast.Expr], namespace: dict = None):
     """Evaluate a javascript expression, optionally with a namespace."""
     if isinstance(expression, str):
         parser = Parser()
         expression = parser.parse(expression)
-    return EvalJS(namespace).visit(expression)
+    return visit(expression, namespace or {})
 
 
-class EvalJS():
-    """Visitor pattern to evaluate ASTs of javascript expressions."""
-    def __init__(self, namespace=None):
-        self.namespace = namespace or {}
+@singledispatch
+def visit(obj: Any, namespace: dict):
+    return obj
 
-    @singledispatch_method
-    def visit(self, obj):
-        return obj
 
-    @visit.register(ast.Expr)
-    def _(self, obj):
-        return obj.value
+@visit.register
+def _visit_expr(obj: ast.Expr, namespace: dict):
+    return obj.value
 
-    @visit.register(ast.BinOp)
-    def _(self, obj):
-        if obj.op not in BINARY_OPERATORS:
-            raise NotImplementedError(f"Binary Operator A {obj.op} B")
-        op = BINARY_OPERATORS[obj.op]
-        return op(self.visit(obj.lhs), self.visit(obj.rhs))
 
-    @visit.register(ast.UnOp)
-    def _(self, obj):
-        if obj.op not in UNARY_OPERATORS:
-            raise NotImplementedError(f"Unary Operator {obj.op}x")
-        op = UNARY_OPERATORS[obj.op]
-        return op(self.visit(obj.rhs))
+@visit.register
+def _visit_binop(obj: ast.BinOp, namespace: dict):
+    if obj.op not in BINARY_OPERATORS:
+        raise NotImplementedError(f"Binary Operator A {obj.op} B")
+    op = BINARY_OPERATORS[obj.op]
+    return op(visit(obj.lhs, namespace), visit(obj.rhs, namespace))
 
-    @visit.register(ast.TernOp)
-    def _(self, obj):
-        if obj.op not in TERNARY_OPERATORS:
-            raise NotImplementedError(
-                f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
-        op = TERNARY_OPERATORS[obj.op]
-        return op(self.visit(obj.lhs),
-                  self.visit(obj.mid),
-                  self.visit(obj.rhs))
 
-    @visit.register(ast.Number)
-    def _(self, obj):
-        return obj.value
+@visit.register
+def _visit_unop(obj: ast.UnOp, namespace: dict):
+    if obj.op not in UNARY_OPERATORS:
+        raise NotImplementedError(f"Unary Operator {obj.op}x")
+    op = UNARY_OPERATORS[obj.op]
+    return op(visit(obj.rhs, namespace))
 
-    @visit.register(ast.String)
-    def _(self, obj):
-        return obj.value
 
-    @visit.register(ast.Global)
-    def _(self, obj):
-        if obj.name not in self.namespace:
-            raise NameError("{0} is not a valid name".format(obj.name))
-        return self.namespace[obj.name]
+@visit.register
+def _visit_ternop(obj: ast.TernOp, namespace: dict):
+    if obj.op not in TERNARY_OPERATORS:
+        raise NotImplementedError(
+            f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
+    op = TERNARY_OPERATORS[obj.op]
+    return op(visit(obj.lhs, namespace),
+              visit(obj.mid, namespace),
+              visit(obj.rhs, namespace))
 
-    @visit.register(ast.Name)
-    def _(self, obj):
-        return obj.name
 
-    @visit.register(ast.List)
-    def _(self, obj):
-        return [self.visit(entry) for entry in obj.entries]
+@visit.register
+def _visit_number(obj: ast.Number, namespace: dict):
+    return obj.value
 
-    @visit.register(ast.Object)
-    def _(self, obj):
-        def visit(entry):
-            if isinstance(entry, tuple):
-                return tuple(self.visit(e) for e in entry)
-            if isinstance(entry, ast.Name):
-                return (self.visit(entry), self.visit(ast.Global(entry.name)))
-        return dict(visit(entry) for entry in obj.entries)
 
-    @visit.register(ast.Attr)
-    def _(self, obj):
-        obj_ = self.visit(obj.obj)
-        attr = self.visit(obj.attr)
-        if isinstance(obj_, dict):
-            return obj_[attr]
-        return getattr(obj_, attr)
+@visit.register
+def _visit_string(obj: ast.String, namespace: dict):
+    return obj.value
 
-    @visit.register(ast.Item)
-    def _(self, obj):
-        obj_ = self.visit(obj.obj)
-        item = self.visit(obj.item)
-        if isinstance(obj_, list) and isinstance(item, float):
-            item = int(item)
-        return obj_[item]
 
-    @visit.register(ast.Func)
-    def _(self, obj):
-        func = self.visit(obj.func)
-        args = [self.visit(arg) for arg in obj.args]
-        return func(*args)
+@visit.register
+def _visit_global(obj: ast.Global, namespace: dict):
+    if obj.name not in namespace:
+        raise NameError("{0} is not a valid name".format(obj.name))
+    return namespace[obj.name]
+
+
+@visit.register
+def _visit_name(obj: ast.Name, namespace: dict):
+    return obj.name
+
+
+@visit.register
+def _visit_list(obj: ast.List, namespace: dict):
+    return [visit(entry, namespace) for entry in obj.entries]
+
+
+@visit.register
+def _visit_object(obj: ast.Object, namespace: dict):
+    def _visit(entry):
+        if isinstance(entry, tuple):
+            return tuple(visit(e, namespace) for e in entry)
+        if isinstance(entry, ast.Name):
+            return (visit(entry, namespace),
+                    visit(ast.Global(entry.name), namespace))
+    return dict(_visit(entry) for entry in obj.entries)
+
+
+@visit.register
+def _visit_attr(obj: ast.Attr, namespace: dict):
+    obj_ = visit(obj.obj, namespace)
+    attr = visit(obj.attr, namespace)
+    if isinstance(obj_, dict):
+        return obj_[attr]
+    return getattr(obj_, attr)
+
+
+@visit.register
+def _visit_item(obj: ast.Item, namespace: dict):
+    obj_ = visit(obj.obj, namespace)
+    item = visit(obj.item, namespace)
+    if isinstance(obj_, list) and isinstance(item, float):
+        item = int(item)
+    return obj_[item]
+
+
+@visit.register
+def _visit_func(obj: ast.Func, namespace: dict):
+    func = visit(obj.func, namespace)
+    args = [visit(arg, namespace) for arg in obj.args]
+    return func(*args)
 
 
 def int_inputs(func):
