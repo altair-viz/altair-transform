@@ -20,15 +20,16 @@ def visit_lookup(transform: alt.LookupTransform, df: pd.DataFrame):
 
     lookup = transform.lookup
     default = transform.default
+
     # TODO: use as_ if fields are not specified
     # as_ = transform['as']
 
     indicator: Union[str, bool]
-    if default is not alt.Undefined:
+    if default is None or default is alt.Undefined:
+        indicator = False
+    else:
         # TODO: make sure this doesn't conflict
         indicator = "__merge_indicator"
-    else:
-        indicator = False
 
     merged = pd.merge(df, other_df, left_on=lookup,
                       right_on=key, how='left',
@@ -37,6 +38,6 @@ def visit_lookup(transform: alt.LookupTransform, df: pd.DataFrame):
     if key != lookup:
         merged = merged.drop(key, axis=1)
     if indicator:
-        merged.loc[indicator == "left_only", fields] = default
+        merged.loc[merged[indicator] == "left_only", fields] = default
         merged = merged.drop(indicator, axis=1)
     return merged

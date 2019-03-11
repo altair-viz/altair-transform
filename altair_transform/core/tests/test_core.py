@@ -90,6 +90,32 @@ def test_lookup_transform(data, lookup_key):
     assert out1.equals(out2)
 
 
+@pytest.mark.parametrize('lookup_key', ['c', 'c2'])
+@pytest.mark.parametrize('default', [None, 'missing'])
+def test_lookup_transform_default(data, lookup_key, default):
+    lookup = pd.DataFrame({
+        lookup_key: list('ABC'),
+        'z': [3, 1, 4]
+    })
+    transform = {
+        'lookup': 'c',
+        'from': {
+            'data': to_values(lookup),
+            'key': lookup_key,
+            'fields': ['z']
+        }
+    }
+    if default is not None:
+        transform['default'] = default
+
+    out = apply(data, transform)
+    undef = (out['c'] == 'D')
+    if default is None:
+        assert out.loc[undef, 'z'].isnull().all()
+    else:
+        assert (out.loc[undef, 'z'] == default).all()
+
+
 def test_multiple_transforms(data):
     transform = [
         {'calculate': '0.5 * (datum.x + datum.y)', 'as': 'xy_mean'},
