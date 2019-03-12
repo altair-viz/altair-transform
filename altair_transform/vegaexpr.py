@@ -24,7 +24,7 @@ def eval_vegajs(expression, datum=None):
 # Type Coercion Functions
 def isArray(value):
     """Returns true if value is an array, false otherwise."""
-    return isinstance(value, list),
+    return isinstance(value, list)
 
 
 def isBoolean(value):
@@ -122,8 +122,8 @@ def datetime(year, month, day=0, hour=0, min=0, sec=0, millisec=0):
     The month is 0-based, such that 1 represents February.
     """
     # TODO: do we need a local timezone?
-    return dtmodule.datetime(year, month + 1, day, hour,
-                             min, sec, millisec * 1000)
+    return dtmodule.datetime(int(year), int(month) + 1, int(day), int(hour),
+                             int(min), int(sec), int(millisec * 1000))
 
 
 def date(datetime):
@@ -204,8 +204,9 @@ def utc(year, month, day=0, hour=0, min=0, sec=0, millisec=0):
     Returns a timestamp for the given UTC date.
     The month is 0-based, such that 1 represents February.
     """
-    return dtmodule.datetime(year, month + 1, day, hour, min, sec,
-                             millisec * 1000, tzinfo=pytz.utc)
+    return dtmodule.datetime(int(year), int(month) + 1, int(day), int(hour),
+                             int(min), int(sec), int(millisec * 1000),
+                             tzinfo=pytz.utc)
 
 
 # From https://vega.github.io/vega/docs/expressions/
