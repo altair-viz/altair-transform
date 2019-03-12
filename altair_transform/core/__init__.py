@@ -4,7 +4,7 @@ import pandas as pd
 from .visitor import visit
 
 # These submodules register appropriate visitors.
-from . import aggregate, calculate, filter, lookup  # noqa
+from . import aggregate, calculate, filter, lookup, bin  # noqa
 
 __all__ = ['apply']
 

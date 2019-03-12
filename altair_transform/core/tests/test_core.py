@@ -116,6 +116,17 @@ def test_lookup_transform_default(data, lookup_key, default):
         assert (out.loc[undef, 'z'] == default).all()
 
 
+def test_bin_transform(data):
+    transform = {'bin': True, 'field': 'x', 'as': 'xbin'}
+    out = apply(data, transform)
+    assert 'xbin' in out.columns
+
+    transform = {'bin': True, 'field': 'x', 'as': ['xbin1', 'xbin2']}
+    out = apply(data, transform)
+    assert 'xbin1' in out.columns
+    assert 'xbin2' in out.columns
+
+
 def test_multiple_transforms(data):
     transform = [
         {'calculate': '0.5 * (datum.x + datum.y)', 'as': 'xy_mean'},
