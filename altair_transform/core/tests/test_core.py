@@ -127,7 +127,26 @@ def test_bin_transform(data):
     assert 'xbin2' in out.columns
 
 
-def test_window_transform(data):
+def test_window_transform_basic(data):
+    transform = {
+        'window': [{'op': 'sum', 'field': 'x', 'as': 'xsum'}],
+    }
+    out = apply(data, transform)
+    expected = data['x'].cumsum()
+    assert out['xsum'].equals(expected.astype(float))
+
+
+def test_window_transform_sorted(data):
+    transform = {
+        'window': [{'op': 'sum', 'field': 'x', 'as': 'xsum'}],
+        'sort': [{'field': 'x'}]
+    }
+    out = apply(data, transform)
+    expected = data['x'].sort_values().cumsum().sort_index()
+    assert out['xsum'].equals(expected.astype(float))
+
+
+def test_window_transform_grouped(data):
     transform = {
         'window': [{'op': 'sum', 'field': 'x', 'as': 'xsum'}],
         'groupby': ['y'],
@@ -135,8 +154,6 @@ def test_window_transform(data):
     out = apply(data, transform)
     expected = data.groupby('y').rolling(len(data), min_periods=1)
     expected = expected['x'].sum().reset_index('y', drop=True).sort_index()
-    print(out['xsum'])
-    print(expected)
     assert out['xsum'].equals(expected)
 
 
