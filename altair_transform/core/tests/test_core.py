@@ -20,9 +20,9 @@ AGG_SKIP = ['ci0', 'ci1']  # require scipy
 def data():
     rand = np.random.RandomState(42)
     return pd.DataFrame({
-        'x': rand.randint(0, 100, 10),
-        'y': rand.randint(0, 100, 10),
-        'c': list('AABBCCCDDD'),
+        'x': rand.randint(0, 100, 12),
+        'y': rand.randint(0, 100, 12),
+        'c': list('AAABBBCCCDDD'),
     })
 
 
@@ -61,12 +61,12 @@ def test_aggregate_transform(data, groupby, op):
     out = apply(data, transform)
 
     def validate(group):
-        return group[field].aggregate(op) == group[col]
+        return np.allclose(group[field].aggregate(op), group[col])
 
     if groupby:
         assert out.groupby(group).apply(validate).all()
     else:
-        assert validate(out).all()
+        assert validate(out)
 
 
 @pytest.mark.parametrize('lookup_key', ['c', 'c2'])
@@ -125,6 +125,19 @@ def test_bin_transform(data):
     out = apply(data, transform)
     assert 'xbin1' in out.columns
     assert 'xbin2' in out.columns
+
+
+def test_window_transform(data):
+    transform = {
+        'window': [{'op': 'sum', 'field': 'x', 'as': 'xsum'}],
+        'groupby': ['y'],
+    }
+    out = apply(data, transform)
+    expected = data.groupby('y').rolling(len(data), min_periods=1)
+    expected = expected['x'].sum().reset_index('y', drop=True).sort_index()
+    print(out['xsum'])
+    print(expected)
+    assert out['xsum'].equals(expected)
 
 
 def test_multiple_transforms(data):
