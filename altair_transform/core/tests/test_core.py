@@ -13,7 +13,25 @@ AGGREGATES = ['argmax', 'argmin', 'average', 'count', 'distinct',
               'q3', 'ci0', 'ci1', 'stderr', 'stdev', 'stdevp',
               'sum', 'valid', 'values', 'variance', 'variancep']
 
-AGG_SKIP = ['ci0', 'ci1']  # require scipy
+AGG_SKIP = ['ci0', 'ci1']  # These require scipy.
+
+
+FILTER_PREDICATES = [
+  ('datum.x < datum.y',
+   lambda df: df[df.x < df.y]),
+  ({'not': 'datum.i < 5'},
+   lambda df: df[~(df.i < 5)]),
+  ({'and': [{'field': 'x', 'lt': 50}, {'field': 'i', 'gte': 2}]},
+   lambda df: df[(df.x < 50) & (df.i >= 2)]),
+  ({'or': [{'field': 'y', 'gt': 50}, {'field': 'i', 'lte': 4}]},
+   lambda df: df[(df.y > 50) | (df.i <= 4)]),
+  ({'field': 'c', 'oneOf': ['A', 'B']},
+   lambda df: df[df.c.isin(['A', 'B'])]),
+  ({'field': 'x', 'range': [30, 60]},
+   lambda df: df[(df.x >= 30) & (df.x <= 60)]),
+  ({'field': 'c', 'equal': 'B'},
+   lambda df: df[df.c == 'B']),
+]
 
 
 @pytest.fixture
@@ -22,6 +40,7 @@ def data():
     return pd.DataFrame({
         'x': rand.randint(0, 100, 12),
         'y': rand.randint(0, 100, 12),
+        'i': range(12),
         'c': list('AAABBBCCCDDD'),
     })
 
@@ -36,13 +55,10 @@ def test_calculate_transform(data):
     assert out1.equals(out2)
 
 
-def test_filter_transform(data):
-    transform = {'filter': 'datum.x < datum.y'}
-    out1 = apply(data, transform)
-
-    out2 = data.copy()
-    out2 = out2[data.x < data.y]
-
+@pytest.mark.parametrize("filter,calc", FILTER_PREDICATES)
+def test_filter_transform(data, filter, calc):
+    out1 = apply(data, {'filter': filter})
+    out2 = calc(data)
     assert out1.equals(out2)
 
 

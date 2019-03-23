@@ -7,7 +7,7 @@ import pandas as pd
 
 @singledispatch
 def visit(transform: Any, df: pd.DataFrame):
-    raise NotImplementedError("transform of type {0}".format(type(transform)))
+    raise NotImplementedError(f"transform of type {type(transform)}")
 
 
 @visit.register

@@ -1,4 +1,4 @@
 ply
-altair
+altair<3.0
 numpy
 pandas
