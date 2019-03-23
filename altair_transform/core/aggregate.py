@@ -12,6 +12,8 @@ def visit_aggregate(transform: alt.AggregateTransform, df: pd.DataFrame):
         col = aggregate['as']
 
         op = AGG_REPLACEMENTS.get(op, op)
+        if field == "*" and field not in df.columns:
+            field = df.columns[0]
 
         if groupby is alt.Undefined:
             df[col] = df[field].aggregate(op)

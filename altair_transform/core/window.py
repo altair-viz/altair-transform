@@ -8,9 +8,7 @@ from .aggregate import AGG_REPLACEMENTS
 
 def _get(obj, key, default=alt.Undefined):
     val = obj[key]
-    if val is alt.Undefined:
-        return default
-    return val
+    return default if val is alt.Undefined else val
 
 
 @visit.register
@@ -26,7 +24,7 @@ def visit_window(transform: alt.WindowTransform, df: pd.DataFrame):
 
     # First sort the dataframe if required.
     if sort:
-        fields = [s.field for s in sort]
+        fields = [s['field'] for s in sort]
         ascending = [_get(s, 'order', 'ascending') == 'ascending'
                      for s in sort]
         df2 = df.sort_values(fields, ascending=ascending)
@@ -55,7 +53,11 @@ def visit_window(transform: alt.WindowTransform, df: pd.DataFrame):
         if w['param'] is not alt.Undefined:
             raise NotImplementedError("window function with param")
         col = _get(w, 'field', df2.columns[0])
-        agg = w.op.to_dict()
+        if col == "*" and col not in df2.columns:
+            col = df2.columns[0]
+        agg = w.op
+        if isinstance(agg, alt.SchemaBase):
+            agg = agg.to_dict()
         agg = WINDOW_AGG_REPLACEMENTS.get(agg, agg)
         df2[w['as']] = rolling[col].aggregate(agg).reset_index(groupby,
                                                                drop=True)
