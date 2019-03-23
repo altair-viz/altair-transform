@@ -3,8 +3,9 @@ import pytest
 import numpy as np
 import pandas as pd
 
+import altair as alt
 from altair.utils.data import to_values
-from altair_transform import apply
+from altair_transform import apply, extract_data
 from altair_transform.core.aggregate import AGG_REPLACEMENTS
 
 
@@ -43,6 +44,18 @@ def data():
         'i': range(12),
         'c': list('AAABBBCCCDDD'),
     })
+
+
+def test_extract_data(data):
+    chart = alt.Chart(data).transform_calculate(
+        xpy='datum.x + datum.y',
+        xmy='datum.x - datum.y',
+    )
+    out1 = extract_data(chart)
+    out2 = data.copy()
+    out2['xpy'] = data.x + data.y
+    out2['xmy'] = data.x - data.y
+    assert out1.equals(out2)
 
 
 def test_calculate_transform(data):

@@ -7,7 +7,7 @@ from .visitor import visit
 # These submodules register appropriate visitors.
 from . import aggregate, bin, calculate, filter, lookup, window  # noqa
 
-__all__ = ['apply', 'extract']
+__all__ = ['apply', 'extract_data']
 
 
 def apply(df: pd.DataFrame,
@@ -37,7 +37,7 @@ def apply(df: pd.DataFrame,
     return visit(transform, df)
 
 
-def extract(chart: alt.Chart) -> pd.DataFrame:
+def extract_data(chart: alt.Chart) -> pd.DataFrame:
     """Extract transformed data from a chart.
 
     This only works with data and transform defined at the
