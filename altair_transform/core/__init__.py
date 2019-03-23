@@ -1,15 +1,18 @@
 from typing import Any
 import pandas as pd
+import altair as alt
 
 from .visitor import visit
 
 # These submodules register appropriate visitors.
 from . import aggregate, bin, calculate, filter, lookup, window  # noqa
 
-__all__ = ['apply']
+__all__ = ['apply', 'extract']
 
 
-def apply(df: pd.DataFrame, transform: Any, inplace: bool = False):
+def apply(df: pd.DataFrame,
+          transform: Any,
+          inplace: bool = False) -> pd.DataFrame:
     """Apply transform or transforms to dataframe.
 
     Parameters
@@ -24,9 +27,34 @@ def apply(df: pd.DataFrame, transform: Any, inplace: bool = False):
 
     Returns
     -------
-    df_transform : pd.DataFrame
+    df_transformed : pd.DataFrame
         The transformed dataframe.
     """
     if not inplace:
         df = df.copy()
+    if transform is alt.Undefined:
+        return df
     return visit(transform, df)
+
+
+def extract(chart: alt.Chart) -> pd.DataFrame:
+    """Extract transformed data from a chart.
+
+    This only works with data and transform defined at the
+    top level of the chart.
+
+    Parameters
+    ----------
+    chart : alt.Chart
+        The chart instance from which the data and transform
+        will be extracted
+
+    Returns
+    -------
+    df_transformed : pd.DataFrame
+        The extracted and transformed dataframe.
+    """
+    data = chart.data
+    if not isinstance(data, pd.DataFrame):
+        raise ValueError("Chart data must be a pandas dataframe.")
+    return apply(data, chart.transform)
