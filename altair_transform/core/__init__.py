@@ -5,7 +5,7 @@ import altair as alt
 from .visitor import visit
 
 # These submodules register appropriate visitors.
-from . import aggregate, bin, calculate, filter, lookup, window  # noqa
+from . import aggregate, bin, calculate, filter, lookup, timeunit, window  # noqa
 
 __all__ = ['apply', 'extract_data']
 
