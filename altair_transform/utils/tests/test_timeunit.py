@@ -16,10 +16,20 @@ def dates():
 
 
 @pytest.mark.parametrize('timezone', [None, tzlocal(), 'UTC'])
-def test_datetime_roundtrip(dates, timezone):
+def test_datetimeindex_roundtrip(dates, timezone):
     dates = dates.tz_localize(timezone)
     timestamp = timeunit.date_to_timestamp(dates)
     dates2 = timeunit.timestamp_to_date(timestamp,
                                         tz=(dates.tz is not None),
                                         utc=(dates.tz is pytz.UTC))
     assert dates2.equals(dates)
+
+
+@pytest.mark.parametrize('timezone', [None, tzlocal(), 'UTC'])
+def test_timestamp_roundtrip(dates, timezone):
+    date = dates.tz_localize(timezone)[0]
+    timestamp = timeunit.date_to_timestamp(date)
+    date2 = timeunit.timestamp_to_date(timestamp,
+                                       tz=(date.tz is not None),
+                                       utc=(date.tz is pytz.UTC))
+    assert date2 == date
