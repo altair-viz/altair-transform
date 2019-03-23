@@ -2,6 +2,8 @@
 
 Python evaluation of Altair/Vega-Lite transforms.
 
+[![build status](http://img.shields.io/travis/jakevdp/altair-transform/master.svg?style=flat)](https://travis-ci.org/jakevdp/altair-transform)
+
 ## Example
 
 The Vega-Lite specification includes the ability to apply a
