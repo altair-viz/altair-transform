@@ -212,6 +212,7 @@ def utc(year, month, day=0, hour=0, min=0, sec=0, millisec=0):
 # From https://vega.github.io/vega/docs/expressions/
 VEGAJS_NAMESPACE = {
     # Constants
+    "null": None,
     "NaN": math.nan,
     "E": math.e,
     "LN2": math.log(2),
