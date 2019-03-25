@@ -8,16 +8,20 @@ import pandas as pd
 from altair_transform.utils import timeunit
 
 
-TIMEUNITS = ['year', 'utcyear',
-             'month', 'utcmonth',
-             'date', 'utcdate',
-             'hours', 'utchours',
-             'minutes', 'utcminutes',
-             'seconds', 'utcseconds',
-             'milliseconds', 'utcmilliseconds',
-             'yearmonth', 'utcyearmonth',
-             'yearmonthdate', 'utcyearmonthdate',
-             ]
+TIMEUNITS = [
+    'year', 'utcyear',
+    'month', 'utcmonth',
+    'date', 'utcdate',
+    'hours', 'utchours',
+    'minutes', 'utcminutes',
+    'seconds', 'utcseconds',
+    'milliseconds', 'utcmilliseconds',
+    'yearmonth', 'utcyearmonth',
+    'yearmonthdate', 'utcyearmonthdate',
+    'yearmonthdatehours', 'utcyearmonthdatehours',
+    'yearmonthdatehoursminutes', 'utcyearmonthdatehoursminutes',
+    'yearmonthdatehoursminutesseconds', 'utcyearmonthdatehoursminutesseconds',
+]
 TIMEZONES = [None, tzlocal(), 'UTC', 'US/Pacific', 'US/Eastern']
 
 
