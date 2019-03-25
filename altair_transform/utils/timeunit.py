@@ -1,9 +1,13 @@
 """Utilities for working with pandas & JS datetimes."""
+from typing import Union
 import pandas as pd
 from dateutil.tz import tzlocal
+from functools import wraps
+
+Date = Union[pd.Series, pd.DatetimeIndex, pd.Timestamp]
 
 
-def date_to_timestamp(date: pd.DatetimeIndex) -> float:
+def date_to_timestamp(date: pd.DatetimeIndex):
     """Convert a pandas datetime to a javascript timestamp.
 
     This aims to match the timezone handling semantics
@@ -61,3 +65,27 @@ def timestamp_to_date(timestamp: float,
     if tz:
         return dates.tz_convert(tzlocal())
     return dates.tz_convert(tzlocal()).tz_localize(None)
+
+
+def _timeunit(func):
+    @wraps(func)
+    def wrapped(date: Date) -> Date:
+        if isinstance(date, pd.Series):
+            date = date.dt
+        if date.tz is not None:
+            # Note: if using date.dt, result is a Series.
+            date = date.tz_convert(tzlocal())
+
+        if isinstance(date, pd.Series):
+            return pd.Series(func(date.dt))
+        elif isinstance(date, pd.Timestamp):
+            return func(pd.DatetimeIndex([date]))[0]
+        else:
+            return func(date)
+    return wrapped
+
+
+@_timeunit
+def year(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'year' timeUnit."""
+    return pd.to_datetime(date.year.astype(str))
