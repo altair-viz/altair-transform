@@ -62,13 +62,16 @@ def test_timeunit_input_types(dates, timezone, unit):
     series = unit(pd.Series(dates))
     datetimeindex = unit(dates)
 
+    assert isinstance(timestamps[0], pd.Timestamp)
+    assert isinstance(series, pd.Series)
+    assert isinstance(datetimeindex, pd.DatetimeIndex)
     assert datetimeindex.equals(pd.DatetimeIndex(series))
     assert datetimeindex.equals(pd.DatetimeIndex(timestamps))
 
 
 @pytest.mark.parametrize('timezone', TIMEZONES)
 @pytest.mark.parametrize('timeunit_name', TIMEUNITS)
-def test_timeunit(dates, timezone, timeunit_name):
+def test_all_timeunits(dates, timezone, timeunit_name):
     timeunit_func = getattr(timeunit, timeunit_name)
     timeunit_calc = timeunit_func(dates.tz_localize(timezone))
 
