@@ -68,6 +68,7 @@ def timestamp_to_date(timestamp: float,
 
 
 def _timeunit(arg):
+    """Decorator for timeunit transforms"""
     if callable(arg):
         timezone = tzlocal()
     else:
@@ -106,6 +107,80 @@ def year(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
 def utcyear(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcyear' timeUnit."""
     return pd.to_datetime(date.year.astype(str))
+
+
+@_timeunit
+def month(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'month' timeUnit."""
+    return pd.to_datetime('1900-' + date.month.astype(str))
+
+
+@_timeunit('utc')
+def utcmonth(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utcmonth' timeUnit."""
+    return pd.to_datetime('1900-' + date.month.astype(str))
+
+
+@_timeunit
+def date(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'date' timeUnit."""
+    return pd.to_datetime('1900-01-' + date.day.astype(str))
+
+
+@_timeunit('utc')
+def utcdate(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utcdate' timeUnit."""
+    return pd.to_datetime('1900-01-' + date.day.astype(str))
+
+
+@_timeunit
+def hours(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'hours' timeUnit."""
+    return pd.to_datetime('1900-01-01 ' + date.hour.astype(str) + ":00:00")
+
+
+@_timeunit('utc')
+def utchours(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utchours' timeUnit."""
+    return pd.to_datetime('1900-01-01 ' + date.hour.astype(str) + ":00:00")
+
+
+@_timeunit
+def minutes(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'minutes' timeUnit."""
+    return pd.to_datetime('1900-01-01 00:' + date.minute.astype(str) + ":00")
+
+
+@_timeunit('utc')
+def utcminutes(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utcminutes' timeUnit."""
+    return pd.to_datetime('1900-01-01 00:' + date.minute.astype(str) + ":00")
+
+
+@_timeunit
+def seconds(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'seconds' timeUnit."""
+    return pd.to_datetime('1900-01-01 00:00:' + date.second.astype(str))
+
+
+@_timeunit('utc')
+def utcseconds(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utcseconds' timeUnit."""
+    return pd.to_datetime('1900-01-01 00:00:' + date.second.astype(str))
+
+
+@_timeunit
+def milliseconds(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'seconds' timeUnit."""
+    return pd.to_datetime('1900-01-01 00:00:00.' +
+                          date.second.astype(str).str.zfill(6))
+
+
+@_timeunit('utc')
+def utcmilliseconds(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utcseconds' timeUnit."""
+    return pd.to_datetime('1900-01-01 00:00:00.' +
+                          date.second.astype(str).str.zfill(6))
 
 
 @_timeunit
