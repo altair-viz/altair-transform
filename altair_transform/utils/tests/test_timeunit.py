@@ -8,7 +8,8 @@ import pandas as pd
 from altair_transform.utils import timeunit
 
 
-TIMEUNITS = [timeunit.year, timeunit.utcyear]
+TIMEUNITS = ['year', 'utcyear',
+             'yearmonth', 'utcyearmonth']
 TIMEZONES = [None, tzlocal(), 'UTC', 'US/Pacific', 'US/Eastern']
 
 
@@ -40,13 +41,14 @@ def test_timestamp_roundtrip(dates, timezone):
 
 
 @pytest.mark.parametrize('timezone', TIMEZONES)
-@pytest.mark.parametrize('timeunit', TIMEUNITS)
-def test_timeunit_input_types(dates, timezone, timeunit):
+@pytest.mark.parametrize('unit', TIMEUNITS)
+def test_timeunit_input_types(dates, timezone, unit):
     dates = dates.tz_localize(timezone)
+    unit = getattr(timeunit, unit)
 
-    timestamps = [timeunit(d) for d in dates]
-    series = timeunit(pd.Series(dates))
-    datetimeindex = timeunit(dates)
+    timestamps = [unit(d) for d in dates]
+    series = unit(pd.Series(dates))
+    datetimeindex = unit(dates)
 
     assert datetimeindex.equals(pd.DatetimeIndex(series))
     assert datetimeindex.equals(pd.DatetimeIndex(timestamps))

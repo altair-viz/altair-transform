@@ -76,11 +76,11 @@ def _timeunit(arg):
     def wrapper(func, timezone=timezone):
         @wraps(func)
         def wrapped(date: Date) -> Date:
-            if isinstance(date, pd.Series):
-                date = date.dt
-            if date.tz is not None:
-                # Note: if using date.dt, result is a Series.
-                date = date.tz_convert(timezone)
+            date = date.dt if isinstance(date, pd.Series) else date
+            if date.tz is None:
+                date = date.tz_localize(tzlocal())
+                date = date.dt if isinstance(date, pd.Series) else date
+            date = date.tz_convert(timezone)
 
             if isinstance(date, pd.Series):
                 return pd.Series(func(date.dt))
@@ -106,3 +106,33 @@ def year(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
 def utcyear(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcyear' timeUnit."""
     return pd.to_datetime(date.year.astype(str))
+
+
+@_timeunit
+def yearmonth(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'yearmonth' timeUnit."""
+    return pd.to_datetime(date.year.astype(str) +
+                          '-' + date.month.astype(str))
+
+
+@_timeunit('utc')
+def utcyearmonth(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utcyearmonth' timeUnit."""
+    return pd.to_datetime(date.year.astype(str) +
+                          '-' + date.month.astype(str))
+
+
+@_timeunit
+def yearmonthdate(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'yearmonthdate' timeUnit."""
+    return pd.to_datetime(date.year.astype(str) +
+                          '-' + date.month.astype(str) +
+                          '-' + date.day.astype(str))
+
+
+@_timeunit('utc')
+def utcyearmonthdate(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utcyearmonthdate' timeUnit."""
+    return pd.to_datetime(date.year.astype(str) +
+                          '-' + date.month.astype(str) +
+                          '-' + date.day.astype(str))
