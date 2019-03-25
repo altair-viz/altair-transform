@@ -1,5 +1,6 @@
 """Utilities for working with pandas & JS datetimes."""
-from typing import Union
+import re
+from typing import Union, Set
 import pandas as pd
 from dateutil.tz import tzlocal
 from functools import wraps
@@ -89,20 +90,36 @@ def _timeunit(name):
     return wrapper
 
 
+_simple_timeunits = ['utc', 'year', 'quarter', 'month', 'day', 'date',
+                     'hours', 'minutes', 'seconds', 'milliseconds']
+_elements = ''.join(f'(?P<{name}>{name})?' for name in _simple_timeunits)
+_timeunit_regex = re.compile(f'^{_elements}$')
+
+
+def _parse_timeunit_string(s: str) -> Set[str]:
+    """Return the set of timeunit keys in a specification string."""
+    match = _timeunit_regex.match(s)
+    if not match:
+        return set()
+    return {k for k, v in match.groupdict().items() if v}
+
+
 def _standard_timeunit(name: str, date: Date) -> Date:
-    Y = date.year.astype(str) if 'year' in name else '1900'
-    M = date.month.astype(str).str.zfill(2) if 'month' in name else '01'
-    D = date.day.astype(str).str.zfill(2) if 'date' in name else '01'
-    h = date.hour.astype(str).str.zfill(2) if 'hours' in name else '00'
-    m = date.minute.astype(str).str.zfill(2) if 'minutes' in name else '00'
-    s = date.second.astype(str).str.zfill(2) if 'seconds' in name else '00'
-    ms = (date.microsecond.astype(str).str.zfill(6)
-          if 'milliseconds' in name else '00')
+    units = _parse_timeunit_string(name)
+    if 'quarter' in units or 'day' in units:
+        raise NotImplementedError('quarter and day timeunit')
+    if not units:
+        raise ValueError(f"{0!r} is not a recognized timeunit")
+    Y = date.year.astype(str) if 'year' in units else '1900'
+    M = date.month.astype(str).str.zfill(2) if 'month' in units else '01'
+    D = date.day.astype(str).str.zfill(2) if 'date' in units else '01'
+    h = date.hour.astype(str).str.zfill(2) if 'hours' in units else '00'
+    m = date.minute.astype(str).str.zfill(2) if 'minutes' in units else '00'
+    s = date.second.astype(str).str.zfill(2) if 'seconds' in units else '00'
+    ms = ((date.microsecond // 1000).astype(str).str.zfill(3)
+          if 'milliseconds' in units else '00')
     return pd.to_datetime(Y + '-' + M + '-' + D + ' ' +
                           h + ':' + m + ':' + s + '.' + ms)
-
-
-# TODO: quarter, day
 
 
 @_timeunit('year')
@@ -247,3 +264,63 @@ def yearmonthdatehoursminutesseconds(date: Date) -> Date:
 def utcyearmonthdatehoursminutesseconds(date: Date) -> Date:
     """Implement vega-lite's 'utcyearmonthdatehoursminutesseconds' timeUnit."""
     return _standard_timeunit('utcyearmonthdatehoursminutesseconds', date)
+
+
+@_timeunit('monthdate')
+def monthdate(date: Date) -> Date:
+    """Implement vega-lite's 'monthdate' timeUnit."""
+    return _standard_timeunit('monthdate', date)
+
+
+@_timeunit('utcmonthdate')
+def utcmonthdate(date: Date) -> Date:
+    """Implement vega-lite's 'utcmonthdate' timeUnit."""
+    return _standard_timeunit('utcmonthdate', date)
+
+
+@_timeunit('hoursminutes')
+def hoursminutes(date: Date) -> Date:
+    """Implement vega-lite's 'hoursminutes' timeUnit."""
+    return _standard_timeunit('hoursminutes', date)
+
+
+@_timeunit('utchoursminutes')
+def utchoursminutes(date: Date) -> Date:
+    """Implement vega-lite's 'utchoursminutes' timeUnit."""
+    return _standard_timeunit('utchoursminutes', date)
+
+
+@_timeunit('hoursminutesseconds')
+def hoursminutesseconds(date: Date) -> Date:
+    """Implement vega-lite's 'hoursminutesseconds' timeUnit."""
+    return _standard_timeunit('hoursminutesseconds', date)
+
+
+@_timeunit('utchoursminutesseconds')
+def utchoursminutesseconds(date: Date) -> Date:
+    """Implement vega-lite's 'utchoursminutesseconds' timeUnit."""
+    return _standard_timeunit('utchoursminutesseconds', date)
+
+
+@_timeunit('minutesseconds')
+def minutesseconds(date: Date) -> Date:
+    """Implement vega-lite's 'minutesseconds' timeUnit."""
+    return _standard_timeunit('minutesseconds', date)
+
+
+@_timeunit('utcminutesseconds')
+def utcminutesseconds(date: Date) -> Date:
+    """Implement vega-lite's 'utcminutesseconds' timeUnit."""
+    return _standard_timeunit('utcminutesseconds', date)
+
+
+@_timeunit('secondsmilliseconds')
+def secondsmilliseconds(date: Date) -> Date:
+    """Implement vega-lite's 'secondsmilliseconds' timeUnit."""
+    return _standard_timeunit('secondsmilliseconds', date)
+
+
+@_timeunit('utcsecondsmilliseconds')
+def utcsecondsmilliseconds(date: Date) -> Date:
+    """Implement vega-lite's 'utcsecondsmilliseconds' timeUnit."""
+    return _standard_timeunit('utcsecondsmilliseconds', date)

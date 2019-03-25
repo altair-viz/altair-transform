@@ -21,15 +21,20 @@ TIMEUNITS = [
     'yearmonthdatehours', 'utcyearmonthdatehours',
     'yearmonthdatehoursminutes', 'utcyearmonthdatehoursminutes',
     'yearmonthdatehoursminutesseconds', 'utcyearmonthdatehoursminutesseconds',
+    'monthdate', 'utcmonthdate',
+    'hoursminutes', 'utchoursminutes',
+    'hoursminutesseconds', 'utchoursminutesseconds',
+    'minutesseconds', 'utcminutesseconds',
+    'secondsmilliseconds', 'utcsecondsmilliseconds',
 ]
 TIMEZONES = [None, tzlocal(), 'UTC', 'US/Pacific', 'US/Eastern']
 
 
 @pytest.fixture
 def dates():
-    return pd.date_range('1999-12-31 12:00',
-                         '2000-01-01 12:00',
-                         freq='H')
+    # Use dates on either side of a year boundary to hit corner cases.
+    return pd.DatetimeIndex(['1999-12-31 23:59:55.050',
+                             '2000-01-01 00:00:05.050'])
 
 
 @pytest.mark.parametrize('timezone', TIMEZONES[:3])
@@ -88,8 +93,12 @@ def test_all_timeunits(dates, timezone, timeunit_name):
         ('milliseconds', 'microsecond', 0)
     ]
 
+    if timeunit_name.startswith('utc'):
+        timeunit_name = timeunit_name[3:]
+
     for name, attr, default in to_check:
-        if name in timeunit_name:
+        if timeunit_name.startswith(name):
+            timeunit_name = timeunit_name[len(name):]
             assert getattr(dates, attr).equals(getattr(timeunit_calc, attr))
         else:
             assert (getattr(timeunit_calc, attr) == default).all()
