@@ -106,12 +106,19 @@ def _parse_timeunit_string(s: str) -> Set[str]:
 
 def _standard_timeunit(name: str, date: Date) -> Date:
     units = _parse_timeunit_string(name)
-    if 'quarter' in units or 'day' in units:
+    if 'day' in units:
         raise NotImplementedError('quarter and day timeunit')
     if not units:
         raise ValueError(f"{0!r} is not a recognized timeunit")
+
+    def quarter(month):
+        return month - (month - 1) % 3
+
     Y = date.year.astype(str) if 'year' in units else '1900'
-    M = date.month.astype(str).str.zfill(2) if 'month' in units else '01'
+    M = date.month.astype(str).str.zfill(2) if 'month' in units else (
+        quarter(date.month).astype(str).str.zfill(2)
+        if 'quarter' in units else '01'
+    )
     D = date.day.astype(str).str.zfill(2) if 'date' in units else '01'
     h = date.hour.astype(str).str.zfill(2) if 'hours' in units else '00'
     m = date.minute.astype(str).str.zfill(2) if 'minutes' in units else '00'
@@ -132,6 +139,18 @@ def year(date: Date) -> Date:
 def utcyear(date: Date) -> Date:
     """Implement vega-lite's 'utcyear' timeUnit."""
     return _standard_timeunit('utcyear', date)
+
+
+@_timeunit('quarter')
+def quarter(date: Date) -> Date:
+    """Implement vega-lite's 'quarter' timeUnit."""
+    return _standard_timeunit('quarter', date)
+
+
+@_timeunit('utcquarter')
+def utcquarter(date: Date) -> Date:
+    """Implement vega-lite's 'utcquarter' timeUnit."""
+    return _standard_timeunit('utcquarter', date)
 
 
 @_timeunit('month')
@@ -206,6 +225,30 @@ def utcmilliseconds(date: Date) -> Date:
     return _standard_timeunit('utcmilliseconds', date)
 
 
+@_timeunit('yearquarter')
+def yearquarter(date: Date) -> Date:
+    """Implement vega-lite's 'yearquarter' timeUnit."""
+    return _standard_timeunit('yearquarter', date)
+
+
+@_timeunit('utcyearquarter')
+def utcyearquarter(date: Date) -> Date:
+    """Implement vega-lite's 'utcyearquarter' timeUnit."""
+    return _standard_timeunit('utcyearquarter', date)
+
+
+@_timeunit('yearquartermonth')
+def yearquartermonth(date: Date) -> Date:
+    """Implement vega-lite's 'yearquartermonth' timeUnit."""
+    return _standard_timeunit('yearquartermonth', date)
+
+
+@_timeunit('utcyearquartermonth')
+def utcyearquartermonth(date: Date) -> Date:
+    """Implement vega-lite's 'utcyearquartermonth' timeUnit."""
+    return _standard_timeunit('utcyearquartermonth', date)
+
+
 @_timeunit('yearmonth')
 def yearmonth(date: Date) -> Date:
     """Implement vega-lite's 'yearmonth' timeUnit."""
@@ -264,6 +307,18 @@ def yearmonthdatehoursminutesseconds(date: Date) -> Date:
 def utcyearmonthdatehoursminutesseconds(date: Date) -> Date:
     """Implement vega-lite's 'utcyearmonthdatehoursminutesseconds' timeUnit."""
     return _standard_timeunit('utcyearmonthdatehoursminutesseconds', date)
+
+
+@_timeunit('quartermonth')
+def quartermonth(date: Date) -> Date:
+    """Implement vega-lite's 'quartermonth' timeUnit."""
+    return _standard_timeunit('quartermonth', date)
+
+
+@_timeunit('utcquartermonth')
+def utcquartermonth(date: Date) -> Date:
+    """Implement vega-lite's 'utcquartermonth' timeUnit."""
+    return _standard_timeunit('utcquartermonth', date)
 
 
 @_timeunit('monthdate')
