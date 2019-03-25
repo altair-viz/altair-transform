@@ -67,14 +67,9 @@ def timestamp_to_date(timestamp: float,
     return dates.tz_convert(tzlocal()).tz_localize(None)
 
 
-def _timeunit(arg):
+def _timeunit(name):
     """Decorator for timeunit transforms"""
-    if callable(arg):
-        timezone = tzlocal()
-    else:
-        timezone = arg
-
-    def wrapper(func, timezone=timezone):
+    def wrapper(func, timezone='UTC' if name.startswith('utc') else tzlocal()):
         @wraps(func)
         def wrapped(date: Date) -> Date:
             date = date.dt if isinstance(date, pd.Series) else date
@@ -91,123 +86,124 @@ def _timeunit(arg):
                 return func(date)
         return wrapped
 
-    if callable(arg):
-        return wrapper(arg)
-    else:
-        return wrapper
+    return wrapper
 
 
-@_timeunit
+def _standard_timeunit(name, date):
+    Y = date.year.astype(str) if 'year' in name else '1900'
+    M = date.month.astype(str).str.zfill(2) if 'month' in name else '01'
+    D = date.day.astype(str).str.zfill(2) if 'date' in name else '01'
+    h = date.hour.astype(str).str.zfill(2) if 'hours' in name else '00'
+    m = date.minute.astype(str).str.zfill(2) if 'minutes' in name else '00'
+    s = date.second.astype(str).str.zfill(2) if 'seconds' in name else '00'
+    ms = date.microsecond.astype(str).str.zfill(6) if 'milliseconds' in name else '00'
+    return pd.to_datetime(Y + '-' + M + '-' + D + ' ' +
+                          h + ':' + m + ':' + s + '.' + ms)
+
+
+@_timeunit('year')
 def year(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'year' timeUnit."""
-    return pd.to_datetime(date.year.astype(str))
+    return _standard_timeunit('year', date)
 
 
-@_timeunit('utc')
+@_timeunit('utcyear')
 def utcyear(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcyear' timeUnit."""
-    return pd.to_datetime(date.year.astype(str))
+    return _standard_timeunit('utcyear', date)
 
 
-@_timeunit
+@_timeunit('month')
 def month(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'month' timeUnit."""
-    return pd.to_datetime('1900-' + date.month.astype(str))
+    return _standard_timeunit('month', date)
 
 
-@_timeunit('utc')
+@_timeunit('utcmonth')
 def utcmonth(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcmonth' timeUnit."""
-    return pd.to_datetime('1900-' + date.month.astype(str))
+    return _standard_timeunit('utcmonth', date)
 
 
-@_timeunit
+@_timeunit('date')
 def date(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'date' timeUnit."""
-    return pd.to_datetime('1900-01-' + date.day.astype(str))
+    return _standard_timeunit('date', date)
 
 
-@_timeunit('utc')
+@_timeunit('utcdate')
 def utcdate(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcdate' timeUnit."""
-    return pd.to_datetime('1900-01-' + date.day.astype(str))
+    return _standard_timeunit('utcdate', date)
 
 
-@_timeunit
+@_timeunit('hours')
 def hours(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'hours' timeUnit."""
-    return pd.to_datetime('1900-01-01 ' + date.hour.astype(str) + ":00:00")
+    return _standard_timeunit('hours', date)
 
 
-@_timeunit('utc')
+@_timeunit('utchours')
 def utchours(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utchours' timeUnit."""
-    return pd.to_datetime('1900-01-01 ' + date.hour.astype(str) + ":00:00")
+    return _standard_timeunit('utchours', date)
 
 
-@_timeunit
+@_timeunit('minutes')
 def minutes(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'minutes' timeUnit."""
-    return pd.to_datetime('1900-01-01 00:' + date.minute.astype(str) + ":00")
+    return _standard_timeunit('minutes', date)
 
 
-@_timeunit('utc')
+@_timeunit('utcminutes')
 def utcminutes(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcminutes' timeUnit."""
-    return pd.to_datetime('1900-01-01 00:' + date.minute.astype(str) + ":00")
+    return _standard_timeunit('utcminutes', date)
 
 
-@_timeunit
+@_timeunit('seconds')
 def seconds(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'seconds' timeUnit."""
-    return pd.to_datetime('1900-01-01 00:00:' + date.second.astype(str))
+    return _standard_timeunit('seconds', date)
 
 
-@_timeunit('utc')
+@_timeunit('utcseconds')
 def utcseconds(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcseconds' timeUnit."""
-    return pd.to_datetime('1900-01-01 00:00:' + date.second.astype(str))
+    return _standard_timeunit('utcseconds', date)
 
 
-@_timeunit
+@_timeunit('milliseconds')
 def milliseconds(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'seconds' timeUnit."""
-    return pd.to_datetime('1900-01-01 00:00:00.' +
-                          date.second.astype(str).str.zfill(6))
+    return _standard_timeunit('milliseconds', date)
 
 
-@_timeunit('utc')
+@_timeunit('utcmilliseconds')
 def utcmilliseconds(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcseconds' timeUnit."""
-    return pd.to_datetime('1900-01-01 00:00:00.' +
-                          date.second.astype(str).str.zfill(6))
+    return _standard_timeunit('utcmilliseconds', date)
 
 
-@_timeunit
+@_timeunit('yearmonth')
 def yearmonth(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'yearmonth' timeUnit."""
-    return pd.to_datetime(date.year.astype(str) +
-                          '-' + date.month.astype(str))
+    return _standard_timeunit('yearmonth', date)
 
 
-@_timeunit('utc')
+@_timeunit('utcyearmonth')
 def utcyearmonth(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcyearmonth' timeUnit."""
-    return pd.to_datetime(date.year.astype(str) +
-                          '-' + date.month.astype(str))
+    return _standard_timeunit('utcyearmonth', date)
 
 
-@_timeunit
+@_timeunit('yearmonthdate')
 def yearmonthdate(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'yearmonthdate' timeUnit."""
-    return pd.to_datetime(date.year.astype(str) +
-                          '-' + date.month.astype(str) +
-                          '-' + date.day.astype(str))
+    return _standard_timeunit('yearmonthdate', date)
 
 
-@_timeunit('utc')
+@_timeunit('utcyearmonthdate')
 def utcyearmonthdate(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'utcyearmonthdate' timeUnit."""
-    return pd.to_datetime(date.year.astype(str) +
-                          '-' + date.month.astype(str) +
-                          '-' + date.day.astype(str))
+    return _standard_timeunit('utcyearmonthdate', date)
