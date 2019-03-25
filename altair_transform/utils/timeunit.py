@@ -165,6 +165,20 @@ def utcmonth(date: Date) -> Date:
     return _standard_timeunit('utcmonth', date)
 
 
+@_timeunit('day')
+def day(date: Date) -> Date:
+    """Implement vega-lite's 'day' timeUnit."""
+    return (pd.to_datetime('2006-01-01') +
+            pd.to_timedelta((date.dayofweek + 1) % 7, 'D'))
+
+
+@_timeunit('utcday')
+def utcday(date: Date) -> Date:
+    """Implement vega-lite's 'utcday' timeUnit."""
+    return (pd.to_datetime('2006-01-01') +
+            pd.to_timedelta((date.dayofweek + 1) % 7, 'D'))
+
+
 @_timeunit('date')
 def date(date: Date) -> Date:
     """Implement vega-lite's 'date' timeUnit."""

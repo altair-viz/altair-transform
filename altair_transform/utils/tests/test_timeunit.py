@@ -9,24 +9,15 @@ from altair_transform.utils import timeunit
 
 
 TIMEUNITS = [
-    'year', 'utcyear',
-    'month', 'utcmonth',
-    'date', 'utcdate',
-    'hours', 'utchours',
-    'minutes', 'utcminutes',
-    'seconds', 'utcseconds',
-    'milliseconds', 'utcmilliseconds',
-    'yearmonth', 'utcyearmonth',
-    'yearmonthdate', 'utcyearmonthdate',
-    'yearmonthdatehours', 'utcyearmonthdatehours',
-    'yearmonthdatehoursminutes', 'utcyearmonthdatehoursminutes',
-    'yearmonthdatehoursminutesseconds', 'utcyearmonthdatehoursminutesseconds',
-    'monthdate', 'utcmonthdate',
-    'hoursminutes', 'utchoursminutes',
-    'hoursminutesseconds', 'utchoursminutesseconds',
-    'minutesseconds', 'utcminutesseconds',
-    'secondsmilliseconds', 'utcsecondsmilliseconds',
+    'year', 'quarter', 'month', 'day', 'date',
+    'hours', 'minutes', 'seconds', 'milliseconds',
+    'yearquarter', 'yearquartermonth', 'yearmonth',
+    'yearmonthdate', 'yearmonthdatehours', 'yearmonthdatehoursminutes',
+    'yearmonthdatehoursminutesseconds', 'quartermonth', 'monthdate',
+    'hoursminutes', 'hoursminutesseconds', 'minutesseconds',
+    'secondsmilliseconds'
 ]
+TIMEUNITS += [f'utc{unit}' for unit in TIMEUNITS]
 TIMEZONES = [None, tzlocal(), 'UTC', 'US/Pacific', 'US/Eastern']
 
 
@@ -84,9 +75,11 @@ def test_all_timeunits(dates, timezone, timeunit_name):
     dates = dates.tz_localize(timezone or tzlocal()).tz_convert(tz)
 
     to_check = [
-        ('year', 'year', 1900),
-        ('month', 'month', 1),
-        ('date', 'day', 1),
+        ('year', 'year', 2006 if 'day' in timeunit_name else 1900),
+        ('quarter', 'quarter', None),
+        ('month', 'month', None if 'quarter' in timeunit_name else 1),
+        ('day', 'dayofweek', None),
+        ('date', 'day', None if 'day' in timeunit_name else 1),
         ('hours', 'hour', 0),
         ('minutes', 'minute', 0),
         ('seconds', 'second', 0),
@@ -100,6 +93,6 @@ def test_all_timeunits(dates, timezone, timeunit_name):
         if timeunit_name.startswith(name):
             timeunit_name = timeunit_name[len(name):]
             assert getattr(dates, attr).equals(getattr(timeunit_calc, attr))
-        else:
+        elif default is not None:
             assert (getattr(timeunit_calc, attr) == default).all()
     assert (timeunit_calc.nanosecond == 0).all()
