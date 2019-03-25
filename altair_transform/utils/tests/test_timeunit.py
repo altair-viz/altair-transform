@@ -52,11 +52,10 @@ def test_timestamp_roundtrip(dates, timezone):
 @pytest.mark.parametrize('unit', TIMEUNITS)
 def test_timeunit_input_types(dates, timezone, unit):
     dates = dates.tz_localize(timezone)
-    unit = getattr(timeunit, unit)
 
-    timestamps = [unit(d) for d in dates]
-    series = unit(pd.Series(dates))
-    datetimeindex = unit(dates)
+    timestamps = [timeunit.compute_timeunit(d, unit) for d in dates]
+    series = timeunit.compute_timeunit(pd.Series(dates), unit)
+    datetimeindex = timeunit.compute_timeunit(dates, unit)
 
     assert isinstance(timestamps[0], pd.Timestamp)
     assert isinstance(series, pd.Series)
@@ -68,8 +67,8 @@ def test_timeunit_input_types(dates, timezone, unit):
 @pytest.mark.parametrize('timezone', TIMEZONES)
 @pytest.mark.parametrize('timeunit_name', TIMEUNITS)
 def test_all_timeunits(dates, timezone, timeunit_name):
-    timeunit_func = getattr(timeunit, timeunit_name)
-    timeunit_calc = timeunit_func(dates.tz_localize(timezone))
+    timeunit_calc = timeunit.compute_timeunit(dates.tz_localize(timezone),
+                                              timeunit_name)
 
     tz = 'UTC' if timeunit_name.startswith('utc') else tzlocal()
     dates = dates.tz_localize(timezone or tzlocal()).tz_convert(tz)
