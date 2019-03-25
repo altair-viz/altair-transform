@@ -67,25 +67,42 @@ def timestamp_to_date(timestamp: float,
     return dates.tz_convert(tzlocal()).tz_localize(None)
 
 
-def _timeunit(func):
-    @wraps(func)
-    def wrapped(date: Date) -> Date:
-        if isinstance(date, pd.Series):
-            date = date.dt
-        if date.tz is not None:
-            # Note: if using date.dt, result is a Series.
-            date = date.tz_convert(tzlocal())
+def _timeunit(arg):
+    if callable(arg):
+        timezone = tzlocal()
+    else:
+        timezone = arg
 
-        if isinstance(date, pd.Series):
-            return pd.Series(func(date.dt))
-        elif isinstance(date, pd.Timestamp):
-            return func(pd.DatetimeIndex([date]))[0]
-        else:
-            return func(date)
-    return wrapped
+    def wrapper(func, timezone=timezone):
+        @wraps(func)
+        def wrapped(date: Date) -> Date:
+            if isinstance(date, pd.Series):
+                date = date.dt
+            if date.tz is not None:
+                # Note: if using date.dt, result is a Series.
+                date = date.tz_convert(timezone)
+
+            if isinstance(date, pd.Series):
+                return pd.Series(func(date.dt))
+            elif isinstance(date, pd.Timestamp):
+                return func(pd.DatetimeIndex([date]))[0]
+            else:
+                return func(date)
+        return wrapped
+
+    if callable(arg):
+        return wrapper(arg)
+    else:
+        return wrapper
 
 
 @_timeunit
 def year(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Implement vega-lite's 'year' timeUnit."""
+    return pd.to_datetime(date.year.astype(str))
+
+
+@_timeunit('utc')
+def utcyear(date: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Implement vega-lite's 'utcyear' timeUnit."""
     return pd.to_datetime(date.year.astype(str))

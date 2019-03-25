@@ -8,8 +8,8 @@ import pandas as pd
 from altair_transform.utils import timeunit
 
 
-TIMEUNITS = [timeunit.year]
-TIMEZONES = [None, tzlocal(), 'UTC']
+TIMEUNITS = [timeunit.year, timeunit.utcyear]
+TIMEZONES = [None, tzlocal(), 'UTC', 'US/Pacific', 'US/Eastern']
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def dates():
                          freq='H')
 
 
-@pytest.mark.parametrize('timezone', TIMEZONES)
+@pytest.mark.parametrize('timezone', [None, tzlocal(), 'UTC'])
 def test_datetimeindex_roundtrip(dates, timezone):
     dates = dates.tz_localize(timezone)
     timestamp = timeunit.date_to_timestamp(dates)
@@ -40,6 +40,19 @@ def test_timestamp_roundtrip(dates, timezone):
 
 
 @pytest.mark.parametrize('timezone', TIMEZONES)
+@pytest.mark.parametrize('timeunit', TIMEUNITS)
+def test_timeunit_input_types(dates, timezone, timeunit):
+    dates = dates.tz_localize(timezone)
+
+    timestamps = [timeunit(d) for d in dates]
+    series = timeunit(pd.Series(dates))
+    datetimeindex = timeunit(dates)
+
+    assert datetimeindex.equals(pd.DatetimeIndex(series))
+    assert datetimeindex.equals(pd.DatetimeIndex(timestamps))
+
+
+@pytest.mark.parametrize('timezone', TIMEZONES)
 def test_timeunit_year(dates, timezone):
     dates = dates.tz_localize(timezone)
     year = timeunit.year(dates)
@@ -47,12 +60,7 @@ def test_timeunit_year(dates, timezone):
 
 
 @pytest.mark.parametrize('timezone', TIMEZONES)
-@pytest.mark.parametrize('timeunit', TIMEUNITS)
-def test_timeunit_input_types(dates, timezone, timeunit):
+def test_timeunit_utcyear(dates, timezone):
     dates = dates.tz_localize(timezone)
-    timestamp = [timeunit(d) for d in dates]
-    series = timeunit(pd.Series(dates))
-    datetimeindex = timeunit(dates)
-
-    assert series.equals(pd.Series(timestamp))
-    assert series.equals(pd.Series(datetimeindex))
+    year = timeunit.utcyear(dates)
+    assert year.equals(pd.to_datetime(year.year.astype(str)))
