@@ -8,7 +8,7 @@ from altair_transform.utils import ast, Parser
 __all__ = ['evaljs']
 
 
-def evaljs(expression: Union[str, ast.Expr], namespace: dict = None):
+def evaljs(expression: Union[str, ast.Expr], namespace: dict = None) -> Any:
     """Evaluate a javascript expression, optionally with a namespace."""
     if isinstance(expression, str):
         parser = Parser()
@@ -17,17 +17,17 @@ def evaljs(expression: Union[str, ast.Expr], namespace: dict = None):
 
 
 @singledispatch
-def visit(obj: Any, namespace: dict):
+def visit(obj: Any, namespace: dict) -> Any:
     return obj
 
 
 @visit.register
-def _visit_expr(obj: ast.Expr, namespace: dict):
+def _visit_expr(obj: ast.Expr, namespace: dict) -> Any:
     return obj.value
 
 
 @visit.register
-def _visit_binop(obj: ast.BinOp, namespace: dict):
+def _visit_binop(obj: ast.BinOp, namespace: dict) -> Any:
     if obj.op not in BINARY_OPERATORS:
         raise NotImplementedError(f"Binary Operator A {obj.op} B")
     op = BINARY_OPERATORS[obj.op]
@@ -35,7 +35,7 @@ def _visit_binop(obj: ast.BinOp, namespace: dict):
 
 
 @visit.register
-def _visit_unop(obj: ast.UnOp, namespace: dict):
+def _visit_unop(obj: ast.UnOp, namespace: dict) -> Any:
     if obj.op not in UNARY_OPERATORS:
         raise NotImplementedError(f"Unary Operator {obj.op}x")
     op = UNARY_OPERATORS[obj.op]
@@ -43,7 +43,7 @@ def _visit_unop(obj: ast.UnOp, namespace: dict):
 
 
 @visit.register
-def _visit_ternop(obj: ast.TernOp, namespace: dict):
+def _visit_ternop(obj: ast.TernOp, namespace: dict) -> Any:
     if obj.op not in TERNARY_OPERATORS:
         raise NotImplementedError(
             f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
@@ -54,34 +54,34 @@ def _visit_ternop(obj: ast.TernOp, namespace: dict):
 
 
 @visit.register
-def _visit_number(obj: ast.Number, namespace: dict):
+def _visit_number(obj: ast.Number, namespace: dict) -> Any:
     return obj.value
 
 
 @visit.register
-def _visit_string(obj: ast.String, namespace: dict):
+def _visit_string(obj: ast.String, namespace: dict) -> Any:
     return obj.value
 
 
 @visit.register
-def _visit_global(obj: ast.Global, namespace: dict):
+def _visit_global(obj: ast.Global, namespace: dict) -> Any:
     if obj.name not in namespace:
         raise NameError("{0} is not a valid name".format(obj.name))
     return namespace[obj.name]
 
 
 @visit.register
-def _visit_name(obj: ast.Name, namespace: dict):
+def _visit_name(obj: ast.Name, namespace: dict) -> Any:
     return obj.name
 
 
 @visit.register
-def _visit_list(obj: ast.List, namespace: dict):
+def _visit_list(obj: ast.List, namespace: dict) -> Any:
     return [visit(entry, namespace) for entry in obj.entries]
 
 
 @visit.register
-def _visit_object(obj: ast.Object, namespace: dict):
+def _visit_object(obj: ast.Object, namespace: dict) -> Any:
     def _visit(entry):
         if isinstance(entry, tuple):
             return tuple(visit(e, namespace) for e in entry)
@@ -92,7 +92,7 @@ def _visit_object(obj: ast.Object, namespace: dict):
 
 
 @visit.register
-def _visit_attr(obj: ast.Attr, namespace: dict):
+def _visit_attr(obj: ast.Attr, namespace: dict) -> Any:
     obj_ = visit(obj.obj, namespace)
     attr = visit(obj.attr, namespace)
     if isinstance(obj_, dict):
@@ -101,7 +101,7 @@ def _visit_attr(obj: ast.Attr, namespace: dict):
 
 
 @visit.register
-def _visit_item(obj: ast.Item, namespace: dict):
+def _visit_item(obj: ast.Item, namespace: dict) -> Any:
     obj_ = visit(obj.obj, namespace)
     item = visit(obj.item, namespace)
     if isinstance(obj_, list) and isinstance(item, float):
@@ -110,7 +110,7 @@ def _visit_item(obj: ast.Item, namespace: dict):
 
 
 @visit.register
-def _visit_func(obj: ast.Func, namespace: dict):
+def _visit_func(obj: ast.Func, namespace: dict) -> Any:
     func = visit(obj.func, namespace)
     args = [visit(arg, namespace) for arg in obj.args]
     return func(*args)
@@ -124,7 +124,7 @@ def int_inputs(func):
 
 
 @int_inputs
-def zerofill_rshift(lhs, rhs):
+def zerofill_rshift(lhs: int, rhs: int) -> int:
     if lhs < 0:
         lhs = lhs + 0x100000000
     return lhs >> rhs

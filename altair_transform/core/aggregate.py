@@ -1,10 +1,12 @@
 import altair as alt
+import numpy as np
 import pandas as pd
 from .visitor import visit
 
 
 @visit.register
-def visit_aggregate(transform: alt.AggregateTransform, df: pd.DataFrame):
+def visit_aggregate(transform: alt.AggregateTransform,
+                    df: pd.DataFrame) -> pd.DataFrame:
     groupby = transform['groupby']
     for aggregate in transform['aggregate']:
         op = aggregate['op'].to_dict()
@@ -24,7 +26,7 @@ def visit_aggregate(transform: alt.AggregateTransform, df: pd.DataFrame):
     return df
 
 
-def confidence_interval(x, level):
+def confidence_interval(x: np.ndarray, level: float):
     from scipy import stats
     return stats.t.interval(level, len(x)-1, loc=x.mean(), scale=x.sem())
 

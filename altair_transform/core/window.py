@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 
 import altair as alt
 import pandas as pd
@@ -6,13 +6,14 @@ from .visitor import visit
 from .aggregate import AGG_REPLACEMENTS
 
 
-def _get(obj, key, default=alt.Undefined):
+def _get(obj: Any, key: str, default: Any = alt.Undefined) -> Any:
     val = obj[key]
     return default if val is alt.Undefined else val
 
 
 @visit.register
-def visit_window(transform: alt.WindowTransform, df: pd.DataFrame):
+def visit_window(transform: alt.WindowTransform,
+                 df: pd.DataFrame) -> pd.DataFrame:
     window = transform.window
     frame = _get(transform, 'frame', [None, 0])
     groupby = _get(transform, 'groupby', [])

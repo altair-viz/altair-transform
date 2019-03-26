@@ -5,10 +5,10 @@ import numpy as np
 
 from .visitor import visit
 
-from typing import List, Union
+from typing import Any, List, Union
 
 
-def _get(obj, key, default=alt.Undefined):
+def _get(obj: Any, key: str, default: Any = alt.Undefined) -> Any:
     val = obj[key]
     if val is alt.Undefined:
         return default
@@ -16,7 +16,7 @@ def _get(obj, key, default=alt.Undefined):
 
 
 @visit.register
-def visit_bin(transform: alt.BinTransform, df: pd.DataFrame):
+def visit_bin(transform: alt.BinTransform, df: pd.DataFrame) -> pd.DataFrame:
     as_: Union[List[str], str] = transform['as']
     bin: Union[bool, alt.BinParams] = transform.bin
     field: str = transform.field
@@ -34,7 +34,7 @@ def visit_bin(transform: alt.BinTransform, df: pd.DataFrame):
 
 
 def calc_bins(data_min: float, data_max: float,
-              bin_params: Union[bool, alt.BinParams]):
+              bin_params: Union[bool, alt.BinParams]) -> np.ndarray:
     if bin_params is False:
         raise ValueError("bin=False not supported")
     if bin_params is True:

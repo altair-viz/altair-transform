@@ -1,20 +1,20 @@
 """
 Evaluate vega expressions language
 """
-import datetime as dtmodule
+import datetime as dt
 import math
 import random
 import sys
 import pandas as pd
 import time as timemod
-from typing import Pattern
+from typing import Any, Dict, Optional, Pattern
 
 import pytz
 
 from altair_transform.utils import evaljs
 
 
-def eval_vegajs(expression, datum=None):
+def eval_vegajs(expression: str, datum: pd.DataFrame = None) -> pd.DataFrame:
     """Evaluate a vega expression"""
     namespace = {"datum": datum} if datum is not None else {}
     namespace.update(VEGAJS_NAMESPACE)
@@ -22,26 +22,26 @@ def eval_vegajs(expression, datum=None):
 
 
 # Type Coercion Functions
-def isArray(value):
+def isArray(value: Any) -> bool:
     """Returns true if value is an array, false otherwise."""
     return isinstance(value, list)
 
 
-def isBoolean(value):
+def isBoolean(value: Any) -> bool:
     """Returns true if value is a boolean (true or false), false otherwise."""
     return isinstance(value, bool)
 
 
-def isDate(value):
+def isDate(value: Any) -> bool:
     """Returns true if value is a Date object, false otherwise.
 
     This method will return false for timestamp numbers or
     date-formatted strings; it recognizes Date objects only.
     """
-    return isinstance(value, dtmodule.datetime)
+    return isinstance(value, dt.datetime)
 
 
-def isNumber(value):
+def isNumber(value: Any) -> bool:
     """Returns true if value is a number, false otherwise.
 
     NaN and Infinity are considered numbers.
@@ -49,7 +49,7 @@ def isNumber(value):
     return isinstance(value, (int, float))
 
 
-def isObject(value):
+def isObject(value: Any) -> bool:
     """Returns true if value is an object, false otherwise.
 
     Following JavaScript typeof convention, null values are considered objects.
@@ -57,7 +57,7 @@ def isObject(value):
     return value is None or isinstance(value, dict)
 
 
-def isRegExp(value):
+def isRegExp(value: Any) -> bool:
     """
     Returns true if value is a RegExp (regular expression)
     object, false otherwise.
@@ -65,13 +65,13 @@ def isRegExp(value):
     return isinstance(value, Pattern)
 
 
-def isString(value):
+def isString(value: Any) -> bool:
     """Returns true if value is a string, false otherwise."""
     return isinstance(value, str)
 
 
 # Type Coercion Functions
-def toBoolean(value):
+def toBoolean(value: Any) -> bool:
     """
     Coerces the input value to a boolean.
     Null values and empty strings are mapped to null.
@@ -79,7 +79,7 @@ def toBoolean(value):
     return bool(value)
 
 
-def toDate(value):
+def toDate(value: Any) -> Optional[dt.datetime]:
     """
     Coerces the input value to a Date instance.
     Null values and empty strings are mapped to null.
@@ -91,7 +91,7 @@ def toDate(value):
     return pd.to_datetime(value)
 
 
-def toNumber(value):
+def toNumber(value: Any) -> Optional[float]:
     """
     Coerces the input value to a number.
     Null values and empty strings are mapped to null.
@@ -101,7 +101,7 @@ def toNumber(value):
     return float(value)
 
 
-def toString(value):
+def toString(value: Any) -> Optional[str]:
     """
     Coerces the input value to a string.
     Null values and empty strings are mapped to null.
@@ -112,40 +112,41 @@ def toString(value):
 
 
 # Date/Time Functions
-def now():
+def now() -> float:
     """Returns the timestamp for the current time."""
     return round(timemod.time() * 1000, 0)
 
 
-def datetime(year, month, day=0, hour=0, min=0, sec=0, millisec=0):
+def datetime(year: int, month: int, day: int = 0, hour: int = 0,
+             min: int = 0, sec: int = 0, millisec: int = 0) -> dt.datetime:
     """Returns a new Date instance.
     The month is 0-based, such that 1 represents February.
     """
     # TODO: do we need a local timezone?
-    return dtmodule.datetime(int(year), int(month) + 1, int(day), int(hour),
-                             int(min), int(sec), int(millisec * 1000))
+    return dt.datetime(int(year), int(month) + 1, int(day), int(hour),
+                       int(min), int(sec), int(millisec * 1000))
 
 
-def date(datetime):
+def date(datetime: dt.datetime) -> int:
     """
     Returns the day of the month for the given datetime value, in local time.
     """
     return datetime.day
 
 
-def day(datetime):
+def day(datetime: dt.datetime) -> int:
     """
     Returns the day of the week for the given datetime value, in local time.
     """
     return (datetime.weekday() + 1) % 7
 
 
-def year(datetime):
+def year(datetime: dt.datetime) -> int:
     """Returns the year for the given datetime value, in local time."""
     return datetime.year
 
 
-def quarter(datetime):
+def quarter(datetime: dt.datetime) -> int:
     """
     Returns the quarter of the year (0-3) for the given datetime value,
     in local time.
@@ -153,35 +154,35 @@ def quarter(datetime):
     return (datetime.month - 1) // 3
 
 
-def month(datetime):
+def month(datetime: dt.datetime) -> int:
     """
     Returns the (zero-based) month for the given datetime value, in local time.
     """
     return datetime.month - 1
 
 
-def hours(datetime):
+def hours(datetime: dt.datetime) -> int:
     """
     Returns the hours component for the given datetime value, in local time.
     """
     return datetime.hour
 
 
-def minutes(datetime):
+def minutes(datetime: dt.datetime) -> int:
     """
     Returns the minutes component for the given datetime value, in local time.
     """
     return datetime.minute
 
 
-def seconds(datetime):
+def seconds(datetime: dt.datetime) -> int:
     """
     Returns the seconds component for the given datetime value, in local time.
     """
     return datetime.second
 
 
-def milliseconds(datetime):
+def milliseconds(datetime: dt.datetime) -> float:
     """
     Returns the milliseconds component for the given datetime value,
     in local time.
@@ -189,7 +190,7 @@ def milliseconds(datetime):
     return datetime.microsecond / 1000
 
 
-def time(datetime):
+def time(datetime: dt.datetime) -> float:
     """Returns the epoch-based timestamp for the given datetime value."""
     return datetime.timestamp() * 1000
 
@@ -199,18 +200,19 @@ def timezoneoffset(datetime):
     raise NotImplementedError("timezoneoffset()")
 
 
-def utc(year, month, day=0, hour=0, min=0, sec=0, millisec=0):
+def utc(year: int, month: int, day: int = 0, hour: int = 0,
+        min: int = 0, sec: int = 0, millisec: int = 0) -> dt.datetime:
     """
     Returns a timestamp for the given UTC date.
     The month is 0-based, such that 1 represents February.
     """
-    return dtmodule.datetime(int(year), int(month) + 1, int(day), int(hour),
-                             int(min), int(sec), int(millisec * 1000),
-                             tzinfo=pytz.utc)
+    return dt.datetime(int(year), int(month) + 1, int(day), int(hour),
+                       int(min), int(sec), int(millisec * 1000),
+                       tzinfo=pytz.UTC)
 
 
 # From https://vega.github.io/vega/docs/expressions/
-VEGAJS_NAMESPACE = {
+VEGAJS_NAMESPACE: Dict[str, Any] = {
     # Constants
     "null": None,
     "NaN": math.nan,
