@@ -41,6 +41,7 @@ def data():
     return pd.DataFrame({
         'x': rand.randint(0, 100, 12),
         'y': rand.randint(0, 100, 12),
+        't': pd.date_range('2012-01-15', freq='M', periods=12),
         'i': range(12),
         'c': list('AAABBBCCCDDD'),
     })
@@ -154,6 +155,12 @@ def test_bin_transform(data):
     out = apply(data, transform)
     assert 'xbin1' in out.columns
     assert 'xbin2' in out.columns
+
+
+def test_timeunit_transform(data):
+    transform = {'timeUnit': 'year', 'field': 't', 'as': 'year'}
+    out = apply(data, transform)
+    assert (out.year == pd.to_datetime('2012-01-01')).all()
 
 
 def test_window_transform_basic(data):
