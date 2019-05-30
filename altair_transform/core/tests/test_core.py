@@ -181,6 +181,18 @@ def test_bin_transform(data):
     assert 'xbin2' in out.columns
 
 
+@pytest.mark.parametrize('N', [1, 5, 50])
+def test_sample_transform(data, N):
+    transform = {'sample': N}
+    out = apply(data, transform)
+
+    # Ensure the shape is correct
+    assert out.shape == (min(N, data.shape[0]), data.shape[1])
+
+    # Ensure the content are correct
+    assert out.equals(data.iloc[out.index])
+
+
 def test_timeunit_transform(data):
     transform = {'timeUnit': 'year', 'field': 't', 'as': 'year'}
     out = apply(data, transform)
