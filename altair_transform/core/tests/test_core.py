@@ -3,6 +3,8 @@ import pytest
 import numpy as np
 import pandas as pd
 
+from numpy.testing import assert_equal
+
 import altair as alt
 from altair.utils.data import to_values
 from altair_transform import apply, extract_data
@@ -74,6 +76,33 @@ def test_filter_transform(data, filter, calc):
     out1 = apply(data, {'filter': filter})
     out2 = calc(data)
     assert out1.equals(out2)
+
+
+def test_flatten_transform():
+    data = pd.DataFrame({
+        'x': [[1, 2, 3], [4, 5, 6, 7], [8, 9]],
+        'y': [[1, 2], [3, 4], [5, 6]],
+        'cat': list('ABC')
+    })
+
+    out = apply(data, {'flatten': ['x']})
+    assert out.shape == (9, 3)
+    assert out.columns.tolist() == ['x', 'y', 'cat']
+    assert_equal(out.x.values, range(1, 10))
+    assert_equal(out.cat.values, list('AAABBBBCC'))
+
+    out = apply(data, {'flatten': ['y'], 'as': ['yflat']})
+    assert out.shape == (6, 3)
+    assert out.columns.tolist() == ['yflat', 'x', 'cat']
+    assert_equal(out.yflat.values, range(1, 7))
+    assert_equal(out.cat.values, list('AABBCC'))
+
+    out = apply(data, {'flatten': ['x', 'y'], 'as': ['xflat', 'yflat']})
+    assert out.shape == (9, 3)
+    assert out.columns.tolist() == ['xflat', 'yflat', 'cat']
+    assert_equal(out.xflat.values, range(1, 10))
+    assert_equal(out.yflat.values, [1, 2, np.nan, 3, 4, np.nan, np.nan, 5, 6])
+    assert_equal(out.cat.values, list('AAABBBBCC'))
 
 
 @pytest.mark.parametrize('groupby', [True, False])
