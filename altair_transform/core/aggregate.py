@@ -7,7 +7,8 @@ from .visitor import visit
 @visit.register
 def visit_aggregate(transform: alt.AggregateTransform,
                     df: pd.DataFrame) -> pd.DataFrame:
-    groupby = transform['groupby']
+    groupby = transform._get('groupby', [])
+    agg_cols = {}
     for aggregate in transform['aggregate']:
         op = aggregate['op'].to_dict()
         field = aggregate['field']
@@ -17,12 +18,14 @@ def visit_aggregate(transform: alt.AggregateTransform,
         if field == "*" and field not in df.columns:
             field = df.columns[0]
 
-        if groupby is alt.Undefined:
-            df[col] = df[field].aggregate(op)
+        if groupby:
+            agg_cols[col] = df.groupby(groupby)[field].aggregate(op)
         else:
-            result = df.groupby(groupby)[field].aggregate(op)
-            result.name = col
-            df = df.join(result, on=groupby)
+            agg_cols[col] = [df[field].aggregate(op)]
+
+    df = pd.DataFrame(agg_cols)
+    if groupby:
+        df = df.reset_index()
     return df
 
 

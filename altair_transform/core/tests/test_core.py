@@ -90,6 +90,30 @@ def test_aggregate_transform(data, groupby, op):
     op = AGG_REPLACEMENTS.get(op, op)
     out = apply(data, transform)
 
+    if groupby:
+        grouped = data.groupby(group)[field].aggregate(op)
+        grouped.name = col
+        grouped = grouped.reset_index()
+    else:
+        grouped = pd.DataFrame({col: [data[field].aggregate(op)]})
+
+    assert grouped.equals(out)
+
+
+@pytest.mark.parametrize('groupby', [True, False])
+@pytest.mark.parametrize('op', set(AGGREGATES) - set(AGG_SKIP))
+def test_joinaggregate_transform(data, groupby, op):
+    field = 'x'
+    col = 'z'
+    group = 'c'
+
+    transform = {'joinaggregate': [{'op': op, 'field': field, 'as': col}]}
+    if groupby:
+        transform['groupby'] = [group]
+
+    op = AGG_REPLACEMENTS.get(op, op)
+    out = apply(data, transform)
+
     def validate(group):
         return np.allclose(group[field].aggregate(op), group[col])
 
