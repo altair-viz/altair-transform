@@ -100,14 +100,15 @@ def test_flatten_transform():
     assert_equal(out.cat.values, list('AAABBBBCC'))
 
 
-@pytest.mark.skipif(LooseVersion(alt.__version__) < '3.1.0', reason="Altair 3.1 or higher required for this test.")
+@pytest.mark.skipif(LooseVersion(alt.__version__) < '3.1.0',
+                    reason="Altair 3.1 or higher required for this test.")
 def test_flatten_transform_with_as():
     data = pd.DataFrame({
         'x': [[1, 2, 3], [4, 5, 6, 7], [8, 9]],
         'y': [[1, 2], [3, 4], [5, 6]],
         'cat': list('ABC')
     })
-    
+
     out = apply(data, {'flatten': ['y'], 'as': ['yflat']})
     assert out.shape == (6, 3)
     assert out.columns.tolist() == ['yflat', 'x', 'cat']
