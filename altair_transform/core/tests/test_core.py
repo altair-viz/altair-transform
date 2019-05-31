@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from numpy.testing import assert_equal
+from distutils.version import LooseVersion
 
 import altair as alt
 from altair.utils.data import to_values
@@ -91,6 +92,22 @@ def test_flatten_transform():
     assert_equal(out.x.values, range(1, 10))
     assert_equal(out.cat.values, list('AAABBBBCC'))
 
+    out = apply(data, {'flatten': ['x', 'y']})
+    assert out.shape == (9, 3)
+    assert out.columns.tolist() == ['x', 'y', 'cat']
+    assert_equal(out.x.values, range(1, 10))
+    assert_equal(out.y.values, [1, 2, np.nan, 3, 4, np.nan, np.nan, 5, 6])
+    assert_equal(out.cat.values, list('AAABBBBCC'))
+
+
+@pytest.mark.skipif(LooseVersion(alt.__version__) < '3.1.0', reason="Altair 3.1 or higher required for this test.")
+def test_flatten_transform_with_as():
+    data = pd.DataFrame({
+        'x': [[1, 2, 3], [4, 5, 6, 7], [8, 9]],
+        'y': [[1, 2], [3, 4], [5, 6]],
+        'cat': list('ABC')
+    })
+    
     out = apply(data, {'flatten': ['y'], 'as': ['yflat']})
     assert out.shape == (6, 3)
     assert out.columns.tolist() == ['yflat', 'x', 'cat']
