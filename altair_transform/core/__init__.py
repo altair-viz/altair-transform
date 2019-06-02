@@ -6,7 +6,7 @@ from .visitor import visit
 
 # These submodules register appropriate visitors.
 from . import (aggregate, bin, calculate, filter, flatten, fold,  # noqa: F401
-               joinaggregate, lookup, sample, timeunit, window)
+               impute, joinaggregate, lookup, sample, timeunit, window)
 
 __all__ = ['apply', 'extract_data']
 
