@@ -9,7 +9,7 @@ from ..utils import to_dataframe
 from . import (aggregate, bin, calculate, filter, flatten, fold,  # noqa: F401
                impute, joinaggregate, lookup, sample, timeunit, window)
 
-__all__ = ['apply', 'extract_data']
+__all__ = ['apply', 'extract_data', 'process_chart']
 
 
 def apply(df: pd.DataFrame,
@@ -56,4 +56,23 @@ def extract_data(chart: alt.Chart) -> pd.DataFrame:
     df_transformed : pd.DataFrame
         The extracted and transformed dataframe.
     """
-    return apply(to_dataframe(chart.data), chart.transform)
+    return apply(to_dataframe(chart.data, chart), chart.transform)
+
+
+def transform_chart(chart: alt.Chart) -> alt.Chart:
+    """Return a chart with the transformed data
+
+    Parameters
+    ----------
+    chart : alt.Chart
+        The chart instance from which the data and transform
+        will be extracted.
+
+    Returns
+    -------
+    chart_out : alt.Chart
+        A copy of the input chart with the transformed data.
+    """
+    chart = chart.properties(data=extract_data(chart))
+    chart.transform = alt.Undefined
+    return chart
