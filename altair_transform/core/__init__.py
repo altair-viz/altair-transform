@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 
 from .visitor import visit
+from ..utils import to_dataframe
 
 # These submodules register appropriate visitors.
 from . import (aggregate, bin, calculate, filter, flatten, fold,  # noqa: F401
@@ -55,7 +56,4 @@ def extract_data(chart: alt.Chart) -> pd.DataFrame:
     df_transformed : pd.DataFrame
         The extracted and transformed dataframe.
     """
-    data = chart.data
-    if not isinstance(data, pd.DataFrame):
-        raise ValueError("Chart data must be a pandas dataframe.")
-    return apply(data, chart.transform)
+    return apply(to_dataframe(chart.data), chart.transform)
