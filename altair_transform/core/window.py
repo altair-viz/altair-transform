@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Dict
 
 import altair as alt
 import pandas as pd
@@ -6,19 +6,15 @@ from .visitor import visit
 from .aggregate import AGG_REPLACEMENTS
 
 
-def _get(obj: Any, key: str, default: Any = alt.Undefined) -> Any:
-    val = obj[key]
-    return default if val is alt.Undefined else val
-
-
 @visit.register
 def visit_window(transform: alt.WindowTransform,
                  df: pd.DataFrame) -> pd.DataFrame:
-    window = transform.window
-    frame = _get(transform, 'frame', [None, 0])
-    groupby = _get(transform, 'groupby', [])
-    ignorePeers = _get(transform, 'ignorePeers', False)
-    sort = _get(transform, 'sort', [])
+    transform = transform.to_dict()
+    window = transform['window']
+    frame = transform.get('frame', [None, 0])
+    groupby = transform.get('groupby', [])
+    ignorePeers = transform.get('ignorePeers', False)
+    sort = transform.get('sort', [])
 
     if ignorePeers:
         raise NotImplementedError("Window transform with ignorePeers=True")
@@ -26,7 +22,7 @@ def visit_window(transform: alt.WindowTransform,
     # First sort the dataframe if required.
     if sort:
         fields = [s['field'] for s in sort]
-        ascending = [_get(s, 'order', 'ascending') == 'ascending'
+        ascending = [s.get('order', 'ascending') == 'ascending'
                      for s in sort]
         df2 = df.sort_values(fields, ascending=ascending)
     else:
@@ -51,14 +47,12 @@ def visit_window(transform: alt.WindowTransform,
 
     for w in window:
         # TODO: if field not specified, must be count, rank, or dense_rank
-        if w['param'] is not alt.Undefined:
+        if 'param' in w:
             raise NotImplementedError("window function with param")
-        col = _get(w, 'field', df2.columns[0])
+        col = w.get('field', df2.columns[0])
         if col == "*" and col not in df2.columns:
             col = df2.columns[0]
-        agg = w.op
-        if isinstance(agg, alt.SchemaBase):
-            agg = agg.to_dict()
+        agg = w['op']
         agg = WINDOW_AGG_REPLACEMENTS.get(agg, agg)
         df2[w['as']] = rolling[col].aggregate(agg).reset_index(groupby,
                                                                drop=True)

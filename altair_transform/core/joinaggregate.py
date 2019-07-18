@@ -7,9 +7,10 @@ from .aggregate import AGG_REPLACEMENTS
 @visit.register
 def visit_joinaggregate(transform: alt.JoinAggregateTransform,
                         df: pd.DataFrame) -> pd.DataFrame:
-    groupby = transform['groupby']
+    transform = transform.to_dict()
+    groupby = transform.get('groupby')
     for aggregate in transform['joinaggregate']:
-        op = aggregate['op'].to_dict()
+        op = aggregate['op']
         field = aggregate['field']
         col = aggregate['as']
 
@@ -17,7 +18,7 @@ def visit_joinaggregate(transform: alt.JoinAggregateTransform,
         if field == "*" and field not in df.columns:
             field = df.columns[0]
 
-        if groupby is alt.Undefined:
+        if groupby is None:
             df[col] = df[field].aggregate(op)
         else:
             result = df.groupby(groupby)[field].aggregate(op)

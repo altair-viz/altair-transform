@@ -11,14 +11,14 @@ from ..vegaexpr import eval_vegajs
 @visit.register
 def visit_filter(transform: alt.FilterTransform,
                  df: pd.DataFrame) -> pd.DataFrame:
-    mask = eval_predicate(transform['filter'], df).astype(bool)
+    mask = eval_predicate(transform.filter, df).astype(bool)
     return df[mask]
 
 
 def get_column(df: pd.DataFrame, predicate: Any) -> pd.Series:
     """Get the transformed column from the predicate."""
     if predicate.timeUnit is not alt.Undefined:
-        raise NotImplementedError("timeUnit Trnasform in Predicates")
+        raise NotImplementedError("timeUnit Transform in Predicates")
     return df[predicate.field]
 
 
@@ -26,6 +26,12 @@ def get_column(df: pd.DataFrame, predicate: Any) -> pd.Series:
 def eval_predicate(predicate: Any, df: pd.DataFrame) -> pd.Series:
     raise NotImplementedError(
         f"Evaluating predicate of type {type(predicate)}")
+
+
+@singledispatch
+def eval_dict(predicate: dict, df: pd.DataFrame) -> pd.Series:
+    transform = alt.FilterTrasform({'filter': predicate})
+    return eval_predicate(transform.filter, df)
 
 
 @eval_predicate.register

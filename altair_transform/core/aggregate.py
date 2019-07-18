@@ -7,12 +7,13 @@ from .visitor import visit
 @visit.register
 def visit_aggregate(transform: alt.AggregateTransform,
                     df: pd.DataFrame) -> pd.DataFrame:
-    groupby = transform._get('groupby', [])
+    transform = transform.to_dict()
+    groupby = transform.get('groupby', [])
     agg_cols = {}
     for aggregate in transform['aggregate']:
-        op = aggregate['op'].to_dict()
-        field = aggregate['field']
+        op = aggregate['op']
         col = aggregate['as']
+        field = aggregate.get('field', df.columns[0])
 
         op = AGG_REPLACEMENTS.get(op, op)
         if field == "*" and field not in df.columns:

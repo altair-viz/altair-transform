@@ -5,47 +5,41 @@ import numpy as np
 
 from .visitor import visit
 
-from typing import Any, List, Union
-
-
-def _get(obj: Any, key: str, default: Any = alt.Undefined) -> Any:
-    val = obj[key]
-    if val is alt.Undefined:
-        return default
-    return val
+from typing import Union, Dict
 
 
 @visit.register
 def visit_bin(transform: alt.BinTransform, df: pd.DataFrame) -> pd.DataFrame:
-    as_: Union[List[str], str] = transform['as']
-    bin: Union[bool, alt.BinParams] = transform.bin
-    field: str = transform.field
-    s = df[field]
+    transform = transform.to_dict()
+    col = transform['as']
+    bin = transform['bin']
+    field = transform['field']
 
-    bins = calc_bins(s.min(), s.max(), bin)
+    bins = calc_bins(df[field].min(), df[field].max(), bin)
 
-    if isinstance(as_, str):
-        df[as_] = pd.cut(df[field], bins, labels=bins[:-1])
+    if isinstance(col, str):
+        df[col] = pd.cut(df[field], bins, labels=bins[:-1])
     else:
-        df[as_[0]] = pd.cut(df[field], bins, labels=bins[:-1])
-        df[as_[1]] = pd.cut(df[field], bins, labels=bins[1:])
+        df[col[0]] = pd.cut(df[field], bins, labels=bins[:-1])
+        df[col[1]] = pd.cut(df[field], bins, labels=bins[1:])
 
     return df
 
 
 def calc_bins(data_min: float, data_max: float,
-              bin_params: Union[bool, alt.BinParams]) -> np.ndarray:
-    if bin_params is False:
+              bin_params: Union[bool, Dict]) -> np.ndarray:
+    params: dict = {}
+    if isinstance(bin_params, dict):
+        params = bin_params
+    elif not bin_params:
         raise ValueError("bin=False not supported")
-    if bin_params is True:
-        # Use the defaults.
-        bin_params = alt.BinParams()
 
-    extent = _get(bin_params, 'extent', None)
-    step = _get(bin_params, 'step', None)
-    steps = _get(bin_params, 'steps', None)
-    maxbins = _get(bin_params, 'maxbins', 10)
-    nice = _get(bin_params, 'nice', True)
+    extent = params.get('extent')
+    step = params.get('step')
+    steps = params.get('steps')
+    # TODO: maxbins should default to 6 for row/col encodings.
+    maxbins = params.get('maxbins', 10)
+    nice = params.get('nice', True)
     if extent:
         data_min, data_max = extent
 
@@ -59,5 +53,5 @@ def calc_bins(data_min: float, data_max: float,
     else:
         bins = np.linspace(data_min, data_max, maxbins + 1)
 
-    # TODO: anchor, base, divide, minstep
+    # TODO: support anchor, base, binned, divide, minstep
     return bins
