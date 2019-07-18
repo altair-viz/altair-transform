@@ -3,7 +3,7 @@ import altair as alt
 
 from typing import Union, Optional
 
-DataType = Union[dict, pd.Series, alt.SchemaBase]
+DataType = Union[dict, pd.DataFrame, alt.SchemaBase]
 ChartType = Union[dict, alt.SchemaBase]
 
 
@@ -28,6 +28,17 @@ def to_dataframe(data: DataType,
         else:
             raise ValueError(f"Unknown format for UrlData: '{fmt}'")
 
-    # TODO: implement named data with context
+    if 'name' in data:
+        name = data['name']
+        if context is None:
+            raise ValueError("NamedData not supported.")
+        if isinstance(context, dict):
+            datasets = context.get('datasets', {})
+        else:
+            datasets = context._get('datasets', {})
+        if name not in datasets:
+            raise ValueError(f"dataset '{name}' not specified in chart.")
+        return pd.DataFrame(datasets[name])
+
     data = alt.Data.from_dict(data)
     raise NotImplementedError(f"Data of type {type(data)}")

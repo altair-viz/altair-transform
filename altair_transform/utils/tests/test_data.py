@@ -34,6 +34,22 @@ def inline_data(df):
     return {'values': df.to_dict(orient='records')}
 
 
+@pytest.fixture
+def named_data(df):
+    return {'name': 'my-dataset'}
+
+
+@pytest.fixture
+def chart(named_data, inline_data):
+    return alt.Chart(
+        data=named_data,
+        mark='bar',
+        datasets={
+            named_data['name']: inline_data['values']
+        }
+    )
+
+
 @pytest.mark.parametrize('data_type', [dict, alt.Data])
 def test_csv_to_dataframe(df, csv_data, data_type):
     data = data_type(csv_data)
@@ -50,3 +66,9 @@ def test_json_to_dataframe(df, json_data, data_type):
 def test_inline_to_dataframe(df, inline_data, data_type):
     data = data_type(inline_data)
     assert df.equals(to_dataframe(data))
+
+
+@pytest.mark.parametrize('data_type', [dict, alt.Data])
+def test_named_to_dataframe(df, chart, named_data, data_type):
+    data = data_type(named_data)
+    assert df.equals(to_dataframe(data, context=chart))
