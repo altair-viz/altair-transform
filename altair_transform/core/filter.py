@@ -19,7 +19,7 @@ def get_column(df: pd.DataFrame, predicate: Any) -> pd.Series:
     """Get the transformed column from the predicate."""
     if predicate.timeUnit is not alt.Undefined:
         raise NotImplementedError("timeUnit Transform in Predicates")
-    return df[predicate.field]
+    return df[eval_value(predicate['field'])]
 
 
 @singledispatch
@@ -117,3 +117,8 @@ def eval_value(value: Any) -> Any:
 def eval_datetime(value: alt.DateTime):
     # TODO: implement datetime conversion & comparison
     raise NotImplementedError("Evaluating alt.DateTime object")
+
+
+@eval_value.register
+def eval_schemabase(value: alt.SchemaBase):
+    return value.to_dict()
