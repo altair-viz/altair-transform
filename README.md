@@ -45,8 +45,8 @@ points + line
 ```
 ![Altair Visualization](https://raw.githubusercontent.com/altair-viz/altair-transform/master/images/random_walk.png)
 
-Because the transform is encoded within the renderer, however, it
-is not easy from Altair to access the computed values.
+Because the transform is encoded within the renderer, however, the
+computed values are not directly accessible from the Python layer.
 
 This is where ``altair_transform`` comes in. It includes a (nearly)
 complete Python implementation of Vega-Lite's transform layer, so
