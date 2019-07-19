@@ -13,6 +13,7 @@ env:
 before_install:
   - pip install pip --upgrade;
   - pip install pytest flake8 mypy
+  - mkdir -p $TEST_DIR
 
 install:
   - pip install .;
@@ -20,5 +21,4 @@ install:
 script:
   - python -m mypy altair_transform
   - python -m flake8 altair_transform
-  - mkdir -p $TEST_DIR
   - cd $TEST_DIR && python -m pytest --pyargs altair_transform;
