@@ -4,6 +4,10 @@ Python evaluation of Altair/Vega-Lite transforms.
 
 [![build status](http://img.shields.io/travis/altair-viz/altair-transform/master.svg?style=flat)](https://travis-ci.org/altair-viz/altair-transform)
 
+``altair-transform`` requires Python 3.7 or later. Install with:
+
+    $ pip install altair_transform
+
 ## Example
 
 The Vega-Lite specification includes the ability to apply a
@@ -39,7 +43,7 @@ line = alt.Chart(df).transform_window(
 
 points + line
 ```
-![Altair Visualization](images/random_walk.png)
+![Altair Visualization](https://raw.githubusercontent.com/altair-viz/altair-transform/master/images/random_walk.png)
 
 Because the transform is encoded within the renderer, however, it
 is not easy from Altair to access the computed values.
