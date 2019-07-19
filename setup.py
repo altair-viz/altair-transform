@@ -66,8 +66,8 @@ NAME                = "altair_transform"
 PACKAGES            = find_packages()
 AUTHOR              = "Jake VanderPlas"
 AUTHOR_EMAIL        = "jakevdp@gmail.com"
-URL                 = 'http://github.com/jakevdp/altair-transform/'
-DOWNLOAD_URL        = 'http://github.com/jakevdp/altair-transform/'
+URL                 = 'http://github.com/altair-viz/altair-transform/'
+DOWNLOAD_URL        = 'http://github.com/altair-viz/altair-transform/'
 LICENSE             = 'MIT'
 INSTALL_REQUIRES    = get_install_requirements("requirements.txt")
 PYTHON_REQUIRES     = ">=3.7"

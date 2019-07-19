@@ -2,7 +2,7 @@
 
 Python evaluation of Altair/Vega-Lite transforms.
 
-[![build status](http://img.shields.io/travis/jakevdp/altair-transform/master.svg?style=flat)](https://travis-ci.org/jakevdp/altair-transform)
+[![build status](http://img.shields.io/travis/altair-viz/altair-transform/master.svg?style=flat)](https://travis-ci.org/altair-viz/altair-transform)
 
 ## Example
 
