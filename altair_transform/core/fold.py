@@ -8,7 +8,7 @@ def visit_fold(transform: alt.FoldTransform,
                df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
     fold = transform["fold"]
-    var_name, value_name = transform._get("as", ("key", "value"))
+    var_name, value_name = transform.get("as", ("key", "value"))
     value_vars = [c for c in df.columns if c in fold]
     id_vars = [c for c in df.columns if c not in fold]
     return df.melt(
