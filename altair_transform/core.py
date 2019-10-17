@@ -1,27 +1,15 @@
+"""Core altair_transform routines."""
+
 from typing import Any
+
 import pandas as pd
 import altair as alt
 
-from .visitor import visit
-from ..utils import to_dataframe
+from altair_transform.transform import visit
+from altair_transform.utils import to_dataframe
+from altair_transform.extract import extract_transform
 
-# These submodules register appropriate visitors.
-from . import (  # noqa: F401
-    aggregate,
-    bin,
-    calculate,
-    filter,
-    flatten,
-    fold,
-    impute,
-    joinaggregate,
-    lookup,
-    sample,
-    timeunit,
-    window,
-)
-
-__all__ = ["apply", "extract_data", "process_chart"]
+__all__ = ["apply", "extract_data", "transform_chart"]
 
 
 def apply(df: pd.DataFrame, transform: Any, inplace: bool = False) -> pd.DataFrame:
@@ -83,6 +71,7 @@ def transform_chart(chart: alt.Chart) -> alt.Chart:
     chart_out : alt.Chart
         A copy of the input chart with the transformed data.
     """
+    chart = extract_transform(chart)
     chart = chart.properties(data=extract_data(chart))
     chart.transform = alt.Undefined
     return chart
