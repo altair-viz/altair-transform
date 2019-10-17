@@ -7,23 +7,21 @@ from .aggregate import AGG_REPLACEMENTS
 
 
 @visit.register
-def visit_window(transform: alt.WindowTransform,
-                 df: pd.DataFrame) -> pd.DataFrame:
+def visit_window(transform: alt.WindowTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
-    window = transform['window']
-    frame = transform.get('frame', [None, 0])
-    groupby = transform.get('groupby', [])
-    ignorePeers = transform.get('ignorePeers', False)
-    sort = transform.get('sort', [])
+    window = transform["window"]
+    frame = transform.get("frame", [None, 0])
+    groupby = transform.get("groupby", [])
+    ignorePeers = transform.get("ignorePeers", False)
+    sort = transform.get("sort", [])
 
     if ignorePeers:
         raise NotImplementedError("Window transform with ignorePeers=True")
 
     # First sort the dataframe if required.
     if sort:
-        fields = [s['field'] for s in sort]
-        ascending = [s.get('order', 'ascending') == 'ascending'
-                     for s in sort]
+        fields = [s["field"] for s in sort]
+        ascending = [s.get("order", "ascending") == "ascending" for s in sort]
         df2 = df.sort_values(fields, ascending=ascending)
     else:
         df2 = df
@@ -47,31 +45,30 @@ def visit_window(transform: alt.WindowTransform,
 
     for w in window:
         # TODO: if field not specified, must be count, rank, or dense_rank
-        if 'param' in w:
+        if "param" in w:
             raise NotImplementedError("window function with param")
-        col = w.get('field', df2.columns[0])
+        col = w.get("field", df2.columns[0])
         if col == "*" and col not in df2.columns:
             col = df2.columns[0]
-        agg = w['op']
+        agg = w["op"]
         agg = WINDOW_AGG_REPLACEMENTS.get(agg, agg)
-        df2[w['as']] = rolling[col].aggregate(agg).reset_index(groupby,
-                                                               drop=True)
+        df2[w["as"]] = rolling[col].aggregate(agg).reset_index(groupby, drop=True)
 
     return df2.loc[df.index]
 
 
 # TODO: implement these.
 WINDOW_AGG_REPLACEMENTS: Dict[str, object] = {
-    'row_number': 'row_number',
-    'rank': 'rank',
-    'dense_rank': 'dense_rank',
-    'percent_rank': 'percent_rank',
-    'cume_dist': 'cume_dist',
-    'ntile': 'ntile',
-    'lag': 'lag',
-    'lead': 'lead',
-    'first_value': 'first_value',
-    'last_value': 'last_value',
-    'nth_value': 'nth_value',
+    "row_number": "row_number",
+    "rank": "rank",
+    "dense_rank": "dense_rank",
+    "percent_rank": "percent_rank",
+    "cume_dist": "cume_dist",
+    "ntile": "ntile",
+    "lag": "lag",
+    "lead": "lead",
+    "first_value": "first_value",
+    "last_value": "last_value",
+    "nth_value": "nth_value",
 }
 WINDOW_AGG_REPLACEMENTS.update(AGG_REPLACEMENTS)

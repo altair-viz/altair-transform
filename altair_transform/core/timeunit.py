@@ -5,9 +5,9 @@ from ..utils.timeunit import compute_timeunit
 
 
 @visit.register
-def visit_timeunit(transform: alt.TimeUnitTransform,
-                   df: pd.DataFrame) -> pd.DataFrame:
+def visit_timeunit(transform: alt.TimeUnitTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
-    df[transform['as']] = compute_timeunit(df[transform['field']],
-                                           transform['timeUnit'])
+    df[transform["as"]] = compute_timeunit(
+        df[transform["field"]], transform["timeUnit"]
+    )
     return df

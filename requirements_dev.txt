@@ -1,3 +1,4 @@
-pytest
-mypy
+black
 flake8
+mypy
+pytest

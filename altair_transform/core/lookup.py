@@ -7,13 +7,12 @@ from ..utils import to_dataframe
 
 
 @visit.register
-def visit_lookup(transform: alt.LookupTransform,
-                 df: pd.DataFrame) -> pd.DataFrame:
+def visit_lookup(transform: alt.LookupTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
-    lookup_data = transform['from']
-    data = lookup_data['data']
-    key = lookup_data['key']
-    fields = lookup_data['fields']
+    lookup_data = transform["from"]
+    data = lookup_data["data"]
+    key = lookup_data["key"]
+    fields = lookup_data["fields"]
 
     other_df = to_dataframe(data)
     if fields is alt.Undefined:
@@ -26,8 +25,8 @@ def visit_lookup(transform: alt.LookupTransform,
         cols_to_use = fields
     other_df = other_df[cols_to_use]
 
-    lookup = transform['lookup']
-    default = transform.get('default')
+    lookup = transform["lookup"]
+    default = transform.get("default")
 
     # TODO: use as_ if fields are not specified
     indicator: Union[str, bool]
@@ -38,9 +37,9 @@ def visit_lookup(transform: alt.LookupTransform,
         indicator = "__merge_indicator"
 
     # TODO: how to handle conficting fields?
-    merged = pd.merge(df, other_df, left_on=lookup,
-                      right_on=key, how='left',
-                      indicator=indicator)
+    merged = pd.merge(
+        df, other_df, left_on=lookup, right_on=key, how="left", indicator=indicator
+    )
 
     if key != lookup and key not in fields:
         merged = merged.drop(key, axis=1)

@@ -5,10 +5,9 @@ from .visitor import visit
 
 
 @visit.register
-def visit_sample(transform: alt.SampleTransform,
-                 df: pd.DataFrame) -> pd.DataFrame:
+def visit_sample(transform: alt.SampleTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
-    sample = transform['sample']
+    sample = transform["sample"]
 
     if sample < df.shape[0]:
         index = np.sort(np.random.permutation(df.shape[0])[:sample])
