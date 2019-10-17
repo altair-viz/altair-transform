@@ -7,12 +7,16 @@ import operator
 
 def extract(expressions):
     """Extract expressions from multi-line strings"""
-    return (line for line in expressions.splitlines()
-            if line.strip() and not line.startswith('#'))
+    return (
+        line
+        for line in expressions.splitlines()
+        if line.strip() and not line.startswith("#")
+    )
 
 
 class Bunch:
     """A simple class to enable testing of attribute & item access"""
+
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)
@@ -22,18 +26,18 @@ class Bunch:
 
 
 NAMES = {
-    'A': 10,
-    'B': 20,
-    'C': 30,
-    'obj': Bunch(foo=1, bar=2, func=lambda x: x),
-    'foo': 'bar',
-    'bar': 'baz',
-    'sum': lambda *args: sum(args),
-    'prod': lambda *args: functools.reduce(operator.mul, args),
-    '_123': 2.0,
-    'abc_123': 'hello',
-    'true': True,
-    'false': False,
+    "A": 10,
+    "B": 20,
+    "C": 30,
+    "obj": Bunch(foo=1, bar=2, func=lambda x: x),
+    "foo": "bar",
+    "bar": "baz",
+    "sum": lambda *args: sum(args),
+    "prod": lambda *args: functools.reduce(operator.mul, args),
+    "_123": 2.0,
+    "abc_123": "hello",
+    "true": True,
+    "false": False,
 }
 
 EXPRESSIONS = r"""
@@ -159,7 +163,7 @@ true : 3 ? 4
 """
 
 JSONLY_EXPRESSIONS = [
-    ("{A, B, C: 3, 'd': 4, 1: 5}", {'A': 10, 'B': 20, 'C': 3, 'd': 4, 1: 5}),
+    ("{A, B, C: 3, 'd': 4, 1: 5}", {"A": 10, "B": 20, "C": 3, "d": 4, 1: 5}),
     ("!true", False),
     ("!false", True),
     ("true && false", False),

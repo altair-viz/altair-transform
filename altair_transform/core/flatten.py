@@ -4,17 +4,16 @@ from .visitor import visit
 
 
 @visit.register
-def visit_flatten(transform: alt.FlattenTransform,
-                  df: pd.DataFrame) -> pd.DataFrame:
+def visit_flatten(transform: alt.FlattenTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
 
-    fields = transform['flatten']
-    out = transform.get('as', [])
+    fields = transform["flatten"]
+    out = transform.get("as", [])
 
     if len(out) < len(fields):
-        out = out + fields[len(out):]
+        out = out + fields[len(out) :]
     if len(out) > len(fields):
-        out = out[:len(fields)]
+        out = out[: len(fields)]
 
     if not fields:
         return df
@@ -27,8 +26,7 @@ def visit_flatten(transform: alt.FlattenTransform,
         flattened.index = flattened.shape[0] * [row]
         return flattened
 
-    flattened = pd.concat([flatten_row(i) for i in range(df.shape[0])],
-                          axis=0)
+    flattened = pd.concat([flatten_row(i) for i in range(df.shape[0])], axis=0)
     flattened.columns = out
 
     return flattened.join(others).reset_index(drop=True)

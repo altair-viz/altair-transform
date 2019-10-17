@@ -6,15 +6,25 @@ from .visitor import visit
 from ..utils import to_dataframe
 
 # These submodules register appropriate visitors.
-from . import (aggregate, bin, calculate, filter, flatten, fold,  # noqa: F401
-               impute, joinaggregate, lookup, sample, timeunit, window)
+from . import (  # noqa: F401
+    aggregate,
+    bin,
+    calculate,
+    filter,
+    flatten,
+    fold,
+    impute,
+    joinaggregate,
+    lookup,
+    sample,
+    timeunit,
+    window,
+)
 
-__all__ = ['apply', 'extract_data', 'process_chart']
+__all__ = ["apply", "extract_data", "process_chart"]
 
 
-def apply(df: pd.DataFrame,
-          transform: Any,
-          inplace: bool = False) -> pd.DataFrame:
+def apply(df: pd.DataFrame, transform: Any, inplace: bool = False) -> pd.DataFrame:
     """Apply transform or transforms to dataframe.
 
     Parameters

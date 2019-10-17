@@ -19,14 +19,18 @@ class ParserBase:
     """
     Base class for a lexer/parser that has the rules defined as methods
     """
+
     tokens: Tuple = ()
     precedence: Tuple = ()
 
     def __init__(self, **kw):
-        self.debug = kw.get('debug', 0)
+        self.debug = kw.get("debug", 0)
         try:
-            modname = os.path.split(os.path.splitext(__file__)[0])[
-                1] + "_" + self.__class__.__name__
+            modname = (
+                os.path.split(os.path.splitext(__file__)[0])[1]
+                + "_"
+                + self.__class__.__name__
+            )
         except ValueError:
             modname = "parser" + "_" + self.__class__.__name__
         self.debugfile = modname + ".dbg"
@@ -34,10 +38,12 @@ class ParserBase:
 
         # Build the lexer and parser
         lex.lex(module=self, debug=self.debug)
-        yacc.yacc(module=self,
-                  debug=self.debug,
-                  debugfile=self.debugfile,
-                  tabmodule=self.tabmodule)
+        yacc.yacc(
+            module=self,
+            debug=self.debug,
+            debugfile=self.debugfile,
+            tabmodule=self.tabmodule,
+        )
 
     def parse(self, expression):
         return yacc.parse(expression)
@@ -46,44 +52,72 @@ class ParserBase:
 class Parser(ParserBase):
 
     tokens = (
-        'NAME', 'STRING', 'FLOAT', 'BINARY', 'OCTAL', 'HEX',
-        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE', 'MODULO',
-        'PERIOD', 'COMMA', 'COLON', 'QUESTION',
-        'LPAREN', 'RPAREN',
-        'LBRACKET', 'RBRACKET',
-        'LBRACE', 'RBRACE',
-        'LOGICAL_OR', 'LOGICAL_AND',
-        'LOGICAL_NOT', 'BITWISE_NOT',
-        'BITWISE_OR', 'BITWISE_AND', 'BITWISE_XOR',
-        'LSHIFT', 'RSHIFT', 'ZFRSHIFT',
-        'GREATER_EQUAL', 'GREATER', 'LESS_EQUAL', 'LESS',
-        'IDENT', 'NIDENT', 'EQUAL', 'NEQUAL',
+        "NAME",
+        "STRING",
+        "FLOAT",
+        "BINARY",
+        "OCTAL",
+        "HEX",
+        "PLUS",
+        "MINUS",
+        "EXP",
+        "TIMES",
+        "DIVIDE",
+        "MODULO",
+        "PERIOD",
+        "COMMA",
+        "COLON",
+        "QUESTION",
+        "LPAREN",
+        "RPAREN",
+        "LBRACKET",
+        "RBRACKET",
+        "LBRACE",
+        "RBRACE",
+        "LOGICAL_OR",
+        "LOGICAL_AND",
+        "LOGICAL_NOT",
+        "BITWISE_NOT",
+        "BITWISE_OR",
+        "BITWISE_AND",
+        "BITWISE_XOR",
+        "LSHIFT",
+        "RSHIFT",
+        "ZFRSHIFT",
+        "GREATER_EQUAL",
+        "GREATER",
+        "LESS_EQUAL",
+        "LESS",
+        "IDENT",
+        "NIDENT",
+        "EQUAL",
+        "NEQUAL",
     )
 
     # Tokens
 
-    t_PLUS = r'\+'
-    t_MINUS = r'-'
-    t_EXP = r'\*\*'
-    t_TIMES = r'\*'
-    t_DIVIDE = r'/'
-    t_MODULO = r'%'
-    t_LPAREN = r'\('
-    t_RPAREN = r'\)'
-    t_LBRACKET = r'\['
-    t_RBRACKET = r'\]'
-    t_LBRACE = r'\{'
-    t_RBRACE = r'\}'
-    t_PERIOD = r'\.'
-    t_COMMA = r','
-    t_COLON = r'\:'
-    t_QUESTION = r'\?'
-    t_LOGICAL_OR = r'\|\|'
-    t_BITWISE_OR = r'\|'
-    t_LOGICAL_AND = r'&&'
-    t_BITWISE_AND = r'&'
-    t_BITWISE_XOR = r'\^'
-    t_BITWISE_NOT = r'~'
+    t_PLUS = r"\+"
+    t_MINUS = r"-"
+    t_EXP = r"\*\*"
+    t_TIMES = r"\*"
+    t_DIVIDE = r"/"
+    t_MODULO = r"%"
+    t_LPAREN = r"\("
+    t_RPAREN = r"\)"
+    t_LBRACKET = r"\["
+    t_RBRACKET = r"\]"
+    t_LBRACE = r"\{"
+    t_RBRACE = r"\}"
+    t_PERIOD = r"\."
+    t_COMMA = r","
+    t_COLON = r"\:"
+    t_QUESTION = r"\?"
+    t_LOGICAL_OR = r"\|\|"
+    t_BITWISE_OR = r"\|"
+    t_LOGICAL_AND = r"&&"
+    t_BITWISE_AND = r"&"
+    t_BITWISE_XOR = r"\^"
+    t_BITWISE_NOT = r"~"
     t_LSHIFT = r"<<"
     t_ZFRSHIFT = r">>>"
     t_RSHIFT = r">>"
@@ -96,37 +130,37 @@ class Parser(ParserBase):
     t_NIDENT = r"!=="
     t_NEQUAL = r"!="
     t_LOGICAL_NOT = r"!"
-    t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
+    t_NAME = r"[a-zA-Z_][a-zA-Z0-9_]*"
 
     def t_BINARY(self, t):
-        r'0[bB][01]+'
+        r"0[bB][01]+"
         t.value = int(t.value, 2)
         return t
 
     def t_OCTAL(self, t):
-        r'0[oO]?[0-7]+'
+        r"0[oO]?[0-7]+"
         t.value = int(t.value, 8)
         return t
 
     def t_HEX(self, t):
-        r'0[xX][0-9A-Fa-f]+'
+        r"0[xX][0-9A-Fa-f]+"
         t.value = int(t.value, 16)
         return t
 
     def t_FLOAT(self, t):
-        r'([1-9]\d*(\.\d*)?|0?\.\d+|0)([eE]\d+)?'
+        r"([1-9]\d*(\.\d*)?|0?\.\d+|0)([eE]\d+)?"
         t.value = float(t.value)
         return t
 
     def t_STRING(self, t):
-        r'''(?P<openquote>["'])((\\{2})*|(.*?[^\\](\\{2})*))(?P=openquote)'''
+        r"""(?P<openquote>["'])((\\{2})*|(.*?[^\\](\\{2})*))(?P=openquote)"""
         t.value = bytes(t.value[1:-1], "utf-8").decode("unicode_escape")
         return t
 
     t_ignore = " \t"
 
     def t_newline(self, t):
-        r'\n+'
+        r"\n+"
         t.lexer.lineno += t.value.count("\n")
 
     def t_error(self, t):
@@ -135,19 +169,19 @@ class Parser(ParserBase):
     # Parsing rules
 
     precedence = (
-        ('right', 'QUESTION'),
-        ('left', 'LOGICAL_OR'),
-        ('left', 'LOGICAL_AND'),
-        ('left', 'BITWISE_OR'),
-        ('left', 'BITWISE_XOR'),
-        ('left', 'BITWISE_AND'),
-        ('left', 'EQUAL', 'NEQUAL', 'IDENT', 'NIDENT'),
-        ('left', 'LESS', 'LESS_EQUAL', 'GREATER', 'GREATER_EQUAL'),
-        ('left', 'LSHIFT', 'RSHIFT', 'ZFRSHIFT'),
-        ('left', 'PLUS', 'MINUS'),
-        ('left', 'TIMES', 'DIVIDE', 'MODULO'),
-        ('left', 'EXP'),
-        ('right', 'UMINUS', 'UPLUS', 'LOGICAL_NOT', 'BITWISE_NOT'),
+        ("right", "QUESTION"),
+        ("left", "LOGICAL_OR"),
+        ("left", "LOGICAL_AND"),
+        ("left", "BITWISE_OR"),
+        ("left", "BITWISE_XOR"),
+        ("left", "BITWISE_AND"),
+        ("left", "EQUAL", "NEQUAL", "IDENT", "NIDENT"),
+        ("left", "LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL"),
+        ("left", "LSHIFT", "RSHIFT", "ZFRSHIFT"),
+        ("left", "PLUS", "MINUS"),
+        ("left", "TIMES", "DIVIDE", "MODULO"),
+        ("left", "EXP"),
+        ("right", "UMINUS", "UPLUS", "LOGICAL_NOT", "BITWISE_NOT"),
     )
 
     def p_expression_binop(self, p):
@@ -178,7 +212,7 @@ class Parser(ParserBase):
         p[0] = ast.BinOp(lhs=p[1], op=p[2], rhs=p[3])
 
     def p_expression_ternary(self, p):
-        'expression : expression QUESTION expression COLON expression'
+        "expression : expression QUESTION expression COLON expression"
         p[0] = ast.TernOp(op=(p[2], p[4]), lhs=p[1], mid=p[3], rhs=p[5])
 
     def p_expression_unaryop(self, p):
@@ -220,15 +254,15 @@ class Parser(ParserBase):
         p[0] = ast.Number(p[1])
 
     def p_string(self, p):
-        'string : STRING'
+        "string : STRING"
         p[0] = ast.String(p[1])
 
     def p_global(self, p):
-        'global : NAME'
+        "global : NAME"
         p[0] = ast.Global(p[1])
 
     def p_name(self, p):
-        'name : NAME'
+        "name : NAME"
         p[0] = ast.Name(p[1])
 
     def p_list(self, p):
@@ -280,15 +314,15 @@ class Parser(ParserBase):
         p[0] = p[1]
 
     def p_group(self, p):
-        'group : LPAREN expression RPAREN'
+        "group : LPAREN expression RPAREN"
         p[0] = p[2]
 
     def p_attraccess(self, p):
-        'attraccess : atom PERIOD NAME'
+        "attraccess : atom PERIOD NAME"
         p[0] = ast.Attr(obj=p[1], attr=p[3])
 
     def p_indexing(self, p):
-        'indexing : atom LBRACKET expression RBRACKET'
+        "indexing : atom LBRACKET expression RBRACKET"
         p[0] = ast.Item(obj=p[1], item=p[3])
 
     def p_functioncall(self, p):

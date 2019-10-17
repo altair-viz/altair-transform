@@ -5,14 +5,15 @@ from .aggregate import AGG_REPLACEMENTS
 
 
 @visit.register
-def visit_joinaggregate(transform: alt.JoinAggregateTransform,
-                        df: pd.DataFrame) -> pd.DataFrame:
+def visit_joinaggregate(
+    transform: alt.JoinAggregateTransform, df: pd.DataFrame
+) -> pd.DataFrame:
     transform = transform.to_dict()
-    groupby = transform.get('groupby')
-    for aggregate in transform['joinaggregate']:
-        op = aggregate['op']
-        field = aggregate['field']
-        col = aggregate['as']
+    groupby = transform.get("groupby")
+    for aggregate in transform["joinaggregate"]:
+        op = aggregate["op"]
+        field = aggregate["field"]
+        col = aggregate["as"]
 
         op = AGG_REPLACEMENTS.get(op, op)
         if field == "*" and field not in df.columns:

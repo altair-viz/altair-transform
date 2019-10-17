@@ -117,14 +117,28 @@ def now() -> float:
     return round(timemod.time() * 1000, 0)
 
 
-def datetime(year: int, month: int, day: int = 0, hour: int = 0,
-             min: int = 0, sec: int = 0, millisec: int = 0) -> dt.datetime:
+def datetime(
+    year: int,
+    month: int,
+    day: int = 0,
+    hour: int = 0,
+    min: int = 0,
+    sec: int = 0,
+    millisec: int = 0,
+) -> dt.datetime:
     """Returns a new Date instance.
     The month is 0-based, such that 1 represents February.
     """
     # TODO: do we need a local timezone?
-    return dt.datetime(int(year), int(month) + 1, int(day), int(hour),
-                       int(min), int(sec), int(millisec * 1000))
+    return dt.datetime(
+        int(year),
+        int(month) + 1,
+        int(day),
+        int(hour),
+        int(min),
+        int(sec),
+        int(millisec * 1000),
+    )
 
 
 def date(datetime: dt.datetime) -> int:
@@ -200,15 +214,29 @@ def timezoneoffset(datetime):
     raise NotImplementedError("timezoneoffset()")
 
 
-def utc(year: int, month: int, day: int = 0, hour: int = 0,
-        min: int = 0, sec: int = 0, millisec: int = 0) -> dt.datetime:
+def utc(
+    year: int,
+    month: int,
+    day: int = 0,
+    hour: int = 0,
+    min: int = 0,
+    sec: int = 0,
+    millisec: int = 0,
+) -> dt.datetime:
     """
     Returns a timestamp for the given UTC date.
     The month is 0-based, such that 1 represents February.
     """
-    return dt.datetime(int(year), int(month) + 1, int(day), int(hour),
-                       int(min), int(sec), int(millisec * 1000),
-                       tzinfo=pytz.UTC)
+    return dt.datetime(
+        int(year),
+        int(month) + 1,
+        int(day),
+        int(hour),
+        int(min),
+        int(sec),
+        int(millisec * 1000),
+        tzinfo=pytz.UTC,
+    )
 
 
 # From https://vega.github.io/vega/docs/expressions/
@@ -226,7 +254,6 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "PI": math.pi,
     "SQRT1_2": math.sqrt(0.5),
     "SQRT2": math.sqrt(2),
-
     # Type Checking
     "isArray": isArray,
     "isBoolean": isBoolean,
@@ -235,16 +262,13 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "isObject": isObject,
     "isRegExp": isRegExp,
     "isString": isString,
-
     # Type Coercion
     "toBoolean": toBoolean,
     "toDate": toDate,
     "toNumber": toNumber,
     "toString": toString,
-
     # Control Flow Functions
     "if": lambda test, if_value, else_value: if_value if test else else_value,
-
     # Math Functions
     "isNan": math.isnan,
     "isFinite": math.isfinite,
@@ -267,7 +291,6 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "sin": math.sin,
     "sqrt": math.sqrt,
     "tan": math.tan,
-
     # Date/Time Functions
     "now": now,
     "datetime": datetime,
@@ -283,7 +306,6 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "time": time,
     "timezoneoffset": timezoneoffset,
     "utc": utc,
-
     # TODOs:
     # Remaining Date/Time Functions
     # Array Functions

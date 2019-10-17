@@ -5,7 +5,7 @@ from typing import Any, Union
 
 from altair_transform.utils import ast, Parser
 
-__all__ = ['evaljs']
+__all__ = ["evaljs"]
 
 
 def evaljs(expression: Union[str, ast.Expr], namespace: dict = None) -> Any:
@@ -45,12 +45,11 @@ def _visit_unop(obj: ast.UnOp, namespace: dict) -> Any:
 @visit.register
 def _visit_ternop(obj: ast.TernOp, namespace: dict) -> Any:
     if obj.op not in TERNARY_OPERATORS:
-        raise NotImplementedError(
-            f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
+        raise NotImplementedError(f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
     op = TERNARY_OPERATORS[obj.op]
-    return op(visit(obj.lhs, namespace),
-              visit(obj.mid, namespace),
-              visit(obj.rhs, namespace))
+    return op(
+        visit(obj.lhs, namespace), visit(obj.mid, namespace), visit(obj.rhs, namespace)
+    )
 
 
 @visit.register
@@ -86,8 +85,8 @@ def _visit_object(obj: ast.Object, namespace: dict) -> Any:
         if isinstance(entry, tuple):
             return tuple(visit(e, namespace) for e in entry)
         if isinstance(entry, ast.Name):
-            return (visit(entry, namespace),
-                    visit(ast.Global(entry.name), namespace))
+            return (visit(entry, namespace), visit(ast.Global(entry.name), namespace))
+
     return dict(_visit(entry) for entry in obj.entries)
 
 
@@ -120,6 +119,7 @@ def int_inputs(func):
     @wraps(func)
     def wrapper(*args):
         return float(func(*map(int, args)))
+
     return wrapper
 
 
@@ -132,10 +132,10 @@ def zerofill_rshift(lhs: int, rhs: int) -> int:
 
 # TODO: do implicit type conversions ugh...
 UNARY_OPERATORS = {
-    '~': int_inputs(operator.inv),
-    '-': operator.neg,
-    '+': operator.pos,
-    '!': operator.not_,
+    "~": int_inputs(operator.inv),
+    "-": operator.neg,
+    "+": operator.pos,
+    "!": operator.not_,
 }
 
 
@@ -165,6 +165,4 @@ BINARY_OPERATORS = {
 }
 
 
-TERNARY_OPERATORS = {
-    ("?", ":"): lambda a, b, c: b if a else c
-}
+TERNARY_OPERATORS = {("?", ":"): lambda a, b, c: b if a else c}
