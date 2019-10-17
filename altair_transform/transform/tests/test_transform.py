@@ -2,14 +2,12 @@ import pytest
 
 import numpy as np
 import pandas as pd
-
 from numpy.testing import assert_equal
 from distutils.version import LooseVersion
-
+from altair_transform import apply
 import altair as alt
 from altair.utils.data import to_values
-from altair_transform import apply, extract_data, transform_chart
-from altair_transform.core.aggregate import AGG_REPLACEMENTS
+from altair_transform.transform.aggregate import AGG_REPLACEMENTS
 
 
 AGGREGATES = [
@@ -69,39 +67,6 @@ def data():
             "c": list("AAABBBCCCDDD"),
         }
     )
-
-
-@pytest.fixture
-def chart(data):
-    return (
-        alt.Chart(data)
-        .transform_calculate(xpy="datum.x + datum.y", xmy="datum.x - datum.y")
-        .mark_point()
-        .encode(x="xpy:Q", y="xmy:Q")
-    )
-
-
-def test_extract_data(data, chart):
-    out1 = extract_data(chart)
-    out2 = data.copy()
-    out2["xpy"] = data.x + data.y
-    out2["xmy"] = data.x - data.y
-    assert out1.equals(out2)
-
-
-def test_transform_chart(data, chart):
-    original_chart = chart.copy()
-    data_out = extract_data(chart)
-    chart_out = transform_chart(chart)
-
-    # Original chart not modified
-    assert original_chart == chart
-
-    # Transform applied to output chart
-    assert chart_out.data.equals(data_out)
-    assert chart_out.transform is alt.Undefined
-    assert chart.mark == chart_out.mark
-    assert chart.encoding == chart_out.encoding
 
 
 def test_calculate_transform(data):

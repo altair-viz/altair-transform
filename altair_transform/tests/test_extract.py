@@ -1,4 +1,4 @@
-from altair_transform.core.extract_transforms import _encoding_to_transform
+from altair_transform.extract import _encoding_to_transform
 
 
 def test_extract_simple_aggregate():
