@@ -1,9 +1,13 @@
 """Tools for extracting transforms from encodings"""
 from collections import defaultdict
 import copy
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import altair as alt
+
+_EncodingType = Dict[str, dict]
+_SpecType = Dict[str, Any]
+_TransformType = List[_SpecType]
 
 
 def extract_transform(chart: alt.Chart) -> alt.Chart:
@@ -19,43 +23,70 @@ def extract_transform(chart: alt.Chart) -> alt.Chart:
     return chart
 
 
-def _encoding_to_transform(encoding: dict) -> Tuple[dict, List[dict]]:
+def _encoding_to_transform(
+    encoding: _EncodingType
+) -> Tuple[_EncodingType, _TransformType]:
     """Extract transforms from an encoding dict."""
-    # TODO: what if one encoding has multiple keys? Is this valid?
-    by_category: defaultdict = defaultdict(dict)
-    new_encoding: dict = {}
-    for enc, definition in encoding.items():
+    # TODO: what if one encoding has multiple transforms? Is this valid?
+    by_category: Dict[str, _EncodingType] = defaultdict(dict)
+    new_encoding: _EncodingType = {}
+    for channel, spec in encoding.items():
         for key in ["bin", "aggregate", "timeUnit"]:
-            if key in definition:
-                by_category[key][enc] = copy.deepcopy(definition)
+            if key in spec:
+                by_category[key][channel] = copy.deepcopy(spec)
                 break
         else:
-            new_encoding[enc] = copy.deepcopy(definition)
+            new_encoding[channel] = copy.deepcopy(spec)
 
-    groupby: List[str] = list(new_encoding.keys())
-    transform: List[dict] = []
+    groupby: List[str] = list(new_encoding)
+    transforms: _TransformType = []
+    field: str = ""
+    new_field: str = ""
+    new_field2: str = ""
 
-    if by_category["bin"]:
-        raise NotImplementedError("Extracting bin transforms")
+    for channel, spec in by_category["bin"].items():
+        field = spec.pop("field")
+        new_field = f"{field}_binned"
+        new_field2 = f"{field}_binned2"
+        needs_upper_limit: bool = (
+            channel in ["x", "y"]
+            and spec["type"] == "quantitative"
+            and f"{channel}2" not in encoding
+        )
+        bin_transform: _SpecType = {
+            "field": field,
+            "bin": spec.pop("bin"),
+            "as": [new_field, new_field2] if needs_upper_limit else new_field,
+        }
+        spec["field"] = new_field
+        spec.setdefault("title", f"{field} (binned)")
+        new_encoding[channel] = spec
+        groupby.append(new_field)
+
+        if needs_upper_limit:
+            spec["bin"] = "binned"
+            new_encoding[f"{channel}2"] = {"field": new_field2}
+            groupby.append(new_field2)
+        transforms.append(bin_transform)
 
     if by_category["timeUnit"]:
         raise NotImplementedError("Extracting timeUnit transforms")
 
-    agg_transforms: List[dict] = []
-    for enc, definition in by_category["aggregate"].items():
-        aggregate = definition.pop("aggregate")
-        field = definition.pop("field", None)
+    agg_transforms: _TransformType = []
+    for channel, spec in by_category["aggregate"].items():
+        aggregate: str = spec.pop("aggregate")
+        field = spec.pop("field", None)
         new_field = aggregate if field is None else f"{aggregate}_{field}"
-        agg_dict = {"op": aggregate, "as": new_field}
+        agg_dict: Dict[str, str] = {"op": aggregate, "as": new_field}
         if field is not None:
             agg_dict["field"] = field
         agg_transforms.append(agg_dict)
-        definition["field"] = new_field
-        new_encoding[enc] = definition
+        spec["field"] = new_field
+        new_encoding[channel] = spec
     if agg_transforms:
-        transform.append({"aggregate": agg_transforms, "groupby": groupby})
+        transform: Dict[str, list] = {"aggregate": agg_transforms}
+        if groupby:
+            transform["groupby"] = groupby
+        transforms.append(transform)
 
-    # Sanity check
-    assert encoding.keys() == new_encoding.keys()
-
-    return new_encoding, transform
+    return new_encoding, transforms
