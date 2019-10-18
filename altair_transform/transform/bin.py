@@ -11,6 +11,20 @@ from typing import List, Optional, Tuple, Union
 Number = Union[int, float]
 
 
+def _cut(series: pd.Series, edges: np.ndarray, return_upper: bool = False):
+    """Like pd.cut(), but include outliers in the outer bins."""
+    bins = pd.cut(series, edges, labels=False)
+    bins[series <= edges[0]] = 0
+    bins[series >= edges[-1]] = len(edges) - 2
+    bins = bins.astype(int)
+    bins1 = pd.Series(edges[bins.values], index=bins.index)
+    if return_upper:
+        bins2 = pd.Series(edges[bins.values + 1], index=bins.index)
+        return bins1, bins2
+    else:
+        return bins1
+
+
 @visit.register
 def visit_bin(transform: alt.BinTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform_dct: dict = transform.to_dict()
@@ -22,10 +36,9 @@ def visit_bin(transform: alt.BinTransform, df: pd.DataFrame) -> pd.DataFrame:
     bins = calculate_bins(extent, **({} if bin is True else bin))
 
     if isinstance(col, str):
-        df[col] = pd.cut(df[field], bins, labels=bins[:-1])
+        df[col] = _cut(df[field], bins, return_upper=False)
     else:
-        df[col[0]] = pd.cut(df[field], bins, labels=bins[:-1])
-        df[col[1]] = pd.cut(df[field], bins, labels=bins[1:])
+        df[col[0]], df[col[1]] = _cut(df[field], bins, return_upper=True)
 
     return df
 
