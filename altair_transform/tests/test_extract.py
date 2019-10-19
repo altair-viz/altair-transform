@@ -15,7 +15,13 @@ class _TestCase(NamedTuple):
     [
         _TestCase(
             encoding={"x": {"aggregate": "count", "type": "quantitative"}},
-            expected_encoding={"x": {"field": "count", "type": "quantitative"}},
+            expected_encoding={
+                "x": {
+                    "field": "count",
+                    "type": "quantitative",
+                    "title": "Count of Records",
+                }
+            },
             expected_transform=[{"aggregate": [{"op": "count", "as": "count"}]}],
         ),
         _TestCase(
@@ -31,7 +37,11 @@ class _TestCase(NamedTuple):
                 "y": {"field": "age", "type": "ordinal"},
             },
             expected_encoding={
-                "x": {"field": "sum_people", "type": "quantitative"},
+                "x": {
+                    "field": "sum_people",
+                    "type": "quantitative",
+                    "title": "Sum of people",
+                },
                 "y": {"field": "age", "type": "ordinal"},
             },
             expected_transform=[
@@ -47,7 +57,11 @@ class _TestCase(NamedTuple):
                 "y": {"field": "age", "bin": {"maxbins": 10}, "type": "quantitative"},
             },
             expected_encoding={
-                "x": {"field": "count", "type": "quantitative"},
+                "x": {
+                    "field": "count",
+                    "type": "quantitative",
+                    "title": "Count of Records",
+                },
                 "y": {
                     "field": "age_binned",
                     "bin": "binned",
@@ -74,7 +88,11 @@ class _TestCase(NamedTuple):
                 "y": {"field": "age", "bin": True, "type": "ordinal"},
             },
             expected_encoding={
-                "x": {"field": "count", "type": "quantitative"},
+                "x": {
+                    "field": "count",
+                    "type": "quantitative",
+                    "title": "Count of Records",
+                },
                 "y": {
                     "field": "age_binned",
                     "type": "ordinal",

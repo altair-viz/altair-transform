@@ -69,8 +69,17 @@ def _encoding_to_transform(
             groupby.append(new_field2)
         transforms.append(bin_transform)
 
-    if by_category["timeUnit"]:
-        raise NotImplementedError("Extracting timeUnit transforms")
+    for channel, spec in by_category["timeUnit"].items():
+        timeUnit: str = spec[
+            "timeUnit"
+        ]  # leave timeUnit in spec for the sake of formatting
+        field = spec.pop("field")
+        new_field = f"{timeUnit}_{field}"
+        spec["field"] = new_field
+        spec.setdefault("title", f"{field} ({timeUnit})")
+        new_encoding[channel] = spec
+        transforms.append({"timeUnit": timeUnit, "field": field, "as": new_field})
+        groupby.append(new_field)
 
     agg_transforms: _TransformType = []
     for channel, spec in by_category["aggregate"].items():
@@ -82,6 +91,12 @@ def _encoding_to_transform(
             agg_dict["field"] = field
         agg_transforms.append(agg_dict)
         spec["field"] = new_field
+        spec.setdefault(
+            "title",
+            "Count of Records"
+            if aggregate == "count"
+            else f"{aggregate.title()} of {field}",
+        )
         new_encoding[channel] = spec
     if agg_transforms:
         transform: Dict[str, list] = {"aggregate": agg_transforms}
