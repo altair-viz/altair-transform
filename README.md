@@ -8,7 +8,9 @@ Python evaluation of Altair/Vega-Lite transforms.
 
     $ pip install altair_transform
 
-## Example
+This can be useful in a number of contexts, illustrated in the examples below.
+
+## Example: Extracting Data
 
 The Vega-Lite specification includes the ability to apply a
 wide range of transformations to input data within the chart
@@ -103,3 +105,107 @@ data.head()
 
 From here, you can work with the transformed data directly
 in Python.
+
+## Example: Pre-Aggregating Large Datasets
+
+Altair creates chart specifications containing the full dataset.
+The advantage of this is that the data used to make the chart is entirely transparent; the disadvantage is that it causes issues as datasets grow large.
+For example, a histogram of 20000 points:
+
+```python
+import altair as alt
+import pandas as pd
+import numpy as np
+
+np.random.seed(12345)
+
+df = pd.DataFrame({
+    'x': np.random.randn(20000)
+})
+chart = alt.Chart(df).mark_bar().encode(
+    alt.X('x', bin=True),
+    y='count()'
+)
+chart
+```
+```pyerr
+MaxRowsError: The number of rows in your dataset is greater than the maximum allowed (5000). For information on how to plot larger datasets in Altair, see the documentation
+```
+Altair transform provides the ``transform_chart()`` function, which will pre-transform the data according to the chart specification, so that the final chart specification holds the aggregated data rather than the full dataset:
+```python
+from altair_transform import transform_chart
+new_chart = transform_chart(chart)
+new_chart
+```
+![Altair Visualization](https://raw.githubusercontent.com/altair-viz/altair-transform/master/images/histogram.png)
+
+Examining the new chart specification, we can see that it contains the pre-aggregated dataset:
+```python
+new_chart.data
+```
+<table border="0" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x_binned</th>
+      <th>x_binned2</th>
+      <th>count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>-4.0</td>
+      <td>-3.0</td>
+      <td>29</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-3.0</td>
+      <td>-2.0</td>
+      <td>444</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>-2.0</td>
+      <td>-1.0</td>
+      <td>2703</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-1.0</td>
+      <td>0.0</td>
+      <td>6815</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>6858</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>2706</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>423</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>3.0</td>
+      <td>4.0</td>
+      <td>22</td>
+    </tr>
+  </tbody>
+</table>
+
+## Limitations
+
+``altair_transform`` currently works only for non-compound charts; that is, it cannot transform or extract data from layered, faceted, repeated, or concatenated charts.
+
+There are also a number of less-used transform options that are not yet fully supported. These should explicitly raise a ``NotImplementedError`` if you attempt to use them.
