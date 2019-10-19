@@ -15,8 +15,14 @@ class _TestCase(NamedTuple):
     [
         _TestCase(
             encoding={"x": {"aggregate": "count", "type": "quantitative"}},
-            expected_encoding={"x": {"field": "count", "type": "quantitative"}},
-            expected_transform=[{"aggregate": [{"op": "count", "as": "count"}]}],
+            expected_encoding={
+                "x": {
+                    "field": "__count",
+                    "type": "quantitative",
+                    "title": "Count of Records",
+                }
+            },
+            expected_transform=[{"aggregate": [{"op": "count", "as": "__count"}]}],
         ),
         _TestCase(
             encoding={"x": {"field": "foo", "bin": True, "type": "ordinal"}},
@@ -31,7 +37,11 @@ class _TestCase(NamedTuple):
                 "y": {"field": "age", "type": "ordinal"},
             },
             expected_encoding={
-                "x": {"field": "sum_people", "type": "quantitative"},
+                "x": {
+                    "field": "sum_people",
+                    "type": "quantitative",
+                    "title": "Sum of people",
+                },
                 "y": {"field": "age", "type": "ordinal"},
             },
             expected_transform=[
@@ -47,7 +57,11 @@ class _TestCase(NamedTuple):
                 "y": {"field": "age", "bin": {"maxbins": 10}, "type": "quantitative"},
             },
             expected_encoding={
-                "x": {"field": "count", "type": "quantitative"},
+                "x": {
+                    "field": "__count",
+                    "type": "quantitative",
+                    "title": "Count of Records",
+                },
                 "y": {
                     "field": "age_binned",
                     "bin": "binned",
@@ -63,7 +77,7 @@ class _TestCase(NamedTuple):
                     "as": ["age_binned", "age_binned2"],
                 },
                 {
-                    "aggregate": [{"op": "count", "as": "count"}],
+                    "aggregate": [{"op": "count", "as": "__count"}],
                     "groupby": ["age_binned", "age_binned2"],
                 },
             ],
@@ -74,7 +88,11 @@ class _TestCase(NamedTuple):
                 "y": {"field": "age", "bin": True, "type": "ordinal"},
             },
             expected_encoding={
-                "x": {"field": "count", "type": "quantitative"},
+                "x": {
+                    "field": "__count",
+                    "type": "quantitative",
+                    "title": "Count of Records",
+                },
                 "y": {
                     "field": "age_binned",
                     "type": "ordinal",
@@ -84,8 +102,34 @@ class _TestCase(NamedTuple):
             expected_transform=[
                 {"bin": True, "field": "age", "as": "age_binned"},
                 {
-                    "aggregate": [{"op": "count", "as": "count"}],
+                    "aggregate": [{"op": "count", "as": "__count"}],
                     "groupby": ["age_binned"],
+                },
+            ],
+        ),
+        _TestCase(
+            encoding={
+                "x": {"aggregate": "count", "field": "x", "type": "quantitative"},
+                "y": {"field": "y", "timeUnit": "day", "type": "ordinal"},
+            },
+            expected_encoding={
+                "x": {
+                    "field": "__count",
+                    "type": "quantitative",
+                    "title": "Count of Records",
+                },
+                "y": {
+                    "field": "day_y",
+                    "timeUnit": "day",
+                    "type": "ordinal",
+                    "title": "y (day)",
+                },
+            },
+            expected_transform=[
+                {"timeUnit": "day", "field": "y", "as": "day_y"},
+                {
+                    "aggregate": [{"field": "x", "op": "count", "as": "__count"}],
+                    "groupby": ["day_y"],
                 },
             ],
         ),

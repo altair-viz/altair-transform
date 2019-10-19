@@ -56,9 +56,8 @@ def test_transform_chart_with_aggregate():
     data = pd.DataFrame({"x": list("AABBBCCCC")})
     chart = alt.Chart(data).mark_bar().encode(x="x:N", y="count():Q")
     chart_out = transform_chart(chart)
-    print(chart_out.data)
-    assert chart_out.data.equals(pd.DataFrame({"x": list("ABC"), "count": [2, 3, 4]}))
+    assert chart_out.data.equals(pd.DataFrame({"x": list("ABC"), "__count": [2, 3, 4]}))
     assert chart_out.encoding.to_dict() == {
         "x": {"field": "x", "type": "nominal"},
-        "y": {"field": "count", "type": "quantitative"},
+        "y": {"field": "__count", "type": "quantitative", "title": "Count of Records"},
     }
