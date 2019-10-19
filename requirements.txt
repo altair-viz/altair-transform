@@ -2,3 +2,4 @@ ply
 altair>=3.0
 numpy
 pandas
+dataclasses; python_version < '3.7'

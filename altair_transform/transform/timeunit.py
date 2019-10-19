@@ -4,7 +4,7 @@ from .visitor import visit
 from ..utils.timeunit import compute_timeunit
 
 
-@visit.register
+@visit.register(alt.TimeUnitTransform)
 def visit_timeunit(transform: alt.TimeUnitTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
     df[transform["as"]] = compute_timeunit(

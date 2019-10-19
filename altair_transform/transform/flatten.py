@@ -3,7 +3,7 @@ import pandas as pd
 from .visitor import visit
 
 
-@visit.register
+@visit.register(alt.FlattenTransform)
 def visit_flatten(transform: alt.FlattenTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
 

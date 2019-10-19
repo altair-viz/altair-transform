@@ -4,7 +4,7 @@ import pandas as pd
 from .visitor import visit
 
 
-@visit.register
+@visit.register(alt.SampleTransform)
 def visit_sample(transform: alt.SampleTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
     sample = transform["sample"]

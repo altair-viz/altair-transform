@@ -21,12 +21,12 @@ def visit(obj: Any, namespace: dict) -> Any:
     return obj
 
 
-@visit.register
+@visit.register(ast.Expr)
 def _visit_expr(obj: ast.Expr, namespace: dict) -> Any:
     return obj.value
 
 
-@visit.register
+@visit.register(ast.BinOp)
 def _visit_binop(obj: ast.BinOp, namespace: dict) -> Any:
     if obj.op not in BINARY_OPERATORS:
         raise NotImplementedError(f"Binary Operator A {obj.op} B")
@@ -34,7 +34,7 @@ def _visit_binop(obj: ast.BinOp, namespace: dict) -> Any:
     return op(visit(obj.lhs, namespace), visit(obj.rhs, namespace))
 
 
-@visit.register
+@visit.register(ast.UnOp)
 def _visit_unop(obj: ast.UnOp, namespace: dict) -> Any:
     if obj.op not in UNARY_OPERATORS:
         raise NotImplementedError(f"Unary Operator {obj.op}x")
@@ -42,7 +42,7 @@ def _visit_unop(obj: ast.UnOp, namespace: dict) -> Any:
     return op(visit(obj.rhs, namespace))
 
 
-@visit.register
+@visit.register(ast.TernOp)
 def _visit_ternop(obj: ast.TernOp, namespace: dict) -> Any:
     if obj.op not in TERNARY_OPERATORS:
         raise NotImplementedError(f"Ternary Operator A {obj.op[0]} B {obj.op[1]} C")
@@ -52,34 +52,34 @@ def _visit_ternop(obj: ast.TernOp, namespace: dict) -> Any:
     )
 
 
-@visit.register
+@visit.register(ast.Number)
 def _visit_number(obj: ast.Number, namespace: dict) -> Any:
     return obj.value
 
 
-@visit.register
+@visit.register(ast.String)
 def _visit_string(obj: ast.String, namespace: dict) -> Any:
     return obj.value
 
 
-@visit.register
+@visit.register(ast.Global)
 def _visit_global(obj: ast.Global, namespace: dict) -> Any:
     if obj.name not in namespace:
         raise NameError("{0} is not a valid name".format(obj.name))
     return namespace[obj.name]
 
 
-@visit.register
+@visit.register(ast.Name)
 def _visit_name(obj: ast.Name, namespace: dict) -> Any:
     return obj.name
 
 
-@visit.register
+@visit.register(ast.List)
 def _visit_list(obj: ast.List, namespace: dict) -> Any:
     return [visit(entry, namespace) for entry in obj.entries]
 
 
-@visit.register
+@visit.register(ast.Object)
 def _visit_object(obj: ast.Object, namespace: dict) -> Any:
     def _visit(entry):
         if isinstance(entry, tuple):
@@ -90,7 +90,7 @@ def _visit_object(obj: ast.Object, namespace: dict) -> Any:
     return dict(_visit(entry) for entry in obj.entries)
 
 
-@visit.register
+@visit.register(ast.Attr)
 def _visit_attr(obj: ast.Attr, namespace: dict) -> Any:
     obj_ = visit(obj.obj, namespace)
     attr = visit(obj.attr, namespace)
@@ -99,7 +99,7 @@ def _visit_attr(obj: ast.Attr, namespace: dict) -> Any:
     return getattr(obj_, attr)
 
 
-@visit.register
+@visit.register(ast.Item)
 def _visit_item(obj: ast.Item, namespace: dict) -> Any:
     obj_ = visit(obj.obj, namespace)
     item = visit(obj.item, namespace)
@@ -108,7 +108,7 @@ def _visit_item(obj: ast.Item, namespace: dict) -> Any:
     return obj_[item]
 
 
-@visit.register
+@visit.register(ast.Func)
 def _visit_func(obj: ast.Func, namespace: dict) -> Any:
     func = visit(obj.func, namespace)
     args = [visit(arg, namespace) for arg in obj.args]

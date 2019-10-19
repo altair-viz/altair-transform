@@ -4,7 +4,7 @@ from .visitor import visit
 from .aggregate import AGG_REPLACEMENTS
 
 
-@visit.register
+@visit.register(alt.JoinAggregateTransform)
 def visit_joinaggregate(
     transform: alt.JoinAggregateTransform, df: pd.DataFrame
 ) -> pd.DataFrame:

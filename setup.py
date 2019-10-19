@@ -67,12 +67,13 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=get_install_requirements("requirements.txt"),
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     classifiers=[
         "Environment :: Console",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
 )

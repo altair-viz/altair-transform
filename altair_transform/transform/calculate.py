@@ -4,7 +4,7 @@ from .visitor import visit
 from ..vegaexpr import eval_vegajs
 
 
-@visit.register
+@visit.register(alt.CalculateTransform)
 def visit_calculate(
     transform: alt.CalculateTransform, df: pd.DataFrame
 ) -> pd.DataFrame:

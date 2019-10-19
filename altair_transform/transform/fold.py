@@ -3,7 +3,7 @@ import pandas as pd
 from .visitor import visit
 
 
-@visit.register
+@visit.register(alt.FoldTransform)
 def visit_fold(transform: alt.FoldTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
     fold = transform["fold"]
