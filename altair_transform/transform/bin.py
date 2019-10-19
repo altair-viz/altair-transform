@@ -25,7 +25,7 @@ def _cut(series: pd.Series, edges: np.ndarray, return_upper: bool = False):
         return bins1
 
 
-@visit.register
+@visit.register(alt.BinTransform)
 def visit_bin(transform: alt.BinTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform_dct: dict = transform.to_dict()
     col = transform_dct["as"]

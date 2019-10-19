@@ -6,7 +6,7 @@ from .visitor import visit
 from .aggregate import AGG_REPLACEMENTS
 
 
-@visit.register
+@visit.register(alt.WindowTransform)
 def visit_window(transform: alt.WindowTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
     window = transform["window"]

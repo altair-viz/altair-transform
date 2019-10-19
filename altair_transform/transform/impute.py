@@ -4,7 +4,7 @@ import pandas as pd
 from .visitor import visit
 
 
-@visit.register
+@visit.register(alt.ImputeTransform)
 def visit_impute(transform: alt.ImputeTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform = transform.to_dict()
 

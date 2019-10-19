@@ -4,7 +4,7 @@ import pandas as pd
 from .visitor import visit
 
 
-@visit.register
+@visit.register(alt.AggregateTransform)
 def visit_aggregate(
     transform: alt.AggregateTransform, df: pd.DataFrame
 ) -> pd.DataFrame:

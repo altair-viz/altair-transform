@@ -10,14 +10,14 @@ def visit(transform: Any, df: pd.DataFrame) -> pd.DataFrame:
     raise NotImplementedError(f"transform of type {type(transform)}")
 
 
-@visit.register
+@visit.register(list)
 def visit_list(transform: list, df: pd.DataFrame) -> pd.DataFrame:
     for t in transform:
         df = visit(t, df)
     return df
 
 
-@visit.register
+@visit.register(dict)
 def visit_dict(transform: dict, df: pd.DataFrame) -> pd.DataFrame:
     transform = alt.Transform.from_dict(transform)
     return visit(transform, df)
