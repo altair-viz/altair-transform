@@ -85,7 +85,7 @@ def _encoding_to_transform(
     for channel, spec in by_category["aggregate"].items():
         aggregate: str = spec.pop("aggregate")
         field = spec.pop("field", None)
-        new_field = aggregate if field is None else f"{aggregate}_{field}"
+        new_field = "__count" if aggregate == "count" else f"{aggregate}_{field}"
         agg_dict: Dict[str, str] = {"op": aggregate, "as": new_field}
         if field is not None:
             agg_dict["field"] = field
@@ -93,9 +93,11 @@ def _encoding_to_transform(
         spec["field"] = new_field
         spec.setdefault(
             "title",
-            "Count of Records"
-            if aggregate == "count"
-            else f"{aggregate.title()} of {field}",
+            (
+                "Count of Records"
+                if aggregate == "count"
+                else f"{aggregate.title()} of {field}"
+            ),
         )
         new_encoding[channel] = spec
     if agg_transforms:
