@@ -5,7 +5,7 @@ test :
 	rm -r build
 	python setup.py build &&\
 	  cd build/lib &&\
-	  python -m pytest --pyargs altair_transform
+	  python -m pytest --pyargs --doctest-modules altair_transform
 
 test-coverage:
 	python setup.py build &&\

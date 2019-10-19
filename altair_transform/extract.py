@@ -11,7 +11,50 @@ _TransformType = List[_SpecType]
 
 
 def extract_transform(chart: alt.Chart) -> alt.Chart:
-    """Extract transforms within a chart specification."""
+    """Extract transforms from encodings
+
+    This takes a chart with transforms specified within encodings, and returns
+    an equivalent chart with transforms specified separately in the ``transform``
+    field.
+
+    Parameters
+    ----------
+    chart : alt.Chart
+        Input chart, which will not be modified
+
+    Returns
+    -------
+    chart : alt.Chart
+        A copy of the input chart with any encoding-specified transforms moved
+        to the transforms-attribute
+
+    Example
+    -------
+    >>> chart = alt.Chart('data.csv').mark_bar().encode(x='mean(x):Q', y='y:N')
+    >>> new_chart = extract_transform(chart)
+    >>> new_chart.transform
+    [AggregateTransform({
+      aggregate: [AggregatedFieldDef({
+        as: FieldName('mean_x'),
+        field: FieldName('x'),
+        op: AggregateOp('mean')
+      })],
+      groupby: [FieldName('y')]
+    })]
+    >>> new_chart.encoding
+    FacetedEncoding({
+      x: PositionFieldDef({
+        field: FieldName('mean_x'),
+        title: 'Mean of x',
+        type: StandardType('quantitative')
+      }),
+      y: PositionFieldDef({
+        field: FieldName('y'),
+        type: StandardType('nominal')
+      })
+    })
+    """
+
     chart = chart.copy()
     encoding_dict = chart.encoding.copy().to_dict(context={"data": chart.data})
     encoding, transform = _encoding_to_transform(encoding_dict)
