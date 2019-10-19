@@ -22,4 +22,4 @@ script:
   - black --check .
   - python -m flake8 altair_transform
   - python -m mypy altair_transform
-  - cd $TEST_DIR && python -m pytest --pyargs altair_transform;
+  - cd $TEST_DIR && python -m pytest --pyargs --doctest-modules altair_transform;
