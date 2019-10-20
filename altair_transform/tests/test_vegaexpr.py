@@ -15,13 +15,18 @@ EXPRESSIONS = {
     "toBoolean(1)": True,
     "toBoolean(0)": False,
     'if(4 > PI, "yes", "no")': "yes",
-    "isDate(datetime(2019, 0, 1))": True,
     "pow(sin(PI), 2) + pow(cos(PI), 2)": 1,
-    "year(datetime(2019, 0, 15))": 2019,
-    "month(datetime(2019, 0, 15))": 0,
-    "date(datetime(2019, 0, 15))": 15,
     "floor(1.5) == ceil(0.5)": True,
     "max(1, 2, 3) == min(3, 4, 5)": True,
+    "isDate(datetime(2019, 0, 1, 2, 34, 56, 789))": True,
+    "year(datetime(2019, 0, 1, 2, 34, 56, 789))": 2019,
+    "quarter(datetime(2019, 0, 1, 2, 34, 56, 789))": 0,
+    "month(datetime(2019, 0, 1, 2, 34, 56, 789))": 0,
+    "date(datetime(2019, 0, 1, 2, 34, 56, 789))": 1,
+    "hours(datetime(2019, 0, 1, 2, 34, 56, 789))": 2,
+    "minutes(datetime(2019, 0, 1, 2, 34, 56, 789))": 34,
+    "seconds(datetime(2019, 0, 1, 2, 34, 56, 789))": 56,
+    "milliseconds(datetime(2019, 0, 1, 2, 34, 56, 789))": 789,
 }
 
 

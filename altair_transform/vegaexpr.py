@@ -9,8 +9,6 @@ import pandas as pd
 import time as timemod
 from typing import Any, Dict, Optional, Pattern
 
-import pytz
-
 from altair_transform.utils import evaljs
 
 
@@ -120,7 +118,7 @@ def now() -> float:
 def datetime(
     year: int,
     month: int,
-    day: int = 0,
+    day: int = 1,
     hour: int = 0,
     min: int = 0,
     sec: int = 0,
@@ -217,7 +215,7 @@ def timezoneoffset(datetime):
 def utc(
     year: int,
     month: int,
-    day: int = 0,
+    day: int = 1,
     hour: int = 0,
     min: int = 0,
     sec: int = 0,
@@ -235,7 +233,7 @@ def utc(
         int(min),
         int(sec),
         int(millisec * 1000),
-        tzinfo=pytz.UTC,
+        tzinfo=dt.timezone.utc,
     )
 
 
