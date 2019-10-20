@@ -2,13 +2,15 @@
 
 Python evaluation of Altair/Vega-Lite transforms.
 
-[![build status](http://img.shields.io/travis/altair-viz/altair-transform/master.svg?style=flat)](https://travis-ci.org/altair-viz/altair-transform)
+[![build status](http://img.shields.io/travis/altair-viz/altair-transform/master.svg)](https://travis-ci.org/altair-viz/altair-transform)
+[![code style black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ``altair-transform`` requires Python 3.6 or later. Install with:
 
     $ pip install altair_transform
 
-This can be useful in a number of contexts, illustrated in the examples below.
+Altair-transform evaluates [Altair](http://altair-viz.github.io) and [Vega-Lite](http://vega.github.io/vega-lite)
+transforms directly in Python. This can be useful in a number of contexts, illustrated in the examples below.
 
 ## Example: Extracting Data
 
@@ -110,6 +112,7 @@ in Python.
 
 Altair creates chart specifications containing the full dataset.
 The advantage of this is that the data used to make the chart is entirely transparent; the disadvantage is that it causes issues as datasets grow large.
+To prevent users from inadvertently crashing their browsers by trying to send too much data to the frontend, Altair limits the data size by default.
 For example, a histogram of 20000 points:
 
 ```python
@@ -131,7 +134,8 @@ chart
 ```pyerr
 MaxRowsError: The number of rows in your dataset is greater than the maximum allowed (5000). For information on how to plot larger datasets in Altair, see the documentation
 ```
-Altair transform provides the ``transform_chart()`` function, which will pre-transform the data according to the chart specification, so that the final chart specification holds the aggregated data rather than the full dataset:
+There are several possible ways around this, as mentioned in Altair's [FAQ](https://altair-viz.github.io/user_guide/faq.html#maxrowserror-how-can-i-plot-large-datasets).
+Altiar-transform provides another option via the ``transform_chart()`` function, which will pre-transform the data according to the chart specification, so that the final chart specification holds the aggregated data rather than the full dataset:
 ```python
 from altair_transform import transform_chart
 new_chart = transform_chart(chart)
