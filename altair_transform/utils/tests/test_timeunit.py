@@ -1,7 +1,6 @@
 """Tests of the timeunit utilities"""
 from dateutil.tz import tzlocal
 import pytest
-import pytz
 
 import pandas as pd
 
@@ -40,26 +39,6 @@ TIMEZONES = [None, tzlocal(), "UTC", "US/Pacific", "US/Eastern"]
 def dates():
     # Use dates on either side of a year boundary to hit corner cases.
     return pd.DatetimeIndex(["1999-12-31 23:59:55.050", "2000-01-01 00:00:05.050"])
-
-
-@pytest.mark.parametrize("timezone", TIMEZONES[:3])
-def test_datetimeindex_roundtrip(dates, timezone):
-    dates = dates.tz_localize(timezone)
-    timestamp = timeunit.date_to_timestamp(dates)
-    dates2 = timeunit.timestamp_to_date(
-        timestamp, tz=(dates.tz is not None), utc=(dates.tz is pytz.UTC)
-    )
-    assert dates2.equals(dates)
-
-
-@pytest.mark.parametrize("timezone", TIMEZONES[:3])
-def test_timestamp_roundtrip(dates, timezone):
-    date = dates.tz_localize(timezone)[0]
-    timestamp = timeunit.date_to_timestamp(date)
-    date2 = timeunit.timestamp_to_date(
-        timestamp, tz=(date.tz is not None), utc=(date.tz is pytz.UTC)
-    )
-    assert date2 == date
 
 
 @pytest.mark.parametrize("timezone", TIMEZONES)
