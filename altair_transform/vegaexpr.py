@@ -9,8 +9,6 @@ import pandas as pd
 import time as timemod
 from typing import Any, Dict, Optional, Pattern
 
-import pytz
-
 from altair_transform.utils import evaljs
 
 
@@ -79,16 +77,18 @@ def toBoolean(value: Any) -> bool:
     return bool(value)
 
 
-def toDate(value: Any) -> Optional[dt.datetime]:
+def toDate(value: Any) -> Optional[float]:
     """
     Coerces the input value to a Date instance.
     Null values and empty strings are mapped to null.
     If an optional parser function is provided, it is used to
     perform date parsing, otherwise Date.parse is used.
     """
+    if isinstance(value, (float, int)):
+        return value
     if value is None or value == "":
         return None
-    return pd.to_datetime(value)
+    return pd.to_datetime(value).timestamp() * 1000
 
 
 def toNumber(value: Any) -> Optional[float]:
@@ -106,8 +106,10 @@ def toString(value: Any) -> Optional[str]:
     Coerces the input value to a string.
     Null values and empty strings are mapped to null.
     """
-    if value is None:
+    if value is None or value == "":
         return None
+    if isinstance(value, float) and value % 1 == 0:
+        return str(int(value))
     return str(value)
 
 
@@ -120,7 +122,7 @@ def now() -> float:
 def datetime(
     year: int,
     month: int,
-    day: int = 0,
+    day: int = 1,
     hour: int = 0,
     min: int = 0,
     sec: int = 0,
@@ -217,32 +219,82 @@ def timezoneoffset(datetime):
 def utc(
     year: int,
     month: int,
-    day: int = 0,
+    day: int = 1,
     hour: int = 0,
     min: int = 0,
     sec: int = 0,
     millisec: int = 0,
-) -> dt.datetime:
+) -> float:
     """
     Returns a timestamp for the given UTC date.
     The month is 0-based, such that 1 represents February.
     """
-    return dt.datetime(
-        int(year),
-        int(month) + 1,
-        int(day),
-        int(hour),
-        int(min),
-        int(sec),
-        int(millisec * 1000),
-        tzinfo=pytz.UTC,
+    return (
+        dt.datetime(
+            int(year),
+            int(month) + 1,
+            int(day),
+            int(hour),
+            int(min),
+            int(sec),
+            int(millisec * 1000),
+            tzinfo=dt.timezone.utc,
+        ).timestamp()
+        * 1000
     )
+
+
+def utcdate(datetime):
+    """Returns the day of the month for the given datetime value, in UTC time."""
+    raise NotImplementedError()
+
+
+def utcday(datetime):
+    """Returns the day of the week for the given datetime value, in UTC time."""
+    raise NotImplementedError()
+
+
+def utcyear(datetime):
+    """Returns the year for the given datetime value, in UTC time."""
+    raise NotImplementedError()
+
+
+def utcquarter(datetime):
+    """Returns the quarter of the year (0-3) for the given datetime value, in UTC time."""
+    raise NotImplementedError()
+
+
+def utcmonth(datetime):
+    """Returns the (zero-based) month for the given datetime value, in UTC time."""
+    raise NotImplementedError()
+
+
+def utchours(datetime):
+    """Returns the hours component for the given datetime value, in UTC time."""
+    raise NotImplementedError()
+
+
+def utcminutes(datetime):
+    """Returns the minutes component for the given datetime value, in UTC time."""
+    raise NotImplementedError()
+
+
+def utcseconds(datetime):
+    """Returns the seconds component for the given datetime value, in UTC time."""
+    raise NotImplementedError()
+
+
+def utcmilliseconds(datetime):
+    """Returns the milliseconds component for the given datetime value, in UTC time."""
+    raise NotImplementedError()
 
 
 # From https://vega.github.io/vega/docs/expressions/
 VEGAJS_NAMESPACE: Dict[str, Any] = {
     # Constants
     "null": None,
+    "true": True,
+    "false": False,
     "NaN": math.nan,
     "E": math.e,
     "LN2": math.log(2),
@@ -306,6 +358,15 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "time": time,
     "timezoneoffset": timezoneoffset,
     "utc": utc,
+    "utcdate": utcdate,
+    "utcday": utcday,
+    "utcyear": utcyear,
+    "utcquarter": utcquarter,
+    "utcmonth": utcmonth,
+    "utchours": utchours,
+    "utcminutes": utcminutes,
+    "utcseconds": utcseconds,
+    "utcmilliseconds": utcmilliseconds,
     # TODOs:
     # Remaining Date/Time Functions
     # Array Functions

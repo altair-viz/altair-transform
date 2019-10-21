@@ -100,11 +100,11 @@ def eval_value(value: Any) -> Any:
 
 
 @eval_value.register(alt.DateTime)
-def eval_datetime(value: alt.DateTime):
+def eval_datetime(value: alt.DateTime) -> pd.Series:
     # TODO: implement datetime conversion & comparison
     raise NotImplementedError("Evaluating alt.DateTime object")
 
 
 @eval_value.register(alt.SchemaBase)
-def eval_schemabase(value: alt.SchemaBase):
+def eval_schemabase(value: alt.SchemaBase) -> dict:
     return value.to_dict()

@@ -4,69 +4,9 @@ from typing import Union, Set
 import pandas as pd
 from dateutil.tz import tzlocal
 
-__all__ = ["date_to_timestamp", "timestamp_to_date", "compute_timeunit"]
+__all__ = ["compute_timeunit"]
 
 Date = Union[pd.Series, pd.DatetimeIndex, pd.Timestamp]
-
-
-def date_to_timestamp(date: pd.DatetimeIndex):
-    """Convert a pandas datetime to a javascript timestamp.
-
-    This aims to match the timezone handling semantics
-    used in Vega and Vega-Lite.
-
-    Parameters
-    ----------
-    timestamp : float
-        The unix epoch timestamp.
-
-    Returns
-    -------
-    date : pd.DatetimeIndex
-        The timestamps to be converted
-
-    See Also
-    --------
-    date_to_timestamp : opposite of this function
-    """
-    if date.tzinfo is None:
-        date = date.tz_localize(tzlocal())
-    try:
-        # Works for pd.Timestamp
-        return date.timestamp() * 1000
-    except AttributeError:
-        # Works for pd.DatetimeIndex
-        return date.astype("int64") * 1e-6
-
-
-def timestamp_to_date(
-    timestamp: float, tz: bool = False, utc: bool = False
-) -> pd.DatetimeIndex:
-    """Convert javascript timestamp to a pandas datetime.
-
-    This aims to match the timezone handling semantics
-    used in Vega and Vega-Lite.
-
-    Parameters
-    ----------
-    date : pd.DatetimeIndex
-        The timestamps to be converted
-
-    Returns
-    -------
-    timestamp : float
-        The unix epoch timestamp.
-
-    See Also
-    --------
-    timestamp_to_date : opposite of this function
-    """
-    dates = pd.to_datetime(timestamp, unit="ms").tz_localize("UTC")
-    if utc:
-        return dates
-    if tz:
-        return dates.tz_convert(tzlocal())
-    return dates.tz_convert(tzlocal()).tz_localize(None)
 
 
 def compute_timeunit(date: Date, timeunit: str) -> Date:
@@ -90,8 +30,7 @@ def compute_timeunit(date: Date, timeunit: str) -> Date:
 
     if dt(date).tz is None:
         date = dt(date).tz_localize(tzlocal())
-    timezone = "UTC" if timeunit.startswith("utc") else tzlocal()
-    date = dt(date).tz_convert(timezone)
+    date = dt(date).tz_convert("UTC" if timeunit.startswith("utc") else tzlocal())
 
     if isinstance(date, pd.Series):
         return pd.Series(_compute_timeunit(timeunit, date.dt))
@@ -137,7 +76,7 @@ def _compute_timeunit(name: str, date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     if not units:
         raise ValueError(f"{0!r} is not a recognized timeunit")
 
-    def quarter(month):
+    def quarter(month: pd.Int64Index) -> pd.Int64Index:
         return month - (month - 1) % 3
 
     Y = date.year.astype(str) if "year" in units else "1900"
