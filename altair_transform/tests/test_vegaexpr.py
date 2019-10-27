@@ -1,7 +1,7 @@
 import datetime as dt
 import pytest
 import numpy as np
-from altair_transform.vegaexpr import eval_vegajs
+from altair_transform.vegaexpr import eval_vegajs, undefined
 
 # Most parsing is tested in the parser; here we just test a sampling of the
 # variables and functions defined in the vegaexpr namespace.
@@ -10,6 +10,7 @@ EXPRESSIONS = {
     "null": None,
     "true": True,
     "false": False,
+    "undefined": undefined,
     "2 * PI": 2 * np.pi,
     "1 / SQRT2": 1.0 / np.sqrt(2),
     "LOG2E + LN10": np.log2(np.e) + np.log(10),
@@ -18,12 +19,19 @@ EXPRESSIONS = {
     "isBoolean(true)": True,
     "isBoolean(1)": False,
     "isDate(datetime(2019, 1, 1))": True,
+    "isDate('2019-01-01')": False,
+    "isDefined(null)": True,
+    "isDefined(undefined)": False,
     "isNumber(3.5)": True,
     "isNumber(now())": True,
     "isString('abc')": True,
     'isString("abc")': True,
     "isObject({a:2})": True,
     "isObject({'a':2})": True,
+    "isValid(null)": False,
+    "isValid(NaN)": False,
+    "isValid(undefined)": False,
+    "isValid(0)": True,
     "toBoolean(1)": True,
     "toBoolean(0)": False,
     "toDate('')": None,
@@ -43,6 +51,9 @@ EXPRESSIONS = {
     "pow(sin(PI), 2) + pow(cos(PI), 2)": 1,
     "floor(1.5) == ceil(0.5)": True,
     "max(1, 2, 3) == min(3, 4, 5)": True,
+    "time(datetime(1546338896789))": 1546338896789,
+    "isDate(datetime())": True,
+    "datetime(1546329600000)": dt.datetime.fromtimestamp(1546329600),
     "datetime(2019, 0, 1)": dt.datetime(2019, 1, 1),
     "year(datetime(2019, 0, 1, 2, 34, 56, 789))": 2019,
     "quarter(datetime(2019, 0, 1, 2, 34, 56, 789))": 0,
@@ -54,8 +65,27 @@ EXPRESSIONS = {
     "seconds(datetime(2019, 0, 1, 2, 34, 56, 789))": 56,
     "milliseconds(datetime(2019, 0, 1, 2, 34, 56, 789))": 789,
     "utc(2019, 0, 1, 2, 34, 56, 789)": 1546310096789,
-    # TODO: figure out how to test timezone-dependent funcs.
-    # "time(datetime(2019, 0, 1, 2, 34, 56, 789))": 1546338896789,
+    "utcyear(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 2019,
+    "utcquarter(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 0,
+    "utcmonth(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 0,
+    "utcdate(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 1,
+    "utcday(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 2,
+    "utchours(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 2,
+    "utcminutes(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 34,
+    "utcseconds(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 56,
+    "utcmilliseconds(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 789,
+    "parseInt('1234 years')": 1234,
+    "parseInt('2A', 16)": 42,
+    "parseFloat('  3.125 is close to pi')": 3.125,
+    "indexof('ABCABC', 'C')": 2,
+    "lastindexof('ABCABC', 'C')": 5,
+    "length('ABCABC')": 6,
+    "lower('AbC')": "abc",
+    "split('AB CD EF', ' ')": ["AB", "CD", "EF"],
+    "substring('ABCDEF', 3, -1)": "ABC",
+    "slice('ABCDEF', 3, -1)": "DE",
+    "trim('   ABC   ')": "ABC",
+    "upper('AbC')": "ABC",
 }
 
 
