@@ -74,6 +74,17 @@ EXPRESSIONS = {
     "utcminutes(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 34,
     "utcseconds(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 56,
     "utcmilliseconds(datetime(utc(2019, 0, 1, 2, 34, 56, 789)))": 789,
+    "parseInt('1234 years')": 1234,
+    "parseInt('2A', 16)": 42,
+    "parseFloat('  3.125 is close to pi')": 3.125,
+    "indexof('ABCABC', 'C')": 2,
+    "lastindexof('ABCABC', 'C')": 5,
+    "length('ABCABC')": 6,
+    "lower('AbC')": "abc",
+    "slice('ABCDE', 2, -1)": "CD",
+    "split('AB CD EF', ' ')": ["AB", "CD", "EF"],
+    "trim('   ABC   ')": "ABC",
+    "upper('AbC')": "ABC",
 }
 
 

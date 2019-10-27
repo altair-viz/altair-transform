@@ -359,64 +359,56 @@ def utc(
 
 
 @vectorize
-def utcdate(datetime):
+def utcdate(datetime: dt.datetime) -> int:
     """Returns the day of the month for the given datetime value, in UTC time."""
     return date(datetime.astimezone(tz.tzutc()))
 
 
 @vectorize
-def utcday(datetime):
+def utcday(datetime: dt.datetime) -> int:
     """Returns the day of the week for the given datetime value, in UTC time."""
     return day(datetime.astimezone(tz.tzutc()))
 
 
 @vectorize
-def utcyear(datetime):
+def utcyear(datetime: dt.datetime) -> int:
     """Returns the year for the given datetime value, in UTC time."""
     return year(datetime.astimezone(tz.tzutc()))
 
 
 @vectorize
-def utcquarter(datetime):
+def utcquarter(datetime: dt.datetime) -> int:
     """Returns the quarter of the year (0-3) for the given datetime value, in UTC time."""
     return quarter(datetime.astimezone(tz.tzutc()))
 
 
 @vectorize
-def utcmonth(datetime):
+def utcmonth(datetime: dt.datetime) -> int:
     """Returns the (zero-based) month for the given datetime value, in UTC time."""
     return month(datetime.astimezone(tz.tzutc()))
 
 
 @vectorize
-def utchours(datetime):
+def utchours(datetime: dt.datetime) -> int:
     """Returns the hours component for the given datetime value, in UTC time."""
     return hours(datetime.astimezone(tz.tzutc()))
 
 
 @vectorize
-def utcminutes(datetime):
+def utcminutes(datetime: dt.datetime) -> int:
     """Returns the minutes component for the given datetime value, in UTC time."""
     return minutes(datetime.astimezone(tz.tzutc()))
 
 
 @vectorize
-def utcseconds(datetime):
+def utcseconds(datetime: dt.datetime) -> int:
     """Returns the seconds component for the given datetime value, in UTC time."""
     return seconds(datetime.astimezone(tz.tzutc()))
 
 
-def utcmilliseconds(datetime):
+def utcmilliseconds(datetime: dt.datetime) -> float:
     """Returns the milliseconds component for the given datetime value, in UTC time."""
     return milliseconds(datetime.astimezone(tz.tzutc()))
-
-
-@vectorize
-def merge(*objs: dict) -> dict:
-    out = {}
-    for obj in objs:
-        out.update(obj)
-    return out
 
 
 @vectorize
@@ -517,6 +509,158 @@ def utcParse(value, specifier):
     raise NotImplementedError()
 
 
+# String functions
+@vectorize
+def indexof(string: str, substring: str) -> int:
+    """Returns the first index of substring in the input string."""
+    return string.find(substring)
+
+
+@vectorize
+def lastindexof(string: str, substring: str) -> int:
+    """Returns the last index of substring in the input string."""
+    return string.rfind(substring)
+
+
+@vectorize
+def length(string: str) -> int:
+    """Returns the length of the input string."""
+    return len(string)
+
+
+@vectorize
+def lower(string: str) -> str:
+    """Transforms string to lower-case letters."""
+    return string.lower()
+
+
+def pad(string: str, length: int, character: str = " ", align: str = "right"):
+    """
+    Pads a string value with repeated instances of a character
+    up to a specified length. If character is not specified, a
+    space (‘ ‘) is used. By default, padding is added to the end
+    of a string. An optional align parameter specifies if padding
+    should be added to the 'left' (beginning), 'center', or
+    'right' (end) of the input string.
+    """
+    raise NotImplementedError()
+
+
+@vectorize
+def parseFloat(string: str) -> Optional[float]:
+    """
+    Parses the input string to a floating-point value.
+    Same as JavaScript’s parseFloat.
+    """
+    # Javascript parses the first N valid characters.
+    # TODO: use a more efficient approach?
+    string = str(string).strip().split()[0]
+    for end in range(len(string), 0, -1):
+        substr = string[:end]
+        try:
+            return float(substr)
+        except ValueError:
+            pass
+    return None
+
+
+@vectorize
+def parseInt(string: str, base: int = 10) -> Optional[int]:
+    """
+    Parses the input string to an integer value.
+    Same as JavaScript’s parseInt.
+    """
+    # Javascript parses the first N valid characters.
+    # TODO: use a more efficient approach?
+    string = str(string).strip().split()[0]
+    base = int(base)
+    for end in range(len(string), 0, -1):
+        substr = string[:end]
+        try:
+            return int(substr, base)
+        except ValueError:
+            pass
+    return None
+
+
+def replace(string: str, pattern: Union[str, Pattern], replacement: str) -> str:
+    """
+    Returns a new string with some or all matches of pattern replaced by a
+    replacement string. The pattern can be a string or a regular expression.
+    If pattern is a string, only the first instance will be replaced.
+    Same as JavaScript’s String.replace.
+    """
+    raise NotImplementedError()
+
+
+@vectorize
+def slice_(s: str, start: int, end: Optional[int] = None) -> str:
+    """
+    Returns a section of string between the start and end indices.
+    If the end argument is negative, it is treated as an offset from
+    the end of the string (length(string) + end).
+    """
+    start = int(start)
+    if end is not None:
+        end = int(end)
+    return s[start:end]
+
+
+@vectorize
+def split(s: str, sep: str, limit: int = -1):
+    """
+    Returns an array of tokens created by splitting the input string
+    according to a provided separator pattern. The result can optionally
+    be constrained to return at most limit tokens.
+    """
+    return s.split(sep, limit)
+
+
+@vectorize
+def substring(s: str, start: int, end: Optional[int] = None) -> str:
+    """Returns a section of string between the start and end indices."""
+    # TODO: match JS handling of end index
+    start = int(start)
+    if end is not None:
+        end = int(end)
+    return s[start:end]
+
+
+@vectorize
+def trim(s: str) -> str:
+    """Returns a trimmed string with preceding and trailing whitespace removed."""
+    return s.strip()
+
+
+def truncate(
+    string: str, length: int, align: str = "right", ellipsis: str = "…"
+) -> str:
+    """
+    Truncates an input string to a target length. The optional align argument
+    indicates what part of the string should be truncated:
+    'left' (the beginning), 'center', or 'right' (the end).
+    By default, the 'right' end of the string is truncated.
+    The optional ellipsis argument indicates the string to use to indicate
+    truncated content; by default the ellipsis character … (\u2026) is used.
+    """
+    raise NotImplementedError()
+
+
+@vectorize
+def upper(s: str) -> str:
+    """Transforms string to upper-case letters."""
+    return s.upper()
+
+
+# Object functions
+@vectorize
+def merge(*objs: dict) -> dict:
+    out = {}
+    for obj in objs:
+        out.update(obj)
+    return out
+
+
 # From https://vega.github.io/vega/docs/expressions/
 VEGAJS_NAMESPACE: Dict[str, Any] = {
     # Constants
@@ -599,25 +743,30 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "utcseconds": utcseconds,
     "utcmilliseconds": utcmilliseconds,
     # String Functions
-    "indexof": lambda s, x: s.find(x),
-    "lastindexof": lambda s, x: s.rfind(x),
-    "length": lambda s: len(s),
-    "lower": lambda s: s.lower(),
-    # "pad"
-    # "parseFloat"
-    # "parseInt"
-    "slice": lambda s, start, end=None: s[start:end],
-    "split": lambda s, sep, limit=-1: s.split(sep, limit),
-    "substring": lambda s, start, end=None: s[start:end],
-    "trim": lambda s: s.strip(),
-    # "truncate"
-    "upper": lambda s: s.upper(),
+    "indexof": indexof,
+    "lastindexof": lastindexof,
+    "length": length,
+    "lower": lower,
+    "pad": pad,
+    "parseFloat": parseFloat,
+    "parseInt": parseInt,
+    "replace": replace,
+    "slice": slice_,
+    "split": split,
+    "substring": substring,
+    "trim": trim,
+    "truncate": truncate,
+    "upper": upper,
+    # Formatting Functions
+    "dayFormat": dayFormat,
+    "dayAbbrevFormat": dayAbbrevFormat,
+    "monthFormat": monthFormat,
+    "monthAbbrevFormat": monthAbbrevFormat,
     # Object Functions
     "merge": merge,
     # TODOs:
     # Statistical Functions
     # Array Functions
-    # Formatting Functions
     # RegExp Functions
     # Color functions
     # Data functions
