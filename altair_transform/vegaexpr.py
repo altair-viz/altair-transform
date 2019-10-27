@@ -2,13 +2,18 @@
 Evaluate vega expressions language
 """
 import datetime as dt
+from functools import reduce, wraps
+import itertools
 import math
+import operator
 import random
 import sys
+import time as timemod
+from typing import Any, Callable, Dict, Optional, Pattern, Union, overload
+
+import numpy as np
 import pandas as pd
 from dateutil import tz
-import time as timemod
-from typing import Any, Dict, Optional, Pattern, overload
 
 from altair_transform.utils import evaljs
 
@@ -28,17 +33,54 @@ def eval_vegajs(expression: str, datum: pd.DataFrame = None) -> pd.DataFrame:
     return evaljs(expression, namespace)
 
 
-# Type Coercion Functions
+def vectorize(func: Callable) -> Callable:
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        series_args = [
+            arg
+            for arg in itertools.chain(args, kwargs.values())
+            if isinstance(arg, pd.Series)
+        ]
+        if not series_args:
+            return func(*args, **kwargs)
+        else:
+            index = reduce(operator.or_, [s.index for s in series_args])
+
+            def _get(x, i):
+                return x.get(i, math.nan) if isinstance(x, pd.Series) else x
+
+            return pd.Series(
+                [
+                    func(
+                        *(_get(arg, i) for arg in args),
+                        **{k: _get(v, i) for k, v in kwargs.items()},
+                    )
+                    for i in index
+                ],
+                index=index,
+            )
+
+    if hasattr(func, "__annotations__"):
+        wrapper.__annotations__ = {
+            key: Union[pd.Series, val] for key, val in func.__annotations__.items()
+        }
+    return wrapper
+
+
+# Type Checking Functions
+@vectorize
 def isArray(value: Any) -> bool:
     """Returns true if value is an array, false otherwise."""
-    return isinstance(value, list)
+    return isinstance(value, (list, np.ndarray))
 
 
+@vectorize
 def isBoolean(value: Any) -> bool:
     """Returns true if value is a boolean (true or false), false otherwise."""
-    return isinstance(value, bool)
+    return isinstance(value, (bool, np.bool_))
 
 
+@vectorize
 def isDate(value: Any) -> bool:
     """Returns true if value is a Date object, false otherwise.
 
@@ -48,6 +90,7 @@ def isDate(value: Any) -> bool:
     return isinstance(value, dt.datetime)
 
 
+@vectorize
 def isDefined(value: Any) -> bool:
     """Returns true if value is a defined value, false if value equals undefined.
 
@@ -57,14 +100,16 @@ def isDefined(value: Any) -> bool:
     return value is not undefined
 
 
+@vectorize
 def isNumber(value: Any) -> bool:
     """Returns true if value is a number, false otherwise.
 
     NaN and Infinity are considered numbers.
     """
-    return isinstance(value, (int, float))
+    return np.issubdtype(type(value), np.number)
 
 
+@vectorize
 def isObject(value: Any) -> bool:
     """Returns true if value is an object, false otherwise.
 
@@ -73,6 +118,7 @@ def isObject(value: Any) -> bool:
     return value is None or isinstance(value, dict)
 
 
+@vectorize
 def isRegExp(value: Any) -> bool:
     """
     Returns true if value is a RegExp (regular expression)
@@ -81,17 +127,20 @@ def isRegExp(value: Any) -> bool:
     return isinstance(value, Pattern)
 
 
+@vectorize
 def isString(value: Any) -> bool:
     """Returns true if value is a string, false otherwise."""
     return isinstance(value, str)
 
 
+@vectorize
 def isValid(value: Any) -> bool:
     """Returns true if value is not null, undefined, or NaN."""
     return not (value is undefined or pd.isna(value))
 
 
 # Type Coercion Functions
+@vectorize
 def toBoolean(value: Any) -> bool:
     """
     Coerces the input value to a boolean.
@@ -100,6 +149,7 @@ def toBoolean(value: Any) -> bool:
     return bool(value)
 
 
+@vectorize
 def toDate(value: Any) -> Optional[float]:
     """
     Coerces the input value to a Date instance.
@@ -114,6 +164,7 @@ def toDate(value: Any) -> Optional[float]:
     return pd.to_datetime(value).timestamp() * 1000
 
 
+@vectorize
 def toNumber(value: Any) -> Optional[float]:
     """
     Coerces the input value to a number.
@@ -124,6 +175,7 @@ def toNumber(value: Any) -> Optional[float]:
     return float(value)
 
 
+@vectorize
 def toString(value: Any) -> Optional[str]:
     """
     Coerces the input value to a string.
@@ -147,24 +199,25 @@ def datetime() -> dt.datetime:
     ...
 
 
-@overload
+@overload  # noqa: F811
 def datetime(timestamp: float) -> dt.datetime:
     ...
 
 
-@overload
+@overload  # noqa: F811
 def datetime(
     year: float,
     month: int,
     day: int = 0,
     hour: int = 0,
-    minute: int = 0,
-    second: int = 0,
-    millisecond: float = 0,
+    min: int = 0,
+    sec: int = 0,
+    millisec: float = 0,
 ) -> dt.datetime:
     ...
 
 
+@vectorize  # noqa: F811
 def datetime(*args):
     """Returns a new Date instance.
 
@@ -186,12 +239,13 @@ def datetime(*args):
         if len(args) == 2:
             args.append(0)  # Day is required in Python
         if len(args) == 7:
-            args[6] = args[6] * 1000  # milliseconds to microseconds
+            args[6] = int(args[6] * 1000)  # milliseconds to microseconds
         return dt.datetime(*args)
     else:
         raise ValueError("Too many arguments")
 
 
+@vectorize
 def date(datetime: dt.datetime) -> int:
     """
     Returns the day of the month for the given datetime value, in local time.
@@ -199,6 +253,7 @@ def date(datetime: dt.datetime) -> int:
     return datetime.day
 
 
+@vectorize
 def day(datetime: dt.datetime) -> int:
     """
     Returns the day of the week for the given datetime value, in local time.
@@ -206,11 +261,13 @@ def day(datetime: dt.datetime) -> int:
     return (datetime.weekday() + 1) % 7
 
 
+@vectorize
 def year(datetime: dt.datetime) -> int:
     """Returns the year for the given datetime value, in local time."""
     return datetime.year
 
 
+@vectorize
 def quarter(datetime: dt.datetime) -> int:
     """
     Returns the quarter of the year (0-3) for the given datetime value,
@@ -219,6 +276,7 @@ def quarter(datetime: dt.datetime) -> int:
     return (datetime.month - 1) // 3
 
 
+@vectorize
 def month(datetime: dt.datetime) -> int:
     """
     Returns the (zero-based) month for the given datetime value, in local time.
@@ -226,6 +284,7 @@ def month(datetime: dt.datetime) -> int:
     return datetime.month - 1
 
 
+@vectorize
 def hours(datetime: dt.datetime) -> int:
     """
     Returns the hours component for the given datetime value, in local time.
@@ -233,6 +292,7 @@ def hours(datetime: dt.datetime) -> int:
     return datetime.hour
 
 
+@vectorize
 def minutes(datetime: dt.datetime) -> int:
     """
     Returns the minutes component for the given datetime value, in local time.
@@ -240,6 +300,7 @@ def minutes(datetime: dt.datetime) -> int:
     return datetime.minute
 
 
+@vectorize
 def seconds(datetime: dt.datetime) -> int:
     """
     Returns the seconds component for the given datetime value, in local time.
@@ -247,6 +308,7 @@ def seconds(datetime: dt.datetime) -> int:
     return datetime.second
 
 
+@vectorize
 def milliseconds(datetime: dt.datetime) -> float:
     """
     Returns the milliseconds component for the given datetime value,
@@ -255,16 +317,19 @@ def milliseconds(datetime: dt.datetime) -> float:
     return datetime.microsecond / 1000
 
 
+@vectorize
 def time(datetime: dt.datetime) -> float:
     """Returns the epoch-based timestamp for the given datetime value."""
     return datetime.timestamp() * 1000
 
 
+@vectorize
 def timezoneoffset(datetime):
     # TODO: use tzlocal?
     raise NotImplementedError("timezoneoffset()")
 
 
+@vectorize
 def utc(
     year: int,
     month: int = 0,
@@ -293,49 +358,163 @@ def utc(
     )
 
 
+@vectorize
 def utcdate(datetime):
     """Returns the day of the month for the given datetime value, in UTC time."""
-    return date(datetime.astimezone(tz.UTC))
+    return date(datetime.astimezone(tz.tzutc()))
 
 
+@vectorize
 def utcday(datetime):
     """Returns the day of the week for the given datetime value, in UTC time."""
-    return day(datetime.astimezone(tz.UTC))
+    return day(datetime.astimezone(tz.tzutc()))
 
 
+@vectorize
 def utcyear(datetime):
     """Returns the year for the given datetime value, in UTC time."""
-    return year(datetime.astimezone(tz.UTC))
+    return year(datetime.astimezone(tz.tzutc()))
 
 
+@vectorize
 def utcquarter(datetime):
     """Returns the quarter of the year (0-3) for the given datetime value, in UTC time."""
-    return quarter(datetime.astimezone(tz.UTC))
+    return quarter(datetime.astimezone(tz.tzutc()))
 
 
+@vectorize
 def utcmonth(datetime):
     """Returns the (zero-based) month for the given datetime value, in UTC time."""
-    return month(datetime.astimezone(tz.UTC))
+    return month(datetime.astimezone(tz.tzutc()))
 
 
+@vectorize
 def utchours(datetime):
     """Returns the hours component for the given datetime value, in UTC time."""
-    return hours(datetime.astimezone(tz.UTC))
+    return hours(datetime.astimezone(tz.tzutc()))
 
 
+@vectorize
 def utcminutes(datetime):
     """Returns the minutes component for the given datetime value, in UTC time."""
-    return minutes(datetime.astimezone(tz.UTC))
+    return minutes(datetime.astimezone(tz.tzutc()))
 
 
+@vectorize
 def utcseconds(datetime):
     """Returns the seconds component for the given datetime value, in UTC time."""
-    return seconds(datetime.astimezone(tz.UTC))
+    return seconds(datetime.astimezone(tz.tzutc()))
 
 
 def utcmilliseconds(datetime):
     """Returns the milliseconds component for the given datetime value, in UTC time."""
-    return milliseconds(datetime.astimezone(tz.UTC))
+    return milliseconds(datetime.astimezone(tz.tzutc()))
+
+
+@vectorize
+def merge(*objs: dict) -> dict:
+    out = {}
+    for obj in objs:
+        out.update(obj)
+    return out
+
+
+@vectorize
+def dayFormat(day: int) -> str:
+    """
+    Formats a (0-6) weekday number as a full week day name, according to the current locale.
+    For example: dayFormat(0) -> "Sunday".
+    """
+    days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+    ]
+    return days[day % 7]
+
+
+@vectorize
+def dayAbbrevFormat(day: int) -> str:
+    """
+    Formats a (0-6) weekday number as an abbreviated week day name, according to the current locale.
+    For example: dayAbbrevFormat(0) -> "Sun".
+    """
+    days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    return days[day % 7]
+
+
+@vectorize
+def format(value, specifier):
+    """Formats a numeric value as a string. The specifier must be a valid d3-format specifier (e.g., format(value, ',.2f')."""
+    raise NotImplementedError()
+
+
+@vectorize
+def monthFormat(month: int) -> str:
+    """Formats a (zero-based) month number as a full month name, according to the current locale. For example: monthFormat(0) -> "January"."""
+    months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ]
+    return months[month % 12]
+
+
+@vectorize
+def monthAbbrevFormat(month: int) -> str:
+    """Formats a (zero-based) month number as an abbreviated month name, according to the current locale. For example: monthAbbrevFormat(0) -> "Jan"."""
+    months = [
+        "Jan",
+        "Feb",
+        "Ma",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+    return months[month % 12]
+
+
+@vectorize
+def timeFormat(value, specifier):
+    """Formats a datetime value (either a Date object or timestamp) as a string, according to the local time. The specifier must be a valid d3-time-format specifier. For example: timeFormat(timestamp, '%A')."""
+    raise NotImplementedError()
+
+
+@vectorize
+def timeParse(string, specifier):
+    """Parses a string value to a Date object, according to the local time. The specifier must be a valid d3-time-format specifier. For example: timeParse('June 30, 2015', '%B %d, %Y')."""
+    raise NotImplementedError()
+
+
+@vectorize
+def utcFormat(value, specifier):
+    """Formats a datetime value (either a Date object or timestamp) as a string, according to UTC time. The specifier must be a valid d3-time-format specifier. For example: utcFormat(timestamp, '%A')."""
+    raise NotImplementedError()
+
+
+@vectorize
+def utcParse(value, specifier):
+    """Parses a string value to a Date object, according to UTC time. The specifier must be a valid d3-time-format specifier. For example: utcParse('June 30, 2015', '%B %d, %Y')."""
+    raise NotImplementedError()
 
 
 # From https://vega.github.io/vega/docs/expressions/
@@ -374,27 +553,27 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     # Control Flow Functions
     "if": lambda test, if_value, else_value: if_value if test else else_value,
     # Math Functions
-    "isNaN": math.isnan,
-    "isFinite": math.isfinite,
-    "abs": abs,
-    "acos": math.acos,
-    "asin": math.asin,
-    "atan": math.atan,
-    "atan2": math.atan2,
-    "ceil": math.ceil,
-    "clamp": lambda val, low, hi: max(min(val, hi), low),
-    "cos": math.cos,
-    "exp": math.exp,
-    "floor": math.floor,
-    "log": math.log,
-    "max": max,
-    "min": min,
-    "pow": math.pow,
+    "isNaN": np.isnan,
+    "isFinite": np.isfinite,
+    "abs": np.abs,
+    "acos": np.arccos,
+    "asin": np.arcsin,
+    "atan": np.arctan,
+    "atan2": np.arctan2,
+    "ceil": np.ceil,
+    "clamp": np.clip,
+    "cos": np.cos,
+    "exp": np.exp,
+    "floor": np.floor,
+    "log": np.log,
+    "max": vectorize(max),
+    "min": vectorize(min),
+    "pow": np.power,
     "random": random.random,
-    "round": round,
-    "sin": math.sin,
-    "sqrt": math.sqrt,
-    "tan": math.tan,
+    "round": np.round,
+    "sin": np.sin,
+    "sqrt": np.sqrt,
+    "tan": np.tan,
     # Date/Time Functions
     "now": now,
     "datetime": datetime,
@@ -419,12 +598,27 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "utcminutes": utcminutes,
     "utcseconds": utcseconds,
     "utcmilliseconds": utcmilliseconds,
+    # String Functions
+    "indexof": lambda s, x: s.find(x),
+    "lastindexof": lambda s, x: s.rfind(x),
+    "length": lambda s: len(s),
+    "lower": lambda s: s.lower(),
+    # "pad"
+    # "parseFloat"
+    # "parseInt"
+    "slice": lambda s, start, end=None: s[start:end],
+    "split": lambda s, sep, limit=-1: s.split(sep, limit),
+    "substring": lambda s, start, end=None: s[start:end],
+    "trim": lambda s: s.strip(),
+    # "truncate"
+    "upper": lambda s: s.upper(),
+    # Object Functions
+    "merge": merge,
     # TODOs:
     # Statistical Functions
-    # Remaining Date/Time Functions
     # Array Functions
-    # String Functions
-    # Object Functions
     # Formatting Functions
     # RegExp Functions
+    # Color functions
+    # Data functions
 }
