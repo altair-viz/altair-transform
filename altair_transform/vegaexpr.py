@@ -617,13 +617,13 @@ def split(s: str, sep: str, limit: int = -1):
 
 
 @vectorize
-def substring(s: str, start: int, end: Optional[int] = None) -> str:
+def substring(string: str, start: int, end: Optional[int] = None) -> str:
     """Returns a section of string between the start and end indices."""
-    # TODO: match JS handling of end index
-    start = int(start)
-    if end is not None:
-        end = int(end)
-    return s[start:end]
+    start = max(0, int(start))
+    end = len(string) if end is None else max(0, int(end))
+    if start > end:
+        end, start = start, end
+    return string[start:end]
 
 
 @vectorize

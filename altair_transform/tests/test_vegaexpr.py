@@ -81,8 +81,9 @@ EXPRESSIONS = {
     "lastindexof('ABCABC', 'C')": 5,
     "length('ABCABC')": 6,
     "lower('AbC')": "abc",
-    "slice('ABCDE', 2, -1)": "CD",
     "split('AB CD EF', ' ')": ["AB", "CD", "EF"],
+    "substring('ABCDEF', 3, -1)": "ABC",
+    "slice('ABCDEF', 3, -1)": "DE",
     "trim('   ABC   ')": "ABC",
     "upper('AbC')": "ABC",
 }
