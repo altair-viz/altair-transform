@@ -534,6 +534,7 @@ def lower(string: str) -> str:
     return string.lower()
 
 
+@vectorize
 def pad(string: str, length: int, character: str = " ", align: str = "right"):
     """
     Pads a string value with repeated instances of a character
@@ -543,7 +544,17 @@ def pad(string: str, length: int, character: str = " ", align: str = "right"):
     should be added to the 'left' (beginning), 'center', or
     'right' (end) of the input string.
     """
-    raise NotImplementedError()
+    string = str(string)
+    character = str(character)
+    npad = int(length) - len(string)
+    if npad <= 0:
+        return string
+    elif align == "left":
+        return npad * character + string
+    elif align == "center":
+        return (npad // 2) * character + string + (npad - npad // 2) * character
+    else:
+        return string + npad * character
 
 
 @vectorize
@@ -583,6 +594,7 @@ def parseInt(string: str, base: int = 10) -> Optional[int]:
     return None
 
 
+@vectorize
 def replace(string: str, pattern: Union[str, Pattern], replacement: str) -> str:
     """
     Returns a new string with some or all matches of pattern replaced by a
@@ -590,7 +602,10 @@ def replace(string: str, pattern: Union[str, Pattern], replacement: str) -> str:
     If pattern is a string, only the first instance will be replaced.
     Same as JavaScript’s String.replace.
     """
-    raise NotImplementedError()
+    if isinstance(pattern, str):
+        return str(string).replace(pattern, replacement, 1)
+    else:
+        raise NotImplementedError("regex replace")
 
 
 @vectorize
@@ -632,6 +647,7 @@ def trim(s: str) -> str:
     return s.strip()
 
 
+@vectorize
 def truncate(
     string: str, length: int, align: str = "right", ellipsis: str = "…"
 ) -> str:
@@ -643,7 +659,17 @@ def truncate(
     The optional ellipsis argument indicates the string to use to indicate
     truncated content; by default the ellipsis character … (\u2026) is used.
     """
-    raise NotImplementedError()
+    string = str(string)
+    nchars = int(length) - len(ellipsis)
+    if nchars <= 0:
+        return ellipsis
+    elif align == "left":
+        return ellipsis + string[-nchars:]
+    elif align == "center":
+        print(nchars, nchars // 2, nchars // 2 - nchars)
+        return string[: nchars - nchars // 2] + ellipsis + string[-(nchars // 2) :]
+    else:
+        return string[:nchars] + ellipsis
 
 
 @vectorize

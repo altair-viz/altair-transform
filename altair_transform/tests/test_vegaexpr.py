@@ -81,10 +81,17 @@ EXPRESSIONS = {
     "lastindexof('ABCABC', 'C')": 5,
     "length('ABCABC')": 6,
     "lower('AbC')": "abc",
+    "pad('abc', 6, 'x', 'left')": "xxxabc",
+    "pad('abc', 6, 'x', 'right')": "abcxxx",
+    "pad('abc', 6, 'x', 'center')": "xabcxx",
+    "replace('ABCDABCD', 'BC', 'xx')": "AxxDABCD",
     "split('AB CD EF', ' ')": ["AB", "CD", "EF"],
     "substring('ABCDEF', 3, -1)": "ABC",
     "slice('ABCDEF', 3, -1)": "DE",
     "trim('   ABC   ')": "ABC",
+    "truncate('1234567', 4, 'right', 'x')": "123x",
+    "truncate('1234567', 4, 'left', 'x')": "x567",
+    "truncate('1234567', 4, 'center', 'x')": "12x7",
     "upper('AbC')": "ABC",
 }
 
