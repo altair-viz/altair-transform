@@ -687,7 +687,160 @@ def merge(*objs: dict) -> dict:
     return out
 
 
-# From https://vega.github.io/vega/docs/expressions/
+# Statistical Functions
+# TODO: implement without scipy.stats?
+@vectorize
+def sampleNormal(mean=0, stdev=1):
+    """
+    Returns a sample from a univariate normal (Gaussian) probability distribution
+    with specified mean and standard deviation stdev. If unspecified, the mean defaults
+    to 0 and the standard deviation defaults to 1.
+    """
+    from scipy.stats import norm
+
+    return norm(mean, stdev).rvs()
+
+
+@vectorize
+def cumulativeNormal(value, mean=0, stdev=1):
+    """
+    Returns the value of the cumulative distribution function at the given input
+    domain value for a normal distribution with specified mean and standard
+    deviation stdev. If unspecified, the mean defaults to 0 and the standard
+    deviation defaults to 1.
+    """
+    from scipy.stats import norm
+
+    return norm(mean, stdev).cdf(value)
+
+
+@vectorize
+def densityNormal(value, mean=0, stdev=1):
+    """
+    Returns the value of the probability density function at the given input domain
+    value, for a normal distribution with specified mean and standard deviation stdev.
+    If unspecified, the mean defaults to 0 and the standard deviation defaults to 1.
+    """
+    from scipy.stats import norm
+
+    return norm(mean, stdev).pdf(value)
+
+
+@vectorize
+def quantileNormal(probability, mean=0, stdev=1):
+    """
+    Returns the quantile value (the inverse of the cumulative distribution function)
+    for the given input probability, for a normal distribution with specified mean
+    and standard deviation stdev. If unspecified, the mean defaults to 0 and the
+    standard deviation defaults to 1.
+    """
+    from scipy.stats import norm
+
+    return norm(mean, stdev).ppf(probability)
+
+
+@vectorize
+def sampleLogNormal(mean=0, stdev=1):
+    """
+    Returns a sample from a univariate log-normal probability distribution with
+    specified log mean and log standard deviation stdev. If unspecified, the log
+    mean defaults to 0 and the log standard deviation defaults to 1.
+    """
+    from scipy.stats import lognorm
+
+    return lognorm(s=stdev, scale=np.exp(mean)).rvs()
+
+
+@vectorize
+def cumulativeLogNormal(value, mean=0, stdev=1):
+    """
+    Returns the value of the cumulative distribution function at the given input
+    domain value for a log-normal distribution with specified log mean and log
+    standard deviation stdev. If unspecified, the log mean defaults to 0 and the
+    log standard deviation defaults to 1.
+    """
+    from scipy.stats import lognorm
+
+    return lognorm(s=stdev, scale=np.exp(mean)).cdf(value)
+
+
+@vectorize
+def densityLogNormal(value, mean=0, stdev=1):
+    """
+    Returns the value of the probability density function at the given input domain
+    value, for a log-normal distribution with specified log mean and log standard
+    deviation stdev. If unspecified, the log mean defaults to 0 and the log standard
+    deviation defaults to 1.
+    """
+    from scipy.stats import lognorm
+
+    return lognorm(s=stdev, scale=np.exp(mean)).pdf(value)
+
+
+@vectorize
+def quantileLogNormal(probability, mean=0, stdev=1):
+    """
+    Returns the quantile value (the inverse of the cumulative distribution function)
+    for the given input probability, for a log-normal distribution with specified log
+    mean and log standard deviation stdev. If unspecified, the log mean defaults to 0
+    and the log standard deviation defaults to 1.
+    """
+    from scipy.stats import lognorm
+
+    return lognorm(s=stdev, scale=np.exp(mean)).ppf(probability)
+
+
+@vectorize
+def sampleUniform(min=0, max=1):
+    """
+    Returns a sample from a univariate continuous uniform probability distribution
+    over the interval [min, max). If unspecified, min defaults to 0 and max defaults
+    to 1. If only one argument is provided, it is interpreted as the max value.
+    """
+    from scipy.stats import uniform
+
+    return uniform(loc=min, scale=max - min).rvs()
+
+
+@vectorize
+def cumulativeUniform(value, min=0, max=1):
+    """
+    Returns the value of the cumulative distribution function at the given input
+    domain value for a uniform distribution over the interval [min, max). If
+    unspecified, min defaults to 0 and max defaults to 1. If only one argument
+    is provided, it is interpreted as the max value.
+    """
+    from scipy.stats import uniform
+
+    return uniform(loc=min, scale=max - min).cdf(value)
+
+
+@vectorize
+def densityUniform(value, min=0, max=1):
+    """
+    Returns the value of the probability density function at the given input domain
+    value, for a uniform distribution over the interval [min, max). If unspecified,
+    min defaults to 0 and max defaults to 1. If only one argument is provided, it is
+    interpreted as the max value.
+    """
+    from scipy.stats import uniform
+
+    return uniform(loc=min, scale=max - min).pdf(value)
+
+
+@vectorize
+def quantileUniform(probability, min=0, max=1):
+    """
+    Returns the quantile value (the inverse of the cumulative distribution function)
+    for the given input probability, for a uniform distribution over the interval
+    [min, max). If unspecified, min defaults to 0 and max defaults to 1. If only one
+    argument is provided, it is interpreted as the max value
+    """
+    from scipy.stats import uniform
+
+    return uniform(loc=min, scale=max - min).ppf(probability)
+
+
 VEGAJS_NAMESPACE: Dict[str, Any] = {
     # Constants
     "null": None,
@@ -790,8 +943,20 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "monthAbbrevFormat": monthAbbrevFormat,
     # Object Functions
     "merge": merge,
-    # TODOs:
     # Statistical Functions
+    "sampleNormal": sampleNormal,
+    "densityNormal": densityNormal,
+    "cumulativeNormal": cumulativeNormal,
+    "quantileNormal": quantileNormal,
+    "sampleLogNormal": sampleLogNormal,
+    "densityLogNormal": densityLogNormal,
+    "cumulativeLogNormal": cumulativeLogNormal,
+    "quantileLogNormal": quantileLogNormal,
+    "sampleUniform": sampleUniform,
+    "densityUniform": densityUniform,
+    "cumulativeUniform": cumulativeUniform,
+    "quantileUniform": quantileUniform,
+    # TODOs:
     # Array Functions
     # RegExp Functions
     # Color functions
