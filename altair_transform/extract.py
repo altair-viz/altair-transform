@@ -67,7 +67,7 @@ def extract_transform(chart: alt.Chart) -> alt.Chart:
 
 
 def _encoding_to_transform(
-    encoding: _EncodingType
+    encoding: _EncodingType,
 ) -> Tuple[_EncodingType, _TransformType]:
     """Extract transforms from an encoding dict."""
     # TODO: what if one encoding has multiple transforms? Is this valid?
