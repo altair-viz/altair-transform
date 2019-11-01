@@ -37,6 +37,11 @@ def named_data(df):
 
 
 @pytest.fixture
+def sequence_data(df):
+    return {"sequence": {"start": 1, "stop": 4, "as": "x"}}
+
+
+@pytest.fixture
 def chart(named_data, inline_data):
     return alt.Chart(
         data=named_data,
@@ -67,3 +72,9 @@ def test_inline_to_dataframe(df, inline_data, data_type):
 def test_named_to_dataframe(df, chart, named_data, data_type):
     data = data_type(named_data)
     assert df.equals(to_dataframe(data, context=chart))
+
+
+@pytest.mark.parametrize("data_type", [dict, alt.Data])
+def test_sequence_to_dataframe(df, sequence_data, data_type):
+    data = data_type(sequence_data)
+    assert df[["x"]].equals(to_dataframe(data))

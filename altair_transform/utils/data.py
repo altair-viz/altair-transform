@@ -1,7 +1,8 @@
-import pandas as pd
-import altair as alt
-
 from typing import Union, Optional
+
+import altair as alt
+import numpy as np
+import pandas as pd
 
 DataType = Union[dict, pd.DataFrame, alt.SchemaBase]
 ChartType = Union[dict, alt.SchemaBase]
@@ -38,6 +39,13 @@ def to_dataframe(data: DataType, context: Optional[ChartType] = None) -> pd.Data
         if name not in datasets:
             raise ValueError(f"dataset '{name}' not specified in chart.")
         return pd.DataFrame(datasets[name])
+
+    if "sequence" in data:
+        start = data["sequence"]["start"]
+        stop = data["sequence"]["stop"]
+        step = data["sequence"].get("step", 1)
+        name = data["sequence"].get("as", "data")
+        return pd.DataFrame({name: np.arange(start, stop, step)})
 
     data = alt.Data.from_dict(data)
     raise NotImplementedError(f"Data of type {type(data)}")
