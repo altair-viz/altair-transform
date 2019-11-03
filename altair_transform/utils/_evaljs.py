@@ -5,7 +5,15 @@ from typing import Any, Union
 
 from altair_transform.utils import ast, Parser
 
-__all__ = ["evaljs"]
+__all__ = ["evaljs", "undefined"]
+
+
+class _UndefinedType(object):
+    def __repr__(self):
+        return "undefined"
+
+
+undefined = _UndefinedType()
 
 
 def evaljs(expression: Union[str, ast.Expr], namespace: dict = None) -> Any:
@@ -95,8 +103,9 @@ def _visit_attr(obj: ast.Attr, namespace: dict) -> Any:
     obj_ = visit(obj.obj, namespace)
     attr = visit(obj.attr, namespace)
     if isinstance(obj_, dict):
-        return obj_[attr]
-    return getattr(obj_, attr)
+        return obj_.get(attr, undefined)
+    else:
+        return getattr(obj_, attr, undefined)
 
 
 @visit.register(ast.Item)
@@ -105,7 +114,10 @@ def _visit_item(obj: ast.Item, namespace: dict) -> Any:
     item = visit(obj.item, namespace)
     if isinstance(obj_, list) and isinstance(item, float):
         item = int(item)
-    return obj_[item]
+    try:
+        return obj_[item]
+    except (KeyError, IndexError):
+        return undefined
 
 
 @visit.register(ast.Func)

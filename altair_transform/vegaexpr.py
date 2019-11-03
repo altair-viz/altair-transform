@@ -15,15 +15,7 @@ import numpy as np
 import pandas as pd
 from dateutil import tz
 
-from altair_transform.utils import evaljs
-
-
-class _UndefinedType(object):
-    def __repr__(self):
-        return "undefined"
-
-
-undefined = _UndefinedType()
+from altair_transform.utils import evaljs, undefined
 
 
 def eval_vegajs(expression: str, datum: pd.DataFrame = None) -> pd.DataFrame:
@@ -991,7 +983,6 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "null": None,
     "true": True,
     "false": False,
-    "undefined": undefined,
     "NaN": math.nan,
     "E": math.e,
     "LN2": math.log(2),
