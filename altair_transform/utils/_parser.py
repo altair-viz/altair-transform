@@ -347,7 +347,7 @@ class Parser(ParserBase):
 
     def p_error(self, p):
         if p:
-            raise ValueError("Syntax error at '{p.value}'")
+            raise ValueError(f"Syntax error at '{p.value}'")
         else:
             raise ValueError("Syntax error at EOF")
 
