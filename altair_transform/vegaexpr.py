@@ -9,7 +9,7 @@ import operator
 import random
 import sys
 import time as timemod
-from typing import Any, Callable, Dict, Optional, Pattern, Union, overload
+from typing import Any, Callable, Dict, Optional, Pattern, List, Union, overload
 
 import numpy as np
 import pandas as pd
@@ -136,7 +136,7 @@ def isString(value: Any) -> bool:
 @vectorize
 def isValid(value: Any) -> bool:
     """Returns true if value is not null, undefined, or NaN."""
-    return not (value is undefined or pd.isna(value))
+    return not (value is None or value is undefined or pd.isna(value))
 
 
 # Type Coercion Functions
@@ -511,21 +511,41 @@ def utcParse(value, specifier):
 
 # String functions
 @vectorize
-def indexof(string: str, substring: str) -> int:
-    """Returns the first index of substring in the input string."""
-    return string.find(substring)
+def indexof(x: Union[str, list], value: Any) -> int:
+    """
+    For string input, returns the first index of substring in the input string.
+    For array input, returns the first index of value in the input array.
+    """
+    if isinstance(x, str):
+        return x.find(str(value))
+    else:
+        x = list(x)
+        try:
+            return x.index(value)
+        except ValueError:
+            return -1
 
 
 @vectorize
-def lastindexof(string: str, substring: str) -> int:
-    """Returns the last index of substring in the input string."""
-    return string.rfind(substring)
+def lastindexof(x: Union[str, list], value: Any) -> int:
+    """
+    For string input, returns the last index of substring in the input string.
+    For array input, returns the last index of value in the input array.
+    """
+    if isinstance(x, str):
+        return x.rfind(str(value))
+    else:
+        x = list(x)
+        try:
+            return len(x) - 1 - x[::-1].index(value)
+        except ValueError:
+            return -1
 
 
 @vectorize
-def length(string: str) -> int:
-    """Returns the length of the input string."""
-    return len(string)
+def length(x: Union[str, list]) -> int:
+    """Returns the length of the input string or array."""
+    return len(x)
 
 
 @vectorize
@@ -609,16 +629,18 @@ def replace(string: str, pattern: Union[str, Pattern], replacement: str) -> str:
 
 
 @vectorize
-def slice_(s: str, start: int, end: Optional[int] = None) -> str:
+def slice_(
+    x: Union[str, list], start: int, end: Optional[int] = None
+) -> Union[str, list]:
     """
-    Returns a section of string between the start and end indices.
+    Returns a section of string or array between the start and end indices.
     If the end argument is negative, it is treated as an offset from
-    the end of the string (length(string) + end).
+    the end of the string (length(x) + end).
     """
     start = int(start)
     if end is not None:
         end = int(end)
-    return s[start:end]
+    return x[start:end]
 
 
 @vectorize
@@ -690,7 +712,7 @@ def merge(*objs: dict) -> dict:
 # Statistical Functions
 # TODO: implement without scipy.stats?
 @vectorize
-def sampleNormal(mean=0, stdev=1):
+def sampleNormal(mean: float = 0, stdev: float = 1) -> float:
     """
     Returns a sample from a univariate normal (Gaussian) probability distribution
     with specified mean and standard deviation stdev. If unspecified, the mean defaults
@@ -702,7 +724,7 @@ def sampleNormal(mean=0, stdev=1):
 
 
 @vectorize
-def cumulativeNormal(value, mean=0, stdev=1):
+def cumulativeNormal(value: float, mean: float = 0, stdev: float = 1) -> float:
     """
     Returns the value of the cumulative distribution function at the given input
     domain value for a normal distribution with specified mean and standard
@@ -715,7 +737,7 @@ def cumulativeNormal(value, mean=0, stdev=1):
 
 
 @vectorize
-def densityNormal(value, mean=0, stdev=1):
+def densityNormal(value: float, mean: float = 0, stdev: float = 1) -> float:
     """
     Returns the value of the probability density function at the given input domain
     value, for a normal distribution with specified mean and standard deviation stdev.
@@ -727,7 +749,7 @@ def densityNormal(value, mean=0, stdev=1):
 
 
 @vectorize
-def quantileNormal(probability, mean=0, stdev=1):
+def quantileNormal(probability: float, mean: float = 0, stdev: float = 1) -> float:
     """
     Returns the quantile value (the inverse of the cumulative distribution function)
     for the given input probability, for a normal distribution with specified mean
@@ -740,7 +762,7 @@ def quantileNormal(probability, mean=0, stdev=1):
 
 
 @vectorize
-def sampleLogNormal(mean=0, stdev=1):
+def sampleLogNormal(mean: float = 0, stdev: float = 1) -> float:
     """
     Returns a sample from a univariate log-normal probability distribution with
     specified log mean and log standard deviation stdev. If unspecified, the log
@@ -752,7 +774,7 @@ def sampleLogNormal(mean=0, stdev=1):
 
 
 @vectorize
-def cumulativeLogNormal(value, mean=0, stdev=1):
+def cumulativeLogNormal(value: float, mean: float = 0, stdev: float = 1) -> float:
     """
     Returns the value of the cumulative distribution function at the given input
     domain value for a log-normal distribution with specified log mean and log
@@ -765,7 +787,7 @@ def cumulativeLogNormal(value, mean=0, stdev=1):
 
 
 @vectorize
-def densityLogNormal(value, mean=0, stdev=1):
+def densityLogNormal(value: float, mean: float = 0, stdev: float = 1) -> float:
     """
     Returns the value of the probability density function at the given input domain
     value, for a log-normal distribution with specified log mean and log standard
@@ -778,7 +800,7 @@ def densityLogNormal(value, mean=0, stdev=1):
 
 
 @vectorize
-def quantileLogNormal(probability, mean=0, stdev=1):
+def quantileLogNormal(probability: float, mean: float = 0, stdev: float = 1) -> float:
     """
     Returns the quantile value (the inverse of the cumulative distribution function)
     for the given input probability, for a log-normal distribution with specified log
@@ -791,7 +813,7 @@ def quantileLogNormal(probability, mean=0, stdev=1):
 
 
 @vectorize
-def sampleUniform(min=0, max=1):
+def sampleUniform(min: float = 0, max: float = 1) -> float:
     """
     Returns a sample from a univariate continuous uniform probability distribution
     over the interval [min, max). If unspecified, min defaults to 0 and max defaults
@@ -803,7 +825,7 @@ def sampleUniform(min=0, max=1):
 
 
 @vectorize
-def cumulativeUniform(value, min=0, max=1):
+def cumulativeUniform(value: float, min: float = 0, max: float = 1) -> float:
     """
     Returns the value of the cumulative distribution function at the given input
     domain value for a uniform distribution over the interval [min, max). If
@@ -816,7 +838,7 @@ def cumulativeUniform(value, min=0, max=1):
 
 
 @vectorize
-def densityUniform(value, min=0, max=1):
+def densityUniform(value: float, min: float = 0, max: float = 1) -> float:
     """
     Returns the value of the probability density function at the given input domain
     value, for a uniform distribution over the interval [min, max). If unspecified,
@@ -829,7 +851,7 @@ def densityUniform(value, min=0, max=1):
 
 
 @vectorize
-def quantileUniform(probability, min=0, max=1):
+def quantileUniform(probability: float, min: float = 0, max: float = 1) -> float:
     """
     Returns the quantile value (the inverse of the cumulative distribution function)
     for the given input probability, for a uniform distribution over the interval
@@ -839,6 +861,129 @@ def quantileUniform(probability, min=0, max=1):
     from scipy.stats import uniform
 
     return uniform(loc=min, scale=max - min).ppf(probability)
+
+
+# Array functions
+@vectorize
+def extent(array: List[float]) -> List[float]:
+    """
+    Returns a new [min, max] array with the minimum and maximum values of
+    the input array, ignoring null, undefined, and NaN values.
+    """
+    array = [val for val in array if isValid(val)]
+    return [min(array), max(array)]
+
+
+@vectorize
+def clampRange(range_: List[float], min_: float, max_: float) -> List[float]:
+    """
+    Clamps a two-element range array in a span-preserving manner. If the span
+    of the input range is less than (max - min) and an endpoint exceeds either
+    the min or max value, the range is translated such that the span is
+    preserved and one endpoint touches the boundary of the [min, max] range.
+    If the span exceeds (max - min), the range [min, max] is returned.
+    """
+    range_ = [min(range_[:2]), max(range_[:2])]
+    span = range_[1] - range_[0]
+    if span > max_ - min_:
+        return [min_, max_]
+    elif range_[0] < min_:
+        return [min_, min_ + span]
+    elif range_[1] > max_:
+        return [max_ - span, max_]
+    else:
+        return range_
+
+
+@vectorize
+def inrange(value: float, range_: List[float]) -> bool:
+    """
+    Tests whether value lies within (or is equal to either)
+    the first and last values of the range array.
+    """
+    return min(range_[:2]) <= value <= max(range_[:2])
+
+
+@vectorize
+def join(array: List[str], separator: str = ",") -> str:
+    """
+    Returns a new string by concatenating all of the elements of the
+    input array, separated by commas or a specified separator string.
+    """
+    return str(separator).join(map(str, array))
+
+
+@vectorize
+def lerp(array: List[float], fraction: float) -> float:
+    """
+    Returns the linearly interpolated value between the first and last entries
+    in the array for the provided interpolation fraction (typically between 0 and 1).
+    For example, lerp([0, 50], 0.5) returns 25.
+    """
+    return array[0] + fraction * (array[-1] - array[0])
+
+
+@vectorize
+def peek(array: List[Any]) -> Any:
+    """
+    Returns the last element in the input array. Similar to the built-in
+    Array.pop method, except that it does not remove the last element.
+    This method is a convenient shorthand for array[array.length - 1].
+    """
+    return array[-1]
+
+
+@vectorize
+def reverse(array: List[Any]) -> List[Any]:
+    """
+    Returns a new array with elements in a reverse order of the input array.
+    The first array element becomes the last, and the last array element
+    becomes the first.
+    """
+    return array[::-1]
+
+
+@overload
+def sequence(stop=0) -> List[float]:
+    ...
+
+
+@overload  # noqa: F811
+def sequence(start, stop, step=1) -> List[float]:
+    ...
+
+
+@vectorize  # noqa: F811
+def sequence(*args) -> List[float]:
+    """
+    sequence(stop)
+    sequence(start, stop, step=1)
+
+    Returns an array containing an arithmetic sequence of numbers.
+    If step is omitted, it defaults to 1. If start is omitted, it defaults to 0.
+    The stop value is exclusive; it is not included in the result.
+    If step is positive, the last element is the largest start + i * step less than stop;
+    if step is negative, the last element is the smallest start + i * step greater than stop.
+    If the returned array would contain an infinite number of values, an empty range
+    is returned. The arguments are not required to be integers.
+    """
+    if len(args) == 0:
+        return []
+    elif len(args) <= 2:
+        return np.arange(*args).tolist()
+    elif args[2] == 0:
+        return []
+    else:
+        return np.arange(*args[:3]).tolist()
+
+
+@vectorize
+def span(array):
+    """
+    Returns the span of array: the difference between the last and
+    first elements, or array[array.length-1] - array[0].
+    """
+    return array[-1] - array[0]
 
 
 VEGAJS_NAMESPACE: Dict[str, Any] = {
@@ -956,8 +1101,18 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "densityUniform": densityUniform,
     "cumulativeUniform": cumulativeUniform,
     "quantileUniform": quantileUniform,
-    # TODOs:
     # Array Functions
+    # indexof, lastindexof, length, and slice defined under string functions.
+    "extent": extent,
+    "clampRange": clampRange,
+    "inrange": inrange,
+    "join": join,
+    "lerp": lerp,
+    "peek": peek,
+    "reverse": reverse,
+    "sequence": sequence,
+    "span": span,
+    # TODOs:
     # RegExp Functions
     # Color functions
     # Data functions
