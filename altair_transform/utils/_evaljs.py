@@ -1,7 +1,9 @@
 """Functionality to evaluate contents of the ast"""
 from functools import singledispatch, wraps
 import operator
+import re
 from typing import Any, Union
+import warnings
 
 from altair_transform.utils import ast, Parser
 
@@ -68,6 +70,25 @@ def _visit_number(obj: ast.Number, namespace: dict) -> Any:
 @visit.register(ast.String)
 def _visit_string(obj: ast.String, namespace: dict) -> Any:
     return obj.value
+
+
+@visit.register(ast.Regex)
+def _visit_regex(obj: ast.Regex, namespace: dict) -> Any:
+    unsupported_flags = "gy"
+    flagmap = {
+        "i": re.I,
+        "m": re.M,
+        "s": re.S,
+        "u": re.U,
+    }
+    flags = 0
+    for key, flag in flagmap.items():
+        if key in obj.value["flags"]:
+            flags |= flag
+    for key in unsupported_flags:
+        if key in obj.value["flags"]:
+            warnings.warn("regex '{flag}' flag will be ignored.")
+    return re.compile(obj.value["pattern"], flags)
 
 
 @visit.register(ast.Global)

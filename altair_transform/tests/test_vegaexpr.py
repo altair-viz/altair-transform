@@ -1,4 +1,5 @@
 import datetime as dt
+import re
 import pytest
 import numpy as np
 from altair_transform.vegaexpr import eval_vegajs, undefined
@@ -10,6 +11,7 @@ EXPRESSIONS = {
     "null": None,
     "true": True,
     "false": False,
+    "/[A-Za-z0-9]+/": re.compile("[A-Za-z0-9]+"),
     "{}[1]": undefined,
     "{}.foo": undefined,
     "[][0]": undefined,

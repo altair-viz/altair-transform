@@ -74,6 +74,9 @@ false
 "a\"b\"c123"
 "abc123\\"
 "\t''\n"
+# Regex
+"/[0-9]+/"
+"/(?P<foo>foo)(?P<bar>bar)/g"
 # Globals
 A
 B
