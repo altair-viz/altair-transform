@@ -9,13 +9,13 @@ import operator
 import random
 import sys
 import time as timemod
-from typing import Any, Callable, Dict, Optional, Pattern, List, Union, overload
+from typing import Any, Callable, Dict, Optional, List, Union, overload
 
 import numpy as np
 import pandas as pd
 from dateutil import tz
 
-from altair_transform.utils import evaljs, undefined
+from altair_transform.utils import evaljs, undefined, JSRegex
 
 
 def eval_vegajs(expression: str, datum: pd.DataFrame = None) -> pd.DataFrame:
@@ -116,7 +116,7 @@ def isRegExp(value: Any) -> bool:
     Returns true if value is a RegExp (regular expression)
     object, false otherwise.
     """
-    return isinstance(value, Pattern)
+    return isinstance(value, JSRegex)
 
 
 @vectorize
@@ -607,17 +607,17 @@ def parseInt(string: str, base: int = 10) -> Optional[int]:
 
 
 @vectorize
-def replace(string: str, pattern: Union[str, Pattern], replacement: str) -> str:
+def replace(string: str, pattern: Union[str, JSRegex], replacement: str) -> str:
     """
     Returns a new string with some or all matches of pattern replaced by a
     replacement string. The pattern can be a string or a regular expression.
     If pattern is a string, only the first instance will be replaced.
     Same as JavaScript’s String.replace.
     """
-    if isinstance(pattern, str):
-        return str(string).replace(pattern, replacement, 1)
+    if isinstance(pattern, JSRegex):
+        return pattern.replace(string, replacement)
     else:
-        raise NotImplementedError("regex replace")
+        return str(string).replace(pattern, replacement, 1)
 
 
 @vectorize
@@ -978,6 +978,24 @@ def span(array):
     return array[-1] - array[0]
 
 
+# Regular Expression Functions
+def regexp(pattern: str, flags: str = "") -> JSRegex:
+    """
+    Creates a regular expression instance from an input pattern
+    string and optional flags. Same as JavaScript’s RegExp.
+    """
+    return JSRegex(pattern, flags)
+
+
+def test(regexp: JSRegex, string: str = "") -> bool:
+    """
+    Evaluates a regular expression regexp against the input string,
+    returning true if the string matches the pattern, false otherwise.
+    For example: test(/\\d{3}/, "32-21-9483") -> true.
+    """
+    return regexp.test(string)
+
+
 VEGAJS_NAMESPACE: Dict[str, Any] = {
     # Constants
     "null": None,
@@ -1103,8 +1121,10 @@ VEGAJS_NAMESPACE: Dict[str, Any] = {
     "reverse": reverse,
     "sequence": sequence,
     "span": span,
+    # Regular Expression Functions
+    "test": test,
+    "regexp": regexp,
     # TODOs:
-    # RegExp Functions
     # Color functions
     # Data functions
 }
