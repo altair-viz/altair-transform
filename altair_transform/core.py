@@ -131,6 +131,6 @@ def transform_chart(
     """
     if extract_encoding_transforms:
         chart = extract_transform(chart)
-    chart = chart.properties(data=extract_data(chart))
+    chart = chart.properties(data=extract_data(chart, apply_encoding_transforms=False))
     chart.transform = alt.Undefined
     return chart
