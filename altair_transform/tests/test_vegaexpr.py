@@ -1,7 +1,7 @@
 import datetime as dt
 import pytest
 import numpy as np
-from altair_transform.vegaexpr import eval_vegajs, undefined
+from altair_transform.vegaexpr import eval_vegajs, undefined, JSRegex
 
 # Most parsing is tested in the parser; here we just test a sampling of the
 # variables and functions defined in the vegaexpr namespace.
@@ -10,6 +10,8 @@ EXPRESSIONS = {
     "null": None,
     "true": True,
     "false": False,
+    "/[A-Za-z0-9]+/": JSRegex("[A-Za-z0-9]+"),
+    "/.*/i": JSRegex(".*", "i"),
     "{}[1]": undefined,
     "{}.foo": undefined,
     "[][0]": undefined,
@@ -30,6 +32,8 @@ EXPRESSIONS = {
     'isString("abc")': True,
     "isObject({a:2})": True,
     "isObject({'a':2})": True,
+    "isRegExp(/[A-Z0-9]+/)": True,
+    "isRegExp('[A-Z0-9]+')": False,
     "isValid(null)": False,
     "isValid(NaN)": False,
     "isValid({}[1])": False,
@@ -87,6 +91,8 @@ EXPRESSIONS = {
     "pad('abc', 6, 'x', 'right')": "abcxxx",
     "pad('abc', 6, 'x', 'center')": "xabcxx",
     "replace('ABCDABCD', 'BC', 'xx')": "AxxDABCD",
+    "replace('ABCDABCD', /[B-D]+/, 'xxx')": "AxxxABCD",
+    "replace('ABCDABCD', /BC/g, 'xx')": "AxxDAxxD",
     "split('AB CD EF', ' ')": ["AB", "CD", "EF"],
     "substring('ABCDEF', 3, -1)": "ABC",
     "slice('ABCDEF', 3, -1)": "DE",
@@ -113,6 +119,9 @@ EXPRESSIONS = {
     "sequence(0, 2, 0.5)": [0, 0.5, 1, 1.5],
     "slice([1, 2, 3, 4], 1, 3)": [2, 3],
     "span([0, 2, 4])": 4,
+    "regexp('[A-Z]?','g')": JSRegex("[A-Z]?", "g"),
+    "test(/[A-Z]+/, '123ABC')": True,
+    "test(/[A-Z]+/y, '123ABC')": False,
 }
 
 

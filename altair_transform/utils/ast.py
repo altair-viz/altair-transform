@@ -44,6 +44,11 @@ class String(Node):
 
 
 @dataclass
+class Regex(Node):
+    value: typing.Dict[str, str]
+
+
+@dataclass
 class Global(Node):
     name: str
 

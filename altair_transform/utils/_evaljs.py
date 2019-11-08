@@ -1,11 +1,12 @@
 """Functionality to evaluate contents of the ast"""
 from functools import singledispatch, wraps
 import operator
-from typing import Any, Union
+import re
+from typing import Any, Dict, List, Union
 
 from altair_transform.utils import ast, Parser
 
-__all__ = ["evaljs", "undefined"]
+__all__ = ["evaljs", "undefined", "JSRegex"]
 
 
 class _UndefinedType(object):
@@ -14,6 +15,43 @@ class _UndefinedType(object):
 
 
 undefined = _UndefinedType()
+
+
+class JSRegex:
+    _flagmap: Dict[str, re.RegexFlag] = {
+        "i": re.I,
+        "m": re.M,
+        "s": re.S,
+        "u": re.U,
+    }
+
+    def __init__(self, pattern: str, flags: str = ""):
+        self._pattern = pattern
+        self._flags = flags
+        self._regex = re.compile(pattern, self._reflags())
+
+    def __eq__(self, other):
+        if isinstance(other, JSRegex):
+            return (self._pattern, self._flags) == (other._pattern, other._flags)
+
+    def _reflags(self) -> re.RegexFlag:
+        flags = re.RegexFlag(0)
+        for key, flag in self._flagmap.items():
+            if key in self._flags:
+                flags |= flag
+        return flags
+
+    def test(self, string: str) -> bool:
+        if "y" in self._flags:
+            return bool(self._regex.match(string))
+        else:
+            return bool(self._regex.search(string))
+
+    def replace(self, string: str, replacement: str) -> str:
+        if "g" in self._flags:
+            return self._regex.sub(replacement, string)
+        else:
+            return self._regex.sub(replacement, string, count=1)
 
 
 def evaljs(expression: Union[str, ast.Expr], namespace: dict = None) -> Any:
@@ -70,6 +108,11 @@ def _visit_string(obj: ast.String, namespace: dict) -> Any:
     return obj.value
 
 
+@visit.register(ast.Regex)
+def _visit_regex(obj: ast.Regex, namespace: dict) -> JSRegex:
+    return JSRegex(obj.value["pattern"], obj.value["flags"])
+
+
 @visit.register(ast.Global)
 def _visit_global(obj: ast.Global, namespace: dict) -> Any:
     if obj.name not in namespace:
@@ -78,12 +121,12 @@ def _visit_global(obj: ast.Global, namespace: dict) -> Any:
 
 
 @visit.register(ast.Name)
-def _visit_name(obj: ast.Name, namespace: dict) -> Any:
+def _visit_name(obj: ast.Name, namespace: dict) -> str:
     return obj.name
 
 
 @visit.register(ast.List)
-def _visit_list(obj: ast.List, namespace: dict) -> Any:
+def _visit_list(obj: ast.List, namespace: dict) -> List:
     return [visit(entry, namespace) for entry in obj.entries]
 
 

@@ -58,6 +58,7 @@ class Parser(ParserBase):
         "BINARY",
         "OCTAL",
         "HEX",
+        "REGEX",
         "PLUS",
         "MINUS",
         "EXP",
@@ -157,6 +158,13 @@ class Parser(ParserBase):
         t.value = bytes(t.value[1:-1], "utf-8").decode("unicode_escape")
         return t
 
+    # TODO: actually parse & validate regexps?
+    def t_REGEX(self, t):
+        r"\/(?P<REGEX_pattern>(?![*+?])(?:[^\r\n\[/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+)\/(?P<REGEX_flags>[gmisuy]{0,6})"
+        groups = t.lexer.lexmatch.groupdict()
+        t.value = {"pattern": groups["REGEX_pattern"], "flags": groups["REGEX_flags"]}
+        return t
+
     t_ignore = " \t"
 
     def t_newline(self, t):
@@ -234,6 +242,7 @@ class Parser(ParserBase):
         """
         atom : number
              | string
+             | regex
              | global
              | list
              | object
@@ -256,6 +265,10 @@ class Parser(ParserBase):
     def p_string(self, p):
         "string : STRING"
         p[0] = ast.String(p[1])
+
+    def p_regex(self, p):
+        "regex : REGEX"
+        p[0] = ast.Regex(p[1])
 
     def p_global(self, p):
         "global : NAME"
