@@ -47,7 +47,7 @@ class _TestCase(NamedTuple):
             expected_transform=[
                 {
                     "aggregate": [{"op": "sum", "field": "people", "as": "sum_people"}],
-                    "groupby": ["y"],
+                    "groupby": ["age"],
                 }
             ],
         ),
@@ -131,6 +131,32 @@ class _TestCase(NamedTuple):
                     "aggregate": [{"field": "x", "op": "count", "as": "__count"}],
                     "groupby": ["day_y"],
                 },
+            ],
+        ),
+        _TestCase(
+            encoding={
+                "x": {"field": "xval", "type": "ordinal"},
+                "y": {
+                    "field": "yval",
+                    "type": "quantitative",
+                    "impute": {"value": 0, "method": "mean", "keyvals": [1, 2, 3]},
+                },
+                "color": {"field": "cval", "type": "nominal"},
+            },
+            expected_encoding={
+                "x": {"field": "xval", "type": "ordinal"},
+                "y": {"field": "yval", "type": "quantitative"},
+                "color": {"field": "cval", "type": "nominal"},
+            },
+            expected_transform=[
+                {
+                    "impute": "yval",
+                    "key": "xval",
+                    "keyvals": [1, 2, 3],
+                    "groupby": ["cval"],
+                    "value": 0,
+                    "method": "mean",
+                }
             ],
         ),
     ],

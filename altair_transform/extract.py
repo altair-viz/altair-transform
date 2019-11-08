@@ -74,14 +74,16 @@ def _encoding_to_transform(
     by_category: Dict[str, _EncodingType] = defaultdict(dict)
     new_encoding: _EncodingType = {}
     for channel, spec in encoding.items():
-        for key in ["bin", "aggregate", "timeUnit"]:
+        for key in ["impute", "bin", "aggregate", "timeUnit"]:
             if key in spec:
                 by_category[key][channel] = copy.deepcopy(spec)
                 break
         else:
             new_encoding[channel] = copy.deepcopy(spec)
 
-    groupby: List[str] = list(new_encoding)
+    groupby: List[str] = [
+        enc["field"] for enc in new_encoding.values() if "field" in enc
+    ]
     transforms: _TransformType = []
     field: str = ""
     new_field: str = ""
@@ -123,6 +125,20 @@ def _encoding_to_transform(
         new_encoding[channel] = spec
         transforms.append({"timeUnit": timeUnit, "field": field, "as": new_field})
         groupby.append(new_field)
+
+    for channel, spec in by_category["impute"].items():
+        keychannel = "y" if channel == "x" else "x"
+        key = encoding.get(keychannel, {}).get("field", spec["field"])
+        impute_transform: _SpecType = spec.pop("impute")
+        impute_transform.update(
+            {
+                "impute": spec["field"],
+                "key": key,
+                "groupby": [field for field in groupby if field != key],
+            }
+        )
+        new_encoding[channel] = spec
+        transforms.append(impute_transform)
 
     agg_transforms: _TransformType = []
     for channel, spec in by_category["aggregate"].items():
