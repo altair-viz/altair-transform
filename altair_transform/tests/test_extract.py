@@ -159,6 +159,23 @@ class _TestCase(NamedTuple):
                 }
             ],
         ),
+        _TestCase(
+            encoding={
+                "x": {"field": "xval", "bin": "binned", "type": "ordinal"},
+                "y": {"aggregate": "count", "type": "quantitative"},
+            },
+            expected_encoding={
+                "x": {"field": "xval", "bin": "binned", "type": "ordinal"},
+                "y": {
+                    "field": "__count",
+                    "title": "Count of Records",
+                    "type": "quantitative",
+                },
+            },
+            expected_transform=[
+                {"aggregate": [{"op": "count", "as": "__count"}], "groupby": ["xval"]}
+            ],
+        ),
     ],
 )
 def test_extract_simple_aggregate(encoding, expected_encoding, expected_transform):

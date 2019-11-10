@@ -90,6 +90,11 @@ def _encoding_to_transform(
     new_field2: str = ""
 
     for channel, spec in by_category["bin"].items():
+        if spec["bin"] == "binned":
+            new_encoding[channel] = spec
+            if "field" in spec:
+                groupby.append(spec["field"])
+            continue
         field = spec.pop("field")
         new_field = f"{field}_binned"
         new_field2 = f"{field}_binned2"
