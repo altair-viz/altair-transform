@@ -1,5 +1,7 @@
 # Change Log
 
+## Version 0.3 (unreleased)
+
 ## Version 0.2 (released 2019-12-03)
 
 ### Enhancements
