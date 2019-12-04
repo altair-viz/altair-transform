@@ -43,12 +43,12 @@ def extract_transform(chart: alt.Chart) -> alt.Chart:
     })]
     >>> new_chart.encoding
     FacetedEncoding({
-      x: PositionFieldDef({
+      x: X({
         field: FieldName('mean_x'),
         title: 'Mean of x',
         type: StandardType('quantitative')
       }),
-      y: PositionFieldDef({
+      y: X({
         field: FieldName('y'),
         type: StandardType('nominal')
       })

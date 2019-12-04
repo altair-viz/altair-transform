@@ -8,7 +8,8 @@ from ..utils import to_dataframe
 
 @visit.register(alt.LookupTransform)
 def visit_lookup(transform: alt.LookupTransform, df: pd.DataFrame) -> pd.DataFrame:
-    transform = transform.to_dict()
+    with alt.data_transformers.enable(consolidate_datasets=False):
+        transform = transform.to_dict()
     lookup_data = transform["from"]
     data = lookup_data["data"]
     key = lookup_data["key"]
