@@ -11,6 +11,7 @@ from . import (  # noqa: F401
     impute,
     joinaggregate,
     lookup,
+    pivot,
     sample,
     timeunit,
     window,

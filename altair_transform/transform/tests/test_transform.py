@@ -65,6 +65,7 @@ def data():
             "t": pd.date_range("2012-01-15", freq="M", periods=12),
             "i": range(12),
             "c": list("AAABBBCCCDDD"),
+            "d": list("ABCABCABCABC"),
         }
     )
 
@@ -262,6 +263,31 @@ def test_lookup_transform_default(data, lookup_key, default):
         assert out.loc[undef, "z"].isnull().all()
     else:
         assert (out.loc[undef, "z"] == default).all()
+
+
+def test_pivot_transform(data):
+    transform = {"pivot": "c", "value": "x"}
+    expected = pd.DataFrame(
+        {key: [data.x[data.c == key].sum()] for key in data.c.unique()}
+    )
+    out = apply(data, transform)
+    assert out.equals(expected)
+
+
+def test_pivot_transform_groupby(data):
+    transform = {"pivot": "c", "value": "x", "groupby": ["d"]}
+    expected = data.pivot(values="x", index="d", columns="c").reset_index()
+    out = apply(data, transform)
+    assert out.equals(expected)
+
+
+def test_pivot_transform_limit(data):
+    transform = {"pivot": "c", "value": "x", "limit": 2}
+    expected = pd.DataFrame(
+        {key: [data.x[data.c == key].sum()] for key in sorted(data.c.unique())[:2]}
+    )
+    out = apply(data, transform)
+    assert out.equals(expected)
 
 
 def test_bin_transform_simple(data):
