@@ -118,12 +118,12 @@ def transform_chart(
     2  C      2
     >>> new_chart.encoding
     FacetedEncoding({
-      x: X({
+      x: PositionFieldDef({
         field: FieldName('sum_x'),
         title: 'Sum of x',
         type: StandardType('quantitative')
       }),
-      y: X({
+      y: PositionFieldDef({
         field: FieldName('y'),
         type: StandardType('nominal')
       })
