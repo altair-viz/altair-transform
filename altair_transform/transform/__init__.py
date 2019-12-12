@@ -12,6 +12,7 @@ from . import (  # noqa: F401
     joinaggregate,
     lookup,
     pivot,
+    quantile,
     sample,
     timeunit,
     window,

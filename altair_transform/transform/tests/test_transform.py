@@ -2,7 +2,7 @@ import pytest
 
 import numpy as np
 import pandas as pd
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_allclose
 from distutils.version import LooseVersion
 from altair_transform import apply
 import altair as alt
@@ -288,6 +288,25 @@ def test_pivot_transform_limit(data):
     )
     out = apply(data, transform)
     assert out.equals(expected)
+
+
+def test_quantile_transform(data):
+    transform = {"quantile": "x", "step": 0.1}
+    out = apply(data, transform)
+    assert list(out.columns) == ["prob", "value"]
+    assert_allclose(out.prob, np.arange(0.05, 1, 0.1))
+    assert_allclose(out.value, np.quantile(data.x, out.prob))
+
+
+def test_quantile_transform_groupby(data):
+    transform = {"quantile": "x", "step": 0.1, "groupby": ["c"]}
+    out = apply(data, transform)
+    assert list(out.columns) == ["c", "prob", "value"]
+
+    group = transform.pop("groupby")[0]
+    for key in data[group].unique():
+        out_key = apply(data[data[group] == key], transform)
+        assert out[out[group] == key][out_key.columns].equals(out_key)
 
 
 def test_bin_transform_simple(data):
