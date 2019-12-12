@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_equal, assert_allclose
+from pandas.testing import assert_frame_equal, assert_series_equal
 from distutils.version import LooseVersion
 from altair_transform import apply
 import altair as alt
@@ -77,14 +78,14 @@ def test_calculate_transform(data):
     out2 = data.copy()
     out2["z"] = data.x + data.y
 
-    assert out1.equals(out2)
+    assert_frame_equal(out1, out2)
 
 
 @pytest.mark.parametrize("filter,calc", FILTER_PREDICATES)
 def test_filter_transform(data, filter, calc):
     out1 = apply(data, {"filter": filter})
     out2 = calc(data)
-    assert out1.equals(out2)
+    assert_frame_equal(out1, out2)
 
 
 def test_flatten_transform():
@@ -153,7 +154,7 @@ def test_fold_transform(as_):
             as_[1]: data["y1"].tolist() + data["y2"].tolist(),
         }
     )
-    assert out.equals(expected)
+    assert_frame_equal(out, expected)
 
 
 @pytest.mark.parametrize("groupby", [True, False])
@@ -177,7 +178,7 @@ def test_aggregate_transform(data, groupby, op):
     else:
         grouped = pd.DataFrame({col: [data[field].aggregate(op)]})
 
-    assert grouped.equals(out)
+    assert_frame_equal(grouped, out)
 
 
 @pytest.mark.parametrize("method", ["value", "mean", "median", "max", "min"])
@@ -243,7 +244,7 @@ def test_lookup_transform(data, lookup_key):
     out2 = pd.merge(data, lookup, left_on="c", right_on=lookup_key)
     if lookup_key != "c":
         out2 = out2.drop(lookup_key, axis=1)
-    assert out1.equals(out2)
+    assert_frame_equal(out1, out2)
 
 
 @pytest.mark.parametrize("lookup_key", ["c", "c2"])
@@ -268,17 +269,18 @@ def test_lookup_transform_default(data, lookup_key, default):
 def test_pivot_transform(data):
     transform = {"pivot": "c", "value": "x"}
     expected = pd.DataFrame(
-        {key: [data.x[data.c == key].sum()] for key in data.c.unique()}
+        {key: [data.x[data.c == key].sum()] for key in data.c.unique()},
     )
     out = apply(data, transform)
-    assert out.equals(expected)
+    assert_frame_equal(out, expected)
 
 
 def test_pivot_transform_groupby(data):
     transform = {"pivot": "c", "value": "x", "groupby": ["d"]}
     expected = data.pivot(values="x", index="d", columns="c").reset_index()
+    expected.columns.names = [None]
     out = apply(data, transform)
-    assert out.equals(expected)
+    assert_frame_equal(out, expected)
 
 
 def test_pivot_transform_limit(data):
@@ -287,7 +289,43 @@ def test_pivot_transform_limit(data):
         {key: [data.x[data.c == key].sum()] for key in sorted(data.c.unique())[:2]}
     )
     out = apply(data, transform)
-    assert out.equals(expected)
+    assert_frame_equal(out, expected)
+
+
+def test_quantile_values():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {"x": np.random.randn(12), "C": np.random.choice(["A", "B"], 12)}
+    )
+    transform = {"quantile": "x", "groupby": ["C"], "as": ["p", "v"], "step": 0.1}
+    # Copied from vega editor for above data/transform
+    expected = pd.DataFrame(
+        [
+            ["A", 0.05, -0.853389779139604],
+            ["A", 0.15, -0.6056135776659901],
+            ["A", 0.25, -0.3578373761923762],
+            ["A", 0.35, -0.12325942278589436],
+            ["A", 0.45, 0.04532729028492671],
+            ["A", 0.55, 0.21391400335574778],
+            ["A", 0.65, 0.38250071642656897],
+            ["A", 0.75, 0.7489619629456958],
+            ["A", 0.85, 1.1549981161544833],
+            ["A", 0.95, 1.5610342693632706],
+            ["B", 0.05, -0.016677003759505288],
+            ["B", 0.15, 0.15684925302119532],
+            ["B", 0.25, 0.336128799065637],
+            ["B", 0.35, 0.6476262524884882],
+            ["B", 0.45, 0.9543858525126119],
+            ["B", 0.55, 0.9744405491187167],
+            ["B", 0.65, 1.2402825216772193],
+            ["B", 0.75, 1.5575946277597235],
+            ["B", 0.85, 1.8468937659906184],
+            ["B", 0.95, 2.1102258760334363],
+        ],
+        columns=["C", "p", "v"],
+    )
+    out = apply(data, transform)
+    assert_frame_equal(out, expected)
 
 
 def test_quantile_transform(data):
@@ -305,8 +343,9 @@ def test_quantile_transform_groupby(data):
 
     group = transform.pop("groupby")[0]
     for key in data[group].unique():
-        out_key = apply(data[data[group] == key], transform)
-        assert out[out[group] == key][out_key.columns].equals(out_key)
+        out_group_1 = apply(data[data[group] == key], transform)
+        out_group_2 = out[out[group] == key][out_group_1.columns].reset_index(drop=True)
+        assert_frame_equal(out_group_1, out_group_2)
 
 
 def test_bin_transform_simple(data):
@@ -361,7 +400,7 @@ def test_sample_transform(data, N):
     assert out.shape == (min(N, data.shape[0]), data.shape[1])
 
     # Ensure the content are correct
-    assert out.equals(data.iloc[out.index])
+    assert_frame_equal(out, data.iloc[out.index])
 
 
 def test_timeunit_transform(data):
@@ -374,7 +413,8 @@ def test_window_transform_basic(data):
     transform = {"window": [{"op": "sum", "field": "x", "as": "xsum"}]}
     out = apply(data, transform)
     expected = data["x"].cumsum()
-    assert out["xsum"].equals(expected.astype(float))
+    expected.name = "xsum"
+    assert_series_equal(out["xsum"], expected.astype(float))
 
 
 def test_window_transform_sorted(data):
@@ -384,7 +424,8 @@ def test_window_transform_sorted(data):
     }
     out = apply(data, transform)
     expected = data["x"].sort_values().cumsum().sort_index()
-    assert out["xsum"].equals(expected.astype(float))
+    expected.name = "xsum"
+    assert_series_equal(out["xsum"], expected.astype(float))
 
 
 def test_window_transform_grouped(data):
@@ -395,7 +436,8 @@ def test_window_transform_grouped(data):
     out = apply(data, transform)
     expected = data.groupby("y").rolling(len(data), min_periods=1)
     expected = expected["x"].sum().reset_index("y", drop=True).sort_index()
-    assert out["xsum"].equals(expected)
+    expected.name = "xsum"
+    assert_series_equal(out["xsum"], expected)
 
 
 def test_multiple_transforms(data):
@@ -408,4 +450,4 @@ def test_multiple_transforms(data):
     out2["xy_mean"] = 0.5 * (data.x + data.y)
     out2 = out2[out2.x < out2.xy_mean]
 
-    assert out1.equals(out2)
+    assert_frame_equal(out1, out2)

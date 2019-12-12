@@ -19,7 +19,12 @@ def visit_quantile(transform: alt.QuantileTransform, df: pd.DataFrame) -> pd.Dat
         return pd.DataFrame({pname: probs, vname: np.quantile(s, probs)})
 
     if groupby:
-        return df.groupby(groupby)[quantile].apply(qq).reset_index(groupby)
+        return (
+            df.groupby(groupby)[quantile]
+            .apply(qq)
+            .reset_index(groupby)
+            .reset_index(drop=True)
+        )
 
     else:
-        return qq(df[quantile])
+        return qq(df[quantile]).reset_index(drop=True)

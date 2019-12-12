@@ -15,6 +15,8 @@ def visit_pivot(transform: alt.PivotTransform, df: pd.DataFrame) -> pd.DataFrame
     groupby = transform.get("groupby")
     agg = transform.get("op", "sum")
     agg = AGG_REPLACEMENTS.get(agg, agg)
-    return df.pivot_table(
+    out = df.pivot_table(
         columns=pivot, values=transform["value"], index=groupby, aggfunc=agg,
     ).reset_index(drop=not groupby)
+    out.columns.names = [None]
+    return out
