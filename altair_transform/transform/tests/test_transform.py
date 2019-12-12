@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_equal, assert_allclose
+from pandas.testing import assert_frame_equal
 from distutils.version import LooseVersion
 from altair_transform import apply
 import altair as alt
@@ -290,6 +291,42 @@ def test_pivot_transform_limit(data):
     assert out.equals(expected)
 
 
+def test_quantile_values():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {"x": np.random.randn(12), "C": np.random.choice(["A", "B"], 12)}
+    )
+    transform = {"quantile": "x", "groupby": ["C"], "as": ["p", "v"], "step": 0.1}
+    # Copied from vega editor for above data/transform
+    expected = pd.DataFrame(
+        [
+            ["A", 0.05, -0.853389779139604],
+            ["A", 0.15, -0.6056135776659901],
+            ["A", 0.25, -0.3578373761923762],
+            ["A", 0.35, -0.12325942278589436],
+            ["A", 0.45, 0.04532729028492671],
+            ["A", 0.55, 0.21391400335574778],
+            ["A", 0.65, 0.38250071642656897],
+            ["A", 0.75, 0.7489619629456958],
+            ["A", 0.85, 1.1549981161544833],
+            ["A", 0.95, 1.5610342693632706],
+            ["B", 0.05, -0.016677003759505288],
+            ["B", 0.15, 0.15684925302119532],
+            ["B", 0.25, 0.336128799065637],
+            ["B", 0.35, 0.6476262524884882],
+            ["B", 0.45, 0.9543858525126119],
+            ["B", 0.55, 0.9744405491187167],
+            ["B", 0.65, 1.2402825216772193],
+            ["B", 0.75, 1.5575946277597235],
+            ["B", 0.85, 1.8468937659906184],
+            ["B", 0.95, 2.1102258760334363],
+        ],
+        columns=["C", "p", "v"],
+    )
+    out = apply(data, transform)
+    assert_frame_equal(out, expected)
+
+
 def test_quantile_transform(data):
     transform = {"quantile": "x", "step": 0.1}
     out = apply(data, transform)
@@ -305,8 +342,9 @@ def test_quantile_transform_groupby(data):
 
     group = transform.pop("groupby")[0]
     for key in data[group].unique():
-        out_key = apply(data[data[group] == key], transform)
-        assert out[out[group] == key][out_key.columns].equals(out_key)
+        out_group_1 = apply(data[data[group] == key], transform)
+        out_group_2 = out[out[group] == key][out_group_1.columns].reset_index(drop=True)
+        assert_frame_equal(out_group_1, out_group_2)
 
 
 def test_bin_transform_simple(data):
