@@ -4,6 +4,7 @@ Python evaluation of Altair/Vega-Lite transforms.
 
 [![build status](http://img.shields.io/travis/altair-viz/altair-transform/master.svg)](https://travis-ci.org/altair-viz/altair-transform)
 [![code style black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![github actions](https://github.com/altair-viz/altair-transform/workflows/run-tests/badge.svg)](https://github.com/altair-viz/altair-transform/actions?query=workflow%3A%22run-tests%22)
 
 ``altair-transform`` requires Python 3.6 or later. Install with:
 
