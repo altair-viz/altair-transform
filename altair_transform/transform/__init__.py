@@ -13,6 +13,7 @@ from . import (  # noqa: F401
     lookup,
     pivot,
     quantile,
+    regression,
     sample,
     timeunit,
     window,

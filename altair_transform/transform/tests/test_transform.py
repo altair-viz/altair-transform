@@ -391,6 +391,14 @@ def test_bin_transform_steps(nice, steps=[5, 10, 20]):
     assert not out.xbin.isnull().any()
 
 
+def test_regression_transform():
+    data = pd.DataFrame({"x": [0, 1, 2, 3, 4], "y": [2, 4, 6, 8, 10]})
+    transform = {"regression": "y", "on": "x"}
+    out = apply(data, transform)
+    expected = pd.DataFrame({"x": [0, 4], "y": [2.0, 10.0]})
+    assert_frame_equal(out, expected)
+
+
 @pytest.mark.parametrize("N", [1, 5, 50])
 def test_sample_transform(data, N):
     transform = {"sample": N}
