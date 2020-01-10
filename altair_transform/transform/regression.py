@@ -19,7 +19,7 @@ def visit_regression(
     as_ = transform.get("as", (on, reg))
     groupby = transform.get("groupby")
     order = transform.get("order", 3)
-    for key in ["method", "params"]:
+    for key in ["params"]:
         if key in transform:
             raise NotImplementedError(f"transform.{key}")
 
@@ -56,6 +56,10 @@ class Model(metaclass=abc.ABCMeta):
         return self._extent or [df[self._on].min(), df[self._on].max()]
 
     @abc.abstractmethod
+    def grid(self, df: pd.DataFrame) -> np.ndarray:
+        pass
+
+    @abc.abstractmethod
     def _fit(self, df: pd.DataFrame) -> np.ndarray:
         pass
 
@@ -68,15 +72,18 @@ class Model(metaclass=abc.ABCMeta):
 
 
 class LinearModel(Model):
-    def _fit(self, df: pd.DataFrame):
+    def grid(self, df: pd.DataFrame) -> np.ndarray:
+        return np.array(self.extent(df), dtype=float)
+
+    def _fit(self, df: pd.DataFrame) -> np.ndarray:
         x = df[self._on].values
         y = df[self._reg].values
         X = np.vstack([np.ones_like(x), x]).T
         return np.linalg.solve(X.T @ X, X.T @ y)
 
-    def predict(self, df: pd.DataFrame) -> np.ndarray:
+    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         theta = self._fit(df)
-        x = np.array(self.extent(df))
+        x = self.grid(df)
         X = np.vstack([np.ones_like(x), x])
         y = theta @ X
         on, reg = self._as
@@ -84,6 +91,17 @@ class LinearModel(Model):
 
 
 class PolyModel(Model):
+    def grid(self, df: pd.DataFrame) -> np.ndarray:
+        # TODO: make this match grid used in vega.
+        extent = self.extent(df)
+        if self._order == 1:
+            size = 2
+        elif self._order == 2:
+            size = 50
+        else:
+            size = 100
+        return np.linspace(extent[0], extent[1], size)
+
     def _fit(self, df: pd.DataFrame):
         x = df[self._on].values
         y = df[self._reg].values
@@ -92,8 +110,8 @@ class PolyModel(Model):
 
     def predict(self, df: pd.DataFrame) -> np.ndarray:
         theta = self._fit(df)
-        x = np.array(self.extent(df))
-        X = x[:, None] ** np.arange(self._order + 1)
+        x = self.grid(df)
+        X = x ** np.arange(self._order + 1)[:, None]
         y = theta @ X
         on, reg = self._as
         return pd.DataFrame({on: x, reg: y})
