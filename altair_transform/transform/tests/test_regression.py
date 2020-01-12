@@ -32,6 +32,14 @@ def test_linear_groupby() -> None:
     )
 
 
+@pytest.mark.parametrize("method,coef", [("linear", [1, 2]), ("poly", [1, 2, 0, 0])])
+def test_linear_params(method: str, coef: List[int]) -> None:
+    data = pd.DataFrame({"x": [0, 1, 2, 3, 4], "y": [1, 3, 5, 7, 9]})
+    transform = {"regression": "y", "on": "x", "params": True, "method": method}
+    out = apply(data, transform)
+    assert_frame_equal(out, pd.DataFrame({"coef": [coef], "rsquared": [1.0]}))
+
+
 @pytest.mark.parametrize("groupby", [None, ["g"]])
 def test_poly_vs_linear(groupby: List[str]) -> None:
     data = pd.DataFrame(
