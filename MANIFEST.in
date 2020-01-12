@@ -4,4 +4,5 @@ include Makefile
 include LICENSE
 include requirements.txt
 include requirements_dev.txt
+include requirements_driver.txt
 recursive-include altair_transform *.py *.md
