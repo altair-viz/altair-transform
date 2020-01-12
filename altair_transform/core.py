@@ -1,6 +1,6 @@
 """Core altair_transform routines."""
 
-from typing import Any
+from typing import List, Union
 
 import pandas as pd
 import altair as alt
@@ -12,7 +12,11 @@ from altair_transform.extract import extract_transform
 __all__ = ["apply", "extract_data", "transform_chart"]
 
 
-def apply(df: pd.DataFrame, transform: Any, inplace: bool = False) -> pd.DataFrame:
+def apply(
+    df: pd.DataFrame,
+    transform: Union[alt.Transform, List[alt.Transform]],
+    inplace: bool = False,
+) -> pd.DataFrame:
     """Apply transform or transforms to dataframe.
 
     Parameters
