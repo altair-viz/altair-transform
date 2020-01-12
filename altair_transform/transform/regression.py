@@ -58,51 +58,50 @@ class Model(metaclass=abc.ABCMeta):
         self._as = as_
         self._order = order
 
+    @abc.abstractmethod
+    def _design_matrix(self, x: np.array) -> np.array:
+        ...
+
+    @abc.abstractmethod
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
+        ...
+
     def extent(self, df: pd.DataFrame) -> List[float]:
         return self._extent or [df[self._on].min(), df[self._on].max()]
 
-    @abc.abstractmethod
-    def grid(self, df: pd.DataFrame) -> np.ndarray:
-        pass
-
-    @abc.abstractmethod
-    def _fit(self, df: pd.DataFrame) -> Tuple[np.ndarray, float]:
-        pass
-
-    @abc.abstractmethod
-    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
-        pass
-
     def params(self, df: pd.DataFrame) -> pd.DataFrame:
-        params, rsquare = self._fit(df)
-        return pd.DataFrame({"coef": [list(params)], "rsquared": [rsquare]})
-
-
-class LinearModel(Model):
-    def grid(self, df: pd.DataFrame) -> np.ndarray:
-        return np.array(self.extent(df), dtype=float)
-
-    def _fit(self, df: pd.DataFrame) -> Tuple[np.ndarray, float]:
         x = df[self._on].values
         y = df[self._reg].values
-        X = np.vstack([np.ones_like(x), x]).T
+        X = self._design_matrix(x)
         theta = np.linalg.solve(X.T @ X, X.T @ y)
         SS_tot = ((y - y.mean()) ** 2).sum()
         SS_res = ((y - np.dot(X, theta)) ** 2).sum()
         rsquare = 1 - SS_res / SS_tot
-        return theta, rsquare
+        return pd.DataFrame({"coef": [list(theta)], "rsquared": [rsquare]})
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
-        theta = self._fit(df)[0]
-        x = self.grid(df)
-        X = np.vstack([np.ones_like(x), x])
-        y = theta @ X
+        p = self.params(df)
+        coef = p["coef"][0]
+        x = self._grid(df)
+        X = self._design_matrix(x)
+        y = coef @ X.T
         on, reg = self._as
         return pd.DataFrame({on: x, reg: y})
 
 
+class LinearModel(Model):
+    def _design_matrix(self, x: np.array) -> np.array:
+        return np.vstack([np.ones_like(x), x]).T
+
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
+        return np.array(self.extent(df), dtype=float)
+
+
 class PolyModel(Model):
-    def grid(self, df: pd.DataFrame) -> np.ndarray:
+    def _design_matrix(self, x: np.array) -> np.array:
+        return x[:, None] ** np.arange(self._order + 1)
+
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
         # TODO: make this match grid used in vega.
         extent = self.extent(df)
         if self._order == 1:
@@ -112,21 +111,3 @@ class PolyModel(Model):
         else:
             size = 100
         return np.linspace(extent[0], extent[1], size)
-
-    def _fit(self, df: pd.DataFrame) -> Tuple[np.ndarray, float]:
-        x = df[self._on].values
-        y = df[self._reg].values
-        X = x[:, None] ** np.arange(self._order + 1)
-        theta = np.linalg.solve(X.T @ X, X.T @ y)
-        SS_tot = ((y - y.mean()) ** 2).sum()
-        SS_res = ((y - np.dot(X, theta)) ** 2).sum()
-        rsquare = 1 - SS_res / SS_tot
-        return theta, rsquare
-
-    def predict(self, df: pd.DataFrame) -> np.ndarray:
-        theta = self._fit(df)[0]
-        x = self.grid(df)
-        X = x ** np.arange(self._order + 1)[:, None]
-        y = theta @ X
-        on, reg = self._as
-        return pd.DataFrame({on: x, reg: y})
