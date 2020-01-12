@@ -19,9 +19,7 @@ def visit_regression(
     as_ = transform.get("as", (on, reg))
     groupby = transform.get("groupby")
     order = transform.get("order", 3)
-    for key in ["params"]:
-        if key in transform:
-            raise NotImplementedError(f"transform.{key}")
+    params = transform.get("params", False)
 
     model: Model
     if method == "linear":
@@ -31,10 +29,18 @@ def visit_regression(
     else:
         raise NotImplementedError(f"method={method}")
 
-    if groupby:
-        return df.groupby(groupby).apply(model.predict).reset_index(groupby)
+    if params:
+        if groupby:
+            params = df.groupby(groupby).apply(model.params)
+            params["keys"] = [list(p)[:-1] for p in params.index]
+            return params.reset_index(drop=True)
+        else:
+            return model.params(df)
     else:
-        return model.predict(df)
+        if groupby:
+            return df.groupby(groupby).apply(model.predict).reset_index(groupby)
+        else:
+            return model.predict(df)
 
 
 class Model(metaclass=abc.ABCMeta):
@@ -60,29 +66,34 @@ class Model(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _fit(self, df: pd.DataFrame) -> np.ndarray:
+    def _fit(self, df: pd.DataFrame) -> Tuple[np.ndarray, float]:
         pass
 
     @abc.abstractmethod
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         pass
 
-    def params(self, df: pd.DataFrame) -> np.ndarray:
-        return self._fit(df)
+    def params(self, df: pd.DataFrame) -> pd.DataFrame:
+        params, rsquare = self._fit(df)
+        return pd.DataFrame({"coef": [list(params)], "rsquared": [rsquare]})
 
 
 class LinearModel(Model):
     def grid(self, df: pd.DataFrame) -> np.ndarray:
         return np.array(self.extent(df), dtype=float)
 
-    def _fit(self, df: pd.DataFrame) -> np.ndarray:
+    def _fit(self, df: pd.DataFrame) -> Tuple[np.ndarray, float]:
         x = df[self._on].values
         y = df[self._reg].values
         X = np.vstack([np.ones_like(x), x]).T
-        return np.linalg.solve(X.T @ X, X.T @ y)
+        theta = np.linalg.solve(X.T @ X, X.T @ y)
+        SS_tot = ((y - y.mean()) ** 2).sum()
+        SS_res = ((y - np.dot(X, theta)) ** 2).sum()
+        rsquare = 1 - SS_res / SS_tot
+        return theta, rsquare
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
-        theta = self._fit(df)
+        theta = self._fit(df)[0]
         x = self.grid(df)
         X = np.vstack([np.ones_like(x), x])
         y = theta @ X
@@ -102,14 +113,18 @@ class PolyModel(Model):
             size = 100
         return np.linspace(extent[0], extent[1], size)
 
-    def _fit(self, df: pd.DataFrame):
+    def _fit(self, df: pd.DataFrame) -> Tuple[np.ndarray, float]:
         x = df[self._on].values
         y = df[self._reg].values
         X = x[:, None] ** np.arange(self._order + 1)
-        return np.linalg.solve(X.T @ X, X.T @ y)
+        theta = np.linalg.solve(X.T @ X, X.T @ y)
+        SS_tot = ((y - y.mean()) ** 2).sum()
+        SS_res = ((y - np.dot(X, theta)) ** 2).sum()
+        rsquare = 1 - SS_res / SS_tot
+        return theta, rsquare
 
     def predict(self, df: pd.DataFrame) -> np.ndarray:
-        theta = self._fit(df)
+        theta = self._fit(df)[0]
         x = self.grid(df)
         X = x ** np.arange(self._order + 1)[:, None]
         y = theta @ X
