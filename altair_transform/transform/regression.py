@@ -1,5 +1,5 @@
 import abc
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Type
 
 import altair as alt
 import numpy as np
@@ -21,13 +21,18 @@ def visit_regression(
     order = transform.get("order", 3)
     params = transform.get("params", False)
 
-    model: Model
-    if method == "linear":
-        model = LinearModel(on=on, reg=reg, extent=extent, as_=as_, order=order)
-    elif method == "poly":
-        model = PolyModel(on=on, reg=reg, extent=extent, as_=as_, order=order)
-    else:
+    models: Dict[str, Type[Model]] = {
+        "linear": LinearModel,
+        "log": LogModel,
+        "poly": PolyModel,
+        "quad": QuadModel,
+    }
+
+    if method not in models:
         raise NotImplementedError(f"method={method}")
+
+    M = models[method]
+    model = M(on=on, reg=reg, extent=extent, as_=as_, order=order)
 
     if params:
         if groupby:
@@ -58,18 +63,19 @@ class Model(metaclass=abc.ABCMeta):
         self._as = as_
         self._order = order
 
-    @abc.abstractmethod
-    def _design_matrix(self, x: np.array) -> np.array:
-        ...
-
-    @abc.abstractmethod
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        ...
-
-    def extent(self, df: pd.DataFrame) -> List[float]:
-        return self._extent or [df[self._on].min(), df[self._on].max()]
-
     def params(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Return a dataframe with model parameters and r-square values.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The input data to which the model will be fit.
+
+        Returns
+        -------
+        coef : pd.DataFrame
+            DataFrame with model fit results.
+        """
         x = df[self._on].values
         y = df[self._reg].values
         X = self._design_matrix(x)
@@ -80,6 +86,18 @@ class Model(metaclass=abc.ABCMeta):
         return pd.DataFrame({"coef": [list(theta)], "rsquared": [rsquare]})
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Return the fit model
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The input data to which the model will be fit.
+
+        Returns
+        -------
+        model : pd.DataFrame
+            DataFrame with model fit results.
+        """
         p = self.params(df)
         coef = p["coef"][0]
         x = self._grid(df)
@@ -88,22 +106,54 @@ class Model(metaclass=abc.ABCMeta):
         on, reg = self._as
         return pd.DataFrame({on: x, reg: y})
 
+    def _extent_from_data(self, df: pd.DataFrame) -> List[float]:
+        return self._extent or [df[self._on].min(), df[self._on].max()]
+
+    @abc.abstractmethod
+    def _design_matrix(self, x: np.array) -> np.array:
+        ...
+
+    @abc.abstractmethod
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
+        ...
+
+
+# TODO: other models
+# exponential (exp): y = a + e ^ (b * x)
+# power (pow): y = a * x ^ b
+
+
+class LogModel(Model):
+    """y = a + b * log(x)"""
+
+    def _design_matrix(self, x: np.array) -> np.array:
+        return np.vstack([np.ones_like(x), np.log(x)]).T
+
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
+        # TODO: make this match grid used in vega.
+        extent = self._extent_from_data(df)
+        return np.linspace(extent[0], extent[1], 50)
+
 
 class LinearModel(Model):
+    """y = a + b * x"""
+
     def _design_matrix(self, x: np.array) -> np.array:
         return np.vstack([np.ones_like(x), x]).T
 
     def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        return np.array(self.extent(df), dtype=float)
+        return np.array(self._extent_from_data(df), dtype=float)
 
 
 class PolyModel(Model):
+    """y = a + b * x + ... + k * x^k"""
+
     def _design_matrix(self, x: np.array) -> np.array:
         return x[:, None] ** np.arange(self._order + 1)
 
     def _grid(self, df: pd.DataFrame) -> np.ndarray:
         # TODO: make this match grid used in vega.
-        extent = self.extent(df)
+        extent = self._extent_from_data(df)
         if self._order == 1:
             size = 2
         elif self._order == 2:
@@ -111,3 +161,15 @@ class PolyModel(Model):
         else:
             size = 100
         return np.linspace(extent[0], extent[1], size)
+
+
+class QuadModel(Model):
+    """y = a + b * x + c * x^2"""
+
+    def _design_matrix(self, x: np.array) -> np.array:
+        return x[:, None] ** np.arange(3)
+
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
+        # TODO: make this match grid used in vega.
+        extent = self._extent_from_data(df)
+        return np.linspace(extent[0], extent[1], 50)
