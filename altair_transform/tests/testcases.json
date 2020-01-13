@@ -1,0 +1,135 @@
+[
+ {
+  "data": {
+   "schema": {
+    "fields": [
+     {
+      "name": "index",
+      "type": "integer"
+     },
+     {
+      "name": "x",
+      "type": "integer"
+     },
+     {
+      "name": "y",
+      "type": "integer"
+     }
+    ],
+    "primaryKey": [
+     "index"
+    ],
+    "pandas_version": "0.20.0"
+   },
+   "data": [
+    {
+     "index": 0,
+     "x": 1,
+     "y": 1
+    },
+    {
+     "index": 1,
+     "x": 2,
+     "y": 2
+    },
+    {
+     "index": 2,
+     "x": 3,
+     "y": 3
+    },
+    {
+     "index": 3,
+     "x": 4,
+     "y": 5
+    },
+    {
+     "index": 4,
+     "x": 5,
+     "y": 8
+    }
+   ]
+  },
+  "transforms": [
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "linear",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        -1.3,
+        1.7
+       ],
+       "rSquared": 0.9383116883
+      }
+     ]
+    }
+   },
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "log",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        0.0679905235,
+        3.8976667501
+       ],
+       "rSquared": 0.7968245272
+      }
+     ]
+    }
+   }
+  ]
+ }
+]

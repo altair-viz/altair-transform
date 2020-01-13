@@ -1,4 +1,6 @@
 """Extract transformed data directly via a selenium webdriver."""
+import io
+import json
 from typing import Any, Dict, List, Union
 
 import altair as alt
@@ -33,6 +35,16 @@ vegaEmbed("#vis", spec, {"mode": "vega-lite"})
   .then(result => done({data: result.view.data(name)}))
   .catch(error => done({error: error.toString()}));
 """
+
+
+def _serialize(df: pd.DataFrame) -> JSONDict:
+    """Serialize a dataframe to a JSON dict."""
+    return json.loads(df.to_json(orient="table"))
+
+
+def _load(serialized: JSONDict) -> pd.DataFrame:
+    """Load a dataframe from a JSON dict."""
+    return pd.read_json(io.StringIO(json.dumps(serialized)), orient="table")
 
 
 def _extract_data(spec: JSONDict, name: str = "data_0") -> pd.DataFrame:
