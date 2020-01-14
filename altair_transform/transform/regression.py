@@ -49,6 +49,8 @@ def visit_regression(
 
 
 class Model(metaclass=abc.ABCMeta):
+    _coef: Optional[np.ndarray]
+
     def __init__(
         self,
         reg: str,
@@ -78,12 +80,12 @@ class Model(metaclass=abc.ABCMeta):
         """
         x = df[self._on].values
         y = df[self._reg].values
-        X = self._design_matrix(x)
-        theta = np.linalg.solve(X.T @ X, X.T @ y)
+        self._fit(x, y)
+        assert self._coef is not None
         SS_tot = ((y - y.mean()) ** 2).sum()
-        SS_res = ((y - np.dot(X, theta)) ** 2).sum()
+        SS_res = ((y - self._predict(x)) ** 2).sum()
         rsquare = 1 - SS_res / SS_tot
-        return pd.DataFrame({"coef": [list(theta)], "rsquared": [rsquare]})
+        return pd.DataFrame({"coef": [list(self._coef)], "rSquared": [rsquare]})
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         """Return the fit model
@@ -98,11 +100,9 @@ class Model(metaclass=abc.ABCMeta):
         model : pd.DataFrame
             DataFrame with model fit results.
         """
-        p = self.params(df)
-        coef = p["coef"][0]
+        self._fit(df[self._on].values, df[self._reg].values)
         x = self._grid(df)
-        X = self._design_matrix(x)
-        y = coef @ X.T
+        y = self._predict(x)
         on, reg = self._as
         return pd.DataFrame({on: x, reg: y})
 
@@ -110,7 +110,11 @@ class Model(metaclass=abc.ABCMeta):
         return self._extent or [df[self._on].min(), df[self._on].max()]
 
     @abc.abstractmethod
-    def _design_matrix(self, x: np.array) -> np.array:
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        ...
+
+    @abc.abstractmethod
+    def _predict(self, x: np.ndarray) -> np.ndarray:
         ...
 
     @abc.abstractmethod
@@ -134,21 +138,44 @@ class LogModel(Model):
         extent = self._extent_from_data(df)
         return np.linspace(extent[0], extent[1], 50)
 
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        X = self._design_matrix(x)
+        self._coef = np.linalg.solve(X.T @ X, X.T @ y)
+
+    def _predict(self, x: np.ndarray) -> None:
+        assert self._coef is not None
+        X = self._design_matrix(x)
+        return X @ self._coef
+
 
 class LinearModel(Model):
     """y = a + b * x"""
 
-    def _design_matrix(self, x: np.array) -> np.array:
+    def _design_matrix(self, x: np.ndarray) -> np.ndarray:
         return np.vstack([np.ones_like(x), x]).T
 
     def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        return np.array(self._extent_from_data(df), dtype=float)
+        return np.array(self._extent_from_data(df))
+
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        X = self._design_matrix(x)
+        self._coef = np.linalg.solve(X.T @ X, X.T @ y)
+
+    def _predict(self, x: np.ndarray) -> None:
+        assert self._coef is not None
+        X = self._design_matrix(x)
+        return X @ self._coef
 
 
 class PolyModel(Model):
     """y = a + b * x + ... + k * x^k"""
 
+    _xmean: Optional[float]
+    _ymean: Optional[float]
+
     def _design_matrix(self, x: np.array) -> np.array:
+        assert self._xmean is not None
+        x = x - self._xmean
         return x[:, None] ** np.arange(self._order + 1)
 
     def _grid(self, df: pd.DataFrame) -> np.ndarray:
@@ -162,14 +189,43 @@ class PolyModel(Model):
             size = 100
         return np.linspace(extent[0], extent[1], size)
 
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        self._xmean = x.mean()
+        self._ymean = y.mean()
+        X = self._design_matrix(x)
+        self._coef = np.linalg.solve(X.T @ X, X.T @ (y - self._ymean))
+
+    def _predict(self, x: np.ndarray) -> None:
+        assert self._coef is not None
+        assert self._ymean is not None
+        X = self._design_matrix(x)
+        return self._ymean + X @ self._coef
+
 
 class QuadModel(Model):
     """y = a + b * x + c * x^2"""
 
+    _xmean: Optional[float]
+    _ymean: Optional[float]
+
     def _design_matrix(self, x: np.array) -> np.array:
-        return x[:, None] ** np.arange(3)
+        assert self._xmean is not None
+        x = x - self._xmean
+        return np.vstack([np.ones_like(x), x, x * x]).T
 
     def _grid(self, df: pd.DataFrame) -> np.ndarray:
         # TODO: make this match grid used in vega.
         extent = self._extent_from_data(df)
         return np.linspace(extent[0], extent[1], 50)
+
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        self._xmean = x.mean()
+        self._ymean = y.mean()
+        X = self._design_matrix(x)
+        self._coef = np.linalg.solve(X.T @ X, X.T @ (y - self._ymean))
+
+    def _predict(self, x: np.ndarray) -> None:
+        assert self._coef is not None
+        assert self._ymean is not None
+        X = self._design_matrix(x)
+        return self._ymean + X @ self._coef
