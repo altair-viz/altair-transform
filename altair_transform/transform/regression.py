@@ -8,6 +8,10 @@ import pandas as pd
 from .visitor import visit
 
 
+def _ensure_length(coef: np.ndarray, k: int) -> np.ndarray:
+    return np.hstack([coef, np.zeros(k - len(coef), dtype=coef.dtype)])
+
+
 @visit.register(alt.RegressionTransform)
 def visit_regression(
     transform: alt.RegressionTransform, df: pd.DataFrame
@@ -151,7 +155,9 @@ class ExpModel(Model):
 
     def _params(self) -> np.ndarray:
         assert self._model is not None
-        log_a, b = self._model.convert(domain=self._model.window).coef
+        log_a, b = _ensure_length(
+            self._model.convert(domain=self._model.window).coef, 2
+        )
         return np.array([np.exp(log_a), b])
 
 
@@ -172,7 +178,7 @@ class LinearModel(Model):
 
     def _params(self):
         assert self._model is not None
-        return self._model.convert(domain=self._model.window).coef
+        return _ensure_length(self._model.convert(domain=self._model.window).coef, 2)
 
 
 class LogModel(Model):
@@ -194,7 +200,7 @@ class LogModel(Model):
 
     def _params(self) -> np.ndarray:
         assert self._model is not None
-        return self._model.convert(domain=self._model.window).coef
+        return _ensure_length(self._model.convert(domain=self._model.window).coef, 2)
 
 
 class PolyModel(Model):
@@ -214,7 +220,9 @@ class PolyModel(Model):
 
     def _params(self):
         assert self._model is not None
-        return self._model.convert(domain=self._model.window).coef
+        return _ensure_length(
+            self._model.convert(domain=self._model.window).coef, self._order + 1
+        )
 
 
 class PowModel(Model):
@@ -236,7 +244,9 @@ class PowModel(Model):
 
     def _params(self) -> np.ndarray:
         assert self._model is not None
-        log_a, b = self._model.convert(domain=self._model.window).coef
+        log_a, b = _ensure_length(
+            self._model.convert(domain=self._model.window).coef, 2
+        )
         return np.array([np.exp(log_a), b])
 
 
@@ -257,4 +267,4 @@ class QuadModel(Model):
 
     def _params(self):
         assert self._model is not None
-        return self._model.convert(domain=self._model.window).coef
+        return _ensure_length(self._model.convert(domain=self._model.window).coef, 3)
