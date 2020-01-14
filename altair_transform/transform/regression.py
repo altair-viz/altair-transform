@@ -3,8 +3,13 @@ from typing import Dict, List, Optional, Tuple, Type
 
 import altair as alt
 import numpy as np
+from numpy.polynomial import Polynomial
 import pandas as pd
 from .visitor import visit
+
+
+def _ensure_length(coef: np.ndarray, k: int) -> np.ndarray:
+    return np.hstack([coef, np.zeros(k - len(coef), dtype=coef.dtype)])
 
 
 @visit.register(alt.RegressionTransform)
@@ -22,9 +27,11 @@ def visit_regression(
     params = transform.get("params", False)
 
     models: Dict[str, Type[Model]] = {
+        "exp": ExpModel,
         "linear": LinearModel,
         "log": LogModel,
         "poly": PolyModel,
+        "pow": PowModel,
         "quad": QuadModel,
     }
 
@@ -81,11 +88,10 @@ class Model(metaclass=abc.ABCMeta):
         x = df[self._on].values
         y = df[self._reg].values
         self._fit(x, y)
-        assert self._coef is not None
         SS_tot = ((y - y.mean()) ** 2).sum()
         SS_res = ((y - self._predict(x)) ** 2).sum()
         rsquare = 1 - SS_res / SS_tot
-        return pd.DataFrame({"coef": [list(self._coef)], "rSquared": [rsquare]})
+        return pd.DataFrame({"coef": [list(self._params())], "rSquared": [rsquare]})
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         """Return the fit model
@@ -114,6 +120,10 @@ class Model(metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
+    def _params(self) -> np.ndarray:
+        ...
+
+    @abc.abstractmethod
     def _predict(self, x: np.ndarray) -> np.ndarray:
         ...
 
@@ -123,15 +133,13 @@ class Model(metaclass=abc.ABCMeta):
 
 
 # TODO: other models
-# exponential (exp): y = a + e ^ (b * x)
-# power (pow): y = a * x ^ b
+# power (pow):
 
 
-class LogModel(Model):
-    """y = a + b * log(x)"""
+class ExpModel(Model):
+    """y = a * e ^ (b * x)"""
 
-    def _design_matrix(self, x: np.array) -> np.array:
-        return np.vstack([np.ones_like(x), np.log(x)]).T
+    _model: Optional[Polynomial]
 
     def _grid(self, df: pd.DataFrame) -> np.ndarray:
         # TODO: make this match grid used in vega.
@@ -139,79 +147,44 @@ class LogModel(Model):
         return np.linspace(extent[0], extent[1], 50)
 
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
-        X = self._design_matrix(x)
-        self._coef = np.linalg.solve(X.T @ X, X.T @ y)
+        self._model = Polynomial.fit(x, np.log(y), 1, w=np.sqrt(abs(y)))
 
-    def _predict(self, x: np.ndarray) -> None:
-        assert self._coef is not None
-        X = self._design_matrix(x)
-        return X @ self._coef
+    def _predict(self, x: np.ndarray) -> np.ndarray:
+        assert self._model is not None
+        return np.exp(self._model(x))
+
+    def _params(self) -> np.ndarray:
+        assert self._model is not None
+        log_a, b = _ensure_length(
+            self._model.convert(domain=self._model.window).coef, 2
+        )
+        return np.array([np.exp(log_a), b])
 
 
 class LinearModel(Model):
     """y = a + b * x"""
 
-    def _design_matrix(self, x: np.ndarray) -> np.ndarray:
-        return np.vstack([np.ones_like(x), x]).T
+    _model: Optional[Polynomial]
 
     def _grid(self, df: pd.DataFrame) -> np.ndarray:
         return np.array(self._extent_from_data(df))
 
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
-        X = self._design_matrix(x)
-        self._coef = np.linalg.solve(X.T @ X, X.T @ y)
+        self._model = Polynomial.fit(x, y, 1)
 
-    def _predict(self, x: np.ndarray) -> None:
-        assert self._coef is not None
-        X = self._design_matrix(x)
-        return X @ self._coef
+    def _predict(self, x: np.ndarray) -> np.ndarray:
+        assert self._model is not None
+        return self._model(x)
 
-
-class PolyModel(Model):
-    """y = a + b * x + ... + k * x^k"""
-
-    _xmean: Optional[float]
-    _ymean: Optional[float]
-
-    def _design_matrix(self, x: np.array) -> np.array:
-        assert self._xmean is not None
-        x = x - self._xmean
-        return x[:, None] ** np.arange(self._order + 1)
-
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        # TODO: make this match grid used in vega.
-        extent = self._extent_from_data(df)
-        if self._order == 1:
-            size = 2
-        elif self._order == 2:
-            size = 50
-        else:
-            size = 100
-        return np.linspace(extent[0], extent[1], size)
-
-    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
-        self._xmean = x.mean()
-        self._ymean = y.mean()
-        X = self._design_matrix(x)
-        self._coef = np.linalg.solve(X.T @ X, X.T @ (y - self._ymean))
-
-    def _predict(self, x: np.ndarray) -> None:
-        assert self._coef is not None
-        assert self._ymean is not None
-        X = self._design_matrix(x)
-        return self._ymean + X @ self._coef
+    def _params(self):
+        assert self._model is not None
+        return _ensure_length(self._model.convert(domain=self._model.window).coef, 2)
 
 
-class QuadModel(Model):
-    """y = a + b * x + c * x^2"""
+class LogModel(Model):
+    """y = a + b * log(x)"""
 
-    _xmean: Optional[float]
-    _ymean: Optional[float]
-
-    def _design_matrix(self, x: np.array) -> np.array:
-        assert self._xmean is not None
-        x = x - self._xmean
-        return np.vstack([np.ones_like(x), x, x * x]).T
+    _model: Optional[Polynomial]
 
     def _grid(self, df: pd.DataFrame) -> np.ndarray:
         # TODO: make this match grid used in vega.
@@ -219,13 +192,79 @@ class QuadModel(Model):
         return np.linspace(extent[0], extent[1], 50)
 
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
-        self._xmean = x.mean()
-        self._ymean = y.mean()
-        X = self._design_matrix(x)
-        self._coef = np.linalg.solve(X.T @ X, X.T @ (y - self._ymean))
+        self._model = Polynomial.fit(np.log(x), y, 1)
 
-    def _predict(self, x: np.ndarray) -> None:
-        assert self._coef is not None
-        assert self._ymean is not None
-        X = self._design_matrix(x)
-        return self._ymean + X @ self._coef
+    def _predict(self, x: np.ndarray) -> np.ndarray:
+        assert self._model is not None
+        return self._model(np.log(x))
+
+    def _params(self) -> np.ndarray:
+        assert self._model is not None
+        return _ensure_length(self._model.convert(domain=self._model.window).coef, 2)
+
+
+class PolyModel(Model):
+    """y = a + b * x + ... + k * x^k"""
+
+    _model: Optional[Polynomial]
+
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
+        return np.array(self._extent_from_data(df))
+
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        self._model = Polynomial.fit(x, y, self._order)
+
+    def _predict(self, x: np.ndarray) -> np.ndarray:
+        assert self._model is not None
+        return self._model(x)
+
+    def _params(self):
+        assert self._model is not None
+        return _ensure_length(
+            self._model.convert(domain=self._model.window).coef, self._order + 1
+        )
+
+
+class PowModel(Model):
+    """y = a * x ^ b"""
+
+    _model: Optional[Polynomial]
+
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
+        # TODO: make this match grid used in vega.
+        extent = self._extent_from_data(df)
+        return np.linspace(extent[0], extent[1], 50)
+
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        self._model = Polynomial.fit(np.log(x), np.log(y), 1)
+
+    def _predict(self, x: np.ndarray) -> np.ndarray:
+        assert self._model is not None
+        return np.exp(self._model(np.log(x)))
+
+    def _params(self) -> np.ndarray:
+        assert self._model is not None
+        log_a, b = _ensure_length(
+            self._model.convert(domain=self._model.window).coef, 2
+        )
+        return np.array([np.exp(log_a), b])
+
+
+class QuadModel(Model):
+    """y = a + b * x + c * x^2"""
+
+    _model: Optional[Polynomial]
+
+    def _grid(self, df: pd.DataFrame) -> np.ndarray:
+        return np.array(self._extent_from_data(df))
+
+    def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        self._model = Polynomial.fit(x, y, 2)
+
+    def _predict(self, x: np.ndarray) -> np.ndarray:
+        assert self._model is not None
+        return self._model(x)
+
+    def _params(self):
+        assert self._model is not None
+        return _ensure_length(self._model.convert(domain=self._model.window).coef, 3)

@@ -39,7 +39,7 @@ def test_linear_groupby() -> None:
 
 
 @pytest.mark.parametrize(
-    "method,coef", [("linear", [1, 2]), ("quad", [0, 2, 0]), ("poly", [0, 2, 0, 0])]
+    "method,coef", [("linear", [1, 2]), ("quad", [1, 2, 0]), ("poly", [1, 2, 0, 0])]
 )
 def test_linear_params(method: str, coef: List[int]) -> None:
     data = pd.DataFrame({"x": [0, 1, 2, 3, 4], "y": [1, 3, 5, 7, 9]})
