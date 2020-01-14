@@ -21,4 +21,6 @@ def iter_test_cases():
 @pytest.mark.parametrize("transform, data, out", iter_test_cases())
 def test_testcase(transform: dict, data: pd.DataFrame, out: pd.DataFrame) -> None:
     got = apply(data, transform)
+    print(got)
+    print(out)
     assert_frame_equal(got, out, check_dtype=False, check_index_type=False)

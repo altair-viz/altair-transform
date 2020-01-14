@@ -129,6 +129,86 @@
       }
      ]
     }
+   },
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "exp",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        0.6916391087,
+        0.4914862394
+       ],
+       "rSquared": 0.9983834255
+      }
+     ]
+    }
+   },
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "pow",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        0.9051152639,
+        1.2489011249
+       ],
+       "rSquared": 0.9377380263
+      }
+     ]
+    }
    }
   ]
  }

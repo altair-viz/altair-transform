@@ -14,7 +14,12 @@ CASES = [
         "data": pd.DataFrame({"x": range(1, 6), "y": [1, 2, 3, 5, 8]}),
         "transforms": [
             {"regression": "y", "on": "x", "method": method, "params": True}
-            for method in ["linear", "log"]
+            for method in [
+                "linear",
+                "log",
+                "exp",
+                "pow",
+            ]  # rSquared is incorrect for quad and poly in vega 5.8
         ],
     },
 ]
