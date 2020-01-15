@@ -19,7 +19,14 @@ CASES = [
                 "log",
                 "exp",
                 "pow",
-            ]  # rSquared is incorrect for quad and poly in vega 5.8
+                # rSquared is incorrect for quad and poly in vega 5.8
+                # "quad",
+                # "poly",
+            ]
+        ]
+        + [
+            {"regression": "y", "on": "x", "method": method, "params": False}
+            for method in ["linear", "log", "exp", "pow", "quad", "poly"]
         ],
     },
 ]
