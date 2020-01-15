@@ -140,6 +140,7 @@ def adaptive_sample(
     span = max_x - min_x
     stop = span / max_steps
 
+    # sample minimum points on uniform grid
     x = np.linspace(min_x, max_x, min_steps + 1)
     y = f(x)
 
@@ -147,13 +148,12 @@ def adaptive_sample(
         # no adaptation, sample uniform grid directly and return
         return x, y
 
-    # sample minimum points on uniform grid
-    # then move on to perform adaptive refinement
+    # move on to perform adaptive refinement
     start_grid = list(zip(x, y))
-    prev, next_ = start_grid[:1], start_grid[1:]
+    prev, next_ = start_grid[:1], start_grid[:0:-1]
 
     while next_:
-        p0, p1 = prev[-1], next_[0]
+        p0, p1 = prev[-1], next_[-1]
 
         # midpoint for potential curve subdivision
         xm = (p0[0] + p1[0]) / 2
@@ -163,12 +163,12 @@ def adaptive_sample(
             # maximum resolution has not yet been met, and
             # subdivision midpoint sufficiently different from endpoint
             # save subdivision, push midpoint onto the visitation stack
-            next_.insert(0, pm)
+            next_.append(pm)
         else:
             # subdivision midpoint sufficiently similar to endpoint
             # skip subdivision, store endpoint, move to next point on the stack
             prev.append(p1)
-            next_.pop(0)
+            next_.pop()
     out = np.array(prev)
     return out[:, 0], out[:, 1]
 
