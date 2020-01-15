@@ -13,20 +13,9 @@ CASES = [
     {
         "data": pd.DataFrame({"x": range(1, 6), "y": [1, 2, 3, 5, 8]}),
         "transforms": [
-            {"regression": "y", "on": "x", "method": method, "params": True}
-            for method in [
-                "linear",
-                "log",
-                "exp",
-                "pow",
-                # rSquared is incorrect for quad and poly in vega 5.8
-                # "quad",
-                # "poly",
-            ]
-        ]
-        + [
-            {"regression": "y", "on": "x", "method": method, "params": False}
-            for method in ["linear", "log", "exp", "pow", "quad", "poly"]
+            {"regression": "y", "on": "x", "method": method, "params": params}
+            for method in ["linear", "log", "exp", "pow", "quad", "poly",]
+            for params in [True, False]
         ],
     },
 ]
