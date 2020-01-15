@@ -94,126 +94,6 @@
     "transform": {
      "regression": "y",
      "on": "x",
-     "method": "log",
-     "params": true
-    },
-    "out": {
-     "schema": {
-      "fields": [
-       {
-        "name": "index",
-        "type": "integer"
-       },
-       {
-        "name": "coef",
-        "type": "string"
-       },
-       {
-        "name": "rSquared",
-        "type": "number"
-       }
-      ],
-      "primaryKey": [
-       "index"
-      ],
-      "pandas_version": "0.20.0"
-     },
-     "data": [
-      {
-       "index": 0,
-       "coef": [
-        0.0679905235,
-        3.8976667501
-       ],
-       "rSquared": 0.7968245272
-      }
-     ]
-    }
-   },
-   {
-    "transform": {
-     "regression": "y",
-     "on": "x",
-     "method": "exp",
-     "params": true
-    },
-    "out": {
-     "schema": {
-      "fields": [
-       {
-        "name": "index",
-        "type": "integer"
-       },
-       {
-        "name": "coef",
-        "type": "string"
-       },
-       {
-        "name": "rSquared",
-        "type": "number"
-       }
-      ],
-      "primaryKey": [
-       "index"
-      ],
-      "pandas_version": "0.20.0"
-     },
-     "data": [
-      {
-       "index": 0,
-       "coef": [
-        0.6916391087,
-        0.4914862394
-       ],
-       "rSquared": 0.9983834255
-      }
-     ]
-    }
-   },
-   {
-    "transform": {
-     "regression": "y",
-     "on": "x",
-     "method": "pow",
-     "params": true
-    },
-    "out": {
-     "schema": {
-      "fields": [
-       {
-        "name": "index",
-        "type": "integer"
-       },
-       {
-        "name": "coef",
-        "type": "string"
-       },
-       {
-        "name": "rSquared",
-        "type": "number"
-       }
-      ],
-      "primaryKey": [
-       "index"
-      ],
-      "pandas_version": "0.20.0"
-     },
-     "data": [
-      {
-       "index": 0,
-       "coef": [
-        0.9051152639,
-        1.2489011249
-       ],
-       "rSquared": 0.9377380263
-      }
-     ]
-    }
-   },
-   {
-    "transform": {
-     "regression": "y",
-     "on": "x",
      "method": "linear",
      "params": false
     },
@@ -248,6 +128,46 @@
        "index": 1,
        "x": 5,
        "y": 7.2
+      }
+     ]
+    }
+   },
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "log",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        0.0679905235,
+        3.8976667501
+       ],
+       "rSquared": 0.7968245272
       }
      ]
     }
@@ -980,6 +900,46 @@
        "index": 139,
        "x": 5.0,
        "y": 6.3410431612
+      }
+     ]
+    }
+   },
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "exp",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        0.6916391087,
+        0.4914862394
+       ],
+       "rSquared": 0.9983834255
       }
      ]
     }
@@ -1881,6 +1841,46 @@
      "regression": "y",
      "on": "x",
      "method": "pow",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        0.9051152639,
+        1.2489011249
+       ],
+       "rSquared": 0.9377380263
+      }
+     ]
+    }
+   },
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "pow",
      "params": false
     },
     "out": {
@@ -2109,6 +2109,47 @@
        "index": 40,
        "x": 5.0,
        "y": 6.7553571324
+      }
+     ]
+    }
+   },
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "quad",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        1.2,
+        -0.4428571429,
+        0.3571428571
+       ],
+       "rSquared": 0.9962894249
       }
      ]
     }
@@ -2851,6 +2892,48 @@
        "index": 141,
        "x": 5.0,
        "y": 7.9142857143
+      }
+     ]
+    }
+   },
+   {
+    "transform": {
+     "regression": "y",
+     "on": "x",
+     "method": "poly",
+     "params": true
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "coef",
+        "type": "string"
+       },
+       {
+        "name": "rSquared",
+        "type": "number"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "coef": [
+        -0.2,
+        1.5238095238,
+        -0.3928571429,
+        0.0833333333
+       ],
+       "rSquared": 0.9995361781
       }
      ]
     }
