@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Callable, Dict, Optional, Tuple, Type
 
 import altair as alt
 import numpy as np
@@ -62,7 +62,7 @@ class Model(metaclass=abc.ABCMeta):
         self,
         reg: str,
         on: str,
-        extent: Optional[List[float]],
+        extent: Optional[Tuple[float, float]],
         as_: Tuple[str, str],
         order: int,
     ):
@@ -107,13 +107,18 @@ class Model(metaclass=abc.ABCMeta):
             DataFrame with model fit results.
         """
         self._fit(df[self._on].values, df[self._reg].values)
-        x = self._grid(df)
-        y = self._predict(x)
+        x, y = self._grid(df)
         on, reg = self._as
         return pd.DataFrame({on: x, reg: y})
 
-    def _extent_from_data(self, df: pd.DataFrame) -> List[float]:
-        return self._extent or [df[self._on].min(), df[self._on].max()]
+    def _grid(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+        extent = self._extent_from_data(df)
+        return _adaptive_sample(self._predict, extent)
+
+    def _extent_from_data(self, df: pd.DataFrame) -> Tuple[float, float]:
+        xmin: float = df[self._on].min()
+        xmax: float = df[self._on].max()
+        return self._extent or (xmin, xmax)
 
     @abc.abstractmethod
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
@@ -127,24 +132,11 @@ class Model(metaclass=abc.ABCMeta):
     def _predict(self, x: np.ndarray) -> np.ndarray:
         ...
 
-    @abc.abstractmethod
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        ...
-
-
-# TODO: other models
-# power (pow):
-
 
 class ExpModel(Model):
     """y = a * e ^ (b * x)"""
 
     _model: Optional[Polynomial]
-
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        # TODO: make this match grid used in vega.
-        extent = self._extent_from_data(df)
-        return np.linspace(extent[0], extent[1], 50)
 
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
         self._model = Polynomial.fit(x, np.log(y), 1, w=np.sqrt(abs(y)))
@@ -166,8 +158,10 @@ class LinearModel(Model):
 
     _model: Optional[Polynomial]
 
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        return np.array(self._extent_from_data(df))
+    def _grid(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+        extent = self._extent_from_data(df)
+        x = np.array(extent)
+        return x, self._predict(np.array(extent))
 
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
         self._model = Polynomial.fit(x, y, 1)
@@ -186,11 +180,6 @@ class LogModel(Model):
 
     _model: Optional[Polynomial]
 
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        # TODO: make this match grid used in vega.
-        extent = self._extent_from_data(df)
-        return np.linspace(extent[0], extent[1], 50)
-
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
         self._model = Polynomial.fit(np.log(x), y, 1)
 
@@ -208,8 +197,13 @@ class PolyModel(Model):
 
     _model: Optional[Polynomial]
 
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        return np.array(self._extent_from_data(df))
+    def _grid(self, df: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+        if self._order == 1:
+            extent = self._extent_from_data(df)
+            x = np.array(extent)
+            return x, self._predict(np.array(extent))
+        else:
+            return super()._grid(df)
 
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
         self._model = Polynomial.fit(x, y, self._order)
@@ -229,11 +223,6 @@ class PowModel(Model):
     """y = a * x ^ b"""
 
     _model: Optional[Polynomial]
-
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        # TODO: make this match grid used in vega.
-        extent = self._extent_from_data(df)
-        return np.linspace(extent[0], extent[1], 50)
 
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
         self._model = Polynomial.fit(np.log(x), np.log(y), 1)
@@ -255,9 +244,6 @@ class QuadModel(Model):
 
     _model: Optional[Polynomial]
 
-    def _grid(self, df: pd.DataFrame) -> np.ndarray:
-        return np.array(self._extent_from_data(df))
-
     def _fit(self, x: np.ndarray, y: np.ndarray) -> None:
         self._model = Polynomial.fit(x, y, 2)
 
@@ -268,3 +254,68 @@ class QuadModel(Model):
     def _params(self):
         assert self._model is not None
         return _ensure_length(self._model.convert(domain=self._model.window).coef, 3)
+
+
+# -----------------------------------------
+# Adaptive sampling
+# https://github.com/vega/vega/blob/e100874a432033b24ba687a4d2132610411da1b6/packages/vega-regression/src/Regression.js
+
+# subdivide up to accuracy of 0.1 degrees
+MIN_RADIANS = 0.1 * np.pi / 180
+
+
+def _adaptive_sample(
+    f: Callable[[np.ndarray], np.ndarray],
+    extent: Tuple[float, float],
+    min_steps: int = 25,
+    max_steps: int = 200,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Adaptive sampling of a function.
+
+    Code adapted from Javascript at
+    https://github.com/vega/vega/blob/0ab6b730a7e576d33d00e12063855bb132194191/packages/vega-statistics/src/sampleCurve.js
+    """
+
+    min_x, max_x = extent
+    span = max_x - min_x
+    stop = span / max_steps
+
+    x = np.linspace(min_x, max_x, min_steps + 1)
+    y = f(x)
+
+    if min_steps == max_steps:
+        # no adaptation, sample uniform grid directly and return
+        return x, y
+
+    # sample minimum points on uniform grid
+    # then move on to perform adaptive refinement
+    start_grid = list(zip(x, y))
+    prev, next_ = start_grid[:1], start_grid[1:]
+
+    while next_:
+        p0, p1 = prev[-1], next_[0]
+
+        # midpoint for potential curve subdivision
+        xm = (p0[0] + p1[0]) / 2
+        pm = (xm, f(xm))
+
+        if pm[0] - p0[0] >= stop and _angleDelta(p0, pm, p1) > MIN_RADIANS:
+            # maximum resolution has not yet been met, and
+            # subdivision midpoint sufficiently different from endpoint
+            # save subdivision, push midpoint onto the visitation stack
+            next_.insert(0, pm)
+        else:
+            # subdivision midpoint sufficiently similar to endpoint
+            # skip subdivision, store endpoint, move to next point on the stack
+            prev.append(p1)
+            next_.pop(0)
+    out = np.array(prev)
+    return out[:, 0], out[:, 1]
+
+
+def _angleDelta(
+    p: Tuple[float, float], q: Tuple[float, float], r: Tuple[float, float]
+) -> float:
+    a0 = np.arctan2(r[1] - p[1], r[0] - p[0])
+    a1 = np.arctan2(q[1] - p[1], q[0] - p[0])
+    return abs(a0 - a1)

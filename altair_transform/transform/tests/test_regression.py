@@ -49,8 +49,8 @@ def test_linear_params(method: str, coef: List[int]) -> None:
 
 
 @pytest.mark.parametrize("groupby", [None, ["g"]])
-@pytest.mark.parametrize("method", ["quad", "poly"])
-def test_vs_linear(method: str, groupby: List[str]) -> None:
+@pytest.mark.parametrize("method,order", [("linear", 1), ("quad", 2)])
+def test_poly_vs_linear(groupby: List[str], method: str, order: int) -> None:
     data = pd.DataFrame(
         {
             "x": [0, 1, 2, 3, 4, 1, 2, 3],
@@ -59,8 +59,8 @@ def test_vs_linear(method: str, groupby: List[str]) -> None:
         }
     )
     kwds = {} if not groupby else {"groupby": groupby}
-    out1 = apply(data, {"regression": "y", "on": "x", **kwds})
+    out1 = apply(data, {"regression": "y", "on": "x", "method": method, **kwds})
     out2 = apply(
-        data, {"regression": "y", "on": "x", "method": "poly", "order": 1, **kwds}
+        data, {"regression": "y", "on": "x", "method": "poly", "order": order, **kwds}
     )
     assert_frame_equal(out1, out2, check_dtype=False)
