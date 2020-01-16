@@ -3980,6 +3980,198 @@
       }
      ]
     }
+   },
+   {
+    "transform": {
+     "bin": {
+      "extent": [
+       20,
+       80
+      ]
+     },
+     "field": "x",
+     "as": "xbin"
+    },
+    "out": {
+     "schema": {
+      "fields": [
+       {
+        "name": "index",
+        "type": "integer"
+       },
+       {
+        "name": "c",
+        "type": "string"
+       },
+       {
+        "name": "d",
+        "type": "string"
+       },
+       {
+        "name": "i",
+        "type": "integer"
+       },
+       {
+        "name": "t",
+        "type": "string"
+       },
+       {
+        "name": "x",
+        "type": "integer"
+       },
+       {
+        "name": "xbin",
+        "type": "number"
+       },
+       {
+        "name": "xbin_end",
+        "type": "number"
+       },
+       {
+        "name": "y",
+        "type": "integer"
+       }
+      ],
+      "primaryKey": [
+       "index"
+      ],
+      "pandas_version": "0.20.0"
+     },
+     "data": [
+      {
+       "index": 0,
+       "c": "A",
+       "d": "A",
+       "i": 0,
+       "t": "2012-01-31T00:00:00",
+       "x": 51,
+       "xbin": 50.0,
+       "xbin_end": 60.0,
+       "y": 23
+      },
+      {
+       "index": 1,
+       "c": "A",
+       "d": "B",
+       "i": 1,
+       "t": "2012-02-29T00:00:00",
+       "x": 92,
+       "xbin": null,
+       "xbin_end": null,
+       "y": 2
+      },
+      {
+       "index": 2,
+       "c": "A",
+       "d": "C",
+       "i": 2,
+       "t": "2012-03-31T00:00:00",
+       "x": 14,
+       "xbin": null,
+       "xbin_end": null,
+       "y": 21
+      },
+      {
+       "index": 3,
+       "c": "B",
+       "d": "A",
+       "i": 3,
+       "t": "2012-04-30T00:00:00",
+       "x": 71,
+       "xbin": 70.0,
+       "xbin_end": 80.0,
+       "y": 52
+      },
+      {
+       "index": 4,
+       "c": "B",
+       "d": "B",
+       "i": 4,
+       "t": "2012-05-31T00:00:00",
+       "x": 60,
+       "xbin": 60.0,
+       "xbin_end": 70.0,
+       "y": 1
+      },
+      {
+       "index": 5,
+       "c": "B",
+       "d": "C",
+       "i": 5,
+       "t": "2012-06-30T00:00:00",
+       "x": 20,
+       "xbin": 20.0,
+       "xbin_end": 30.0,
+       "y": 87
+      },
+      {
+       "index": 6,
+       "c": "C",
+       "d": "A",
+       "i": 6,
+       "t": "2012-07-31T00:00:00",
+       "x": 82,
+       "xbin": null,
+       "xbin_end": null,
+       "y": 29
+      },
+      {
+       "index": 7,
+       "c": "C",
+       "d": "B",
+       "i": 7,
+       "t": "2012-08-31T00:00:00",
+       "x": 86,
+       "xbin": null,
+       "xbin_end": null,
+       "y": 37
+      },
+      {
+       "index": 8,
+       "c": "C",
+       "d": "C",
+       "i": 8,
+       "t": "2012-09-30T00:00:00",
+       "x": 74,
+       "xbin": 70.0,
+       "xbin_end": 80.0,
+       "y": 1
+      },
+      {
+       "index": 9,
+       "c": "D",
+       "d": "A",
+       "i": 9,
+       "t": "2012-10-31T00:00:00",
+       "x": 74,
+       "xbin": 70.0,
+       "xbin_end": 80.0,
+       "y": 63
+      },
+      {
+       "index": 10,
+       "c": "D",
+       "d": "B",
+       "i": 10,
+       "t": "2012-11-30T00:00:00",
+       "x": 87,
+       "xbin": null,
+       "xbin_end": null,
+       "y": 59
+      },
+      {
+       "index": 11,
+       "c": "D",
+       "d": "C",
+       "i": 11,
+       "t": "2012-12-31T00:00:00",
+       "x": 99,
+       "xbin": null,
+       "xbin_end": null,
+       "y": 20
+      }
+     ]
+    }
    }
   ]
  }

@@ -41,6 +41,7 @@ BIN_TESTS = [
     {"bin": {"anchor": 3.5}, "field": "x", "as": "xbin"},
     {"bin": {"step": 20}, "field": "x", "as": "xbin"},
     {"bin": {"base": 2}, "field": "x", "as": "xbin"},
+    {"bin": {"extent": [20, 80]}, "field": "x", "as": "xbin"},
 ]
 
 

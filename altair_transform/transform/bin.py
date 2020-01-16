@@ -12,11 +12,13 @@ from .vega_utils import calculate_bins
 def _cut(series: pd.Series, edges: np.ndarray) -> Tuple[pd.Series, pd.Series]:
     """Like pd.cut(), but include outliers in the outer bins."""
     bins = pd.cut(series, edges, labels=False, right=False)
-    bins[series <= edges[0]] = 0
-    bins[series >= edges[-1]] = len(edges) - 2
+    out_of_range = (series < edges[0]) | (series > edges[-1])
+    bins[out_of_range] = -1
     bins = bins.astype(int)
-    bins1 = pd.Series(edges[bins.values], index=bins.index)
-    bins2 = pd.Series(edges[bins.values + 1], index=bins.index)
+    bins1 = pd.Series(edges[bins.values], index=bins.index, dtype=float)
+    bins2 = pd.Series(edges[bins.values + 1], index=bins.index, dtype=float)
+    bins1[out_of_range] = np.nan
+    bins2[out_of_range] = np.nan
     return bins1, bins2
 
 
@@ -24,11 +26,11 @@ def _cut(series: pd.Series, edges: np.ndarray) -> Tuple[pd.Series, pd.Series]:
 def visit_bin(transform: alt.BinTransform, df: pd.DataFrame) -> pd.DataFrame:
     transform_dct: dict = transform.to_dict()
     col = transform_dct["as"]
-    bin = transform_dct["bin"]
+    bin_ = {} if transform_dct["bin"] is True else transform_dct["bin"]
     field = transform_dct["field"]
-    extent = df[field].min(), df[field].max()
 
-    bins = calculate_bins(extent, **({} if bin is True else bin))
+    bin_.setdefault("extent", [df[field].min(), df[field].max()])
+    bins = calculate_bins(**bin_)
 
     if isinstance(col, str):
         df[col], df[col + "_end"] = _cut(df[field], bins)
