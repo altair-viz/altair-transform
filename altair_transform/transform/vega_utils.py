@@ -26,7 +26,7 @@ def calculate_bins(
     """Calculate the bins for a given dataset.
 
     This is a Python translation of the Javascript function available at
-    https://github.com/vega/vega/blob/v5.7.3/packages/vega-statistics/src/bin.js
+    https://github.com/vega/vega/blob/v5.9.1/packages/vega-statistics/src/bin.js
 
     Parameters
     ----------
@@ -65,6 +65,42 @@ def calculate_bins(
     -------
     bins : numpy.ndarray
         array of bin edges.
+    """
+    start, stop, step = _bin(
+        extent=extent,
+        base=base,
+        divide=divide,
+        maxbins=maxbins,
+        minstep=minstep,
+        nice=nice,
+        step=step,
+        steps=steps,
+        span=span,
+    )
+
+    N = math.ceil((stop - start) / step)
+
+    if anchor is not None:
+        start += anchor - (start + step * math.floor((anchor - start) / step))
+
+    return start + step * np.arange(N + 1)
+
+
+def _bin(
+    extent: Tuple[Number, Number],
+    base: Number = 20,
+    divide: List[Number] = [5, 2],
+    maxbins: Number = 10,
+    minstep: Number = 0,
+    nice: bool = True,
+    step: Optional[Number] = None,
+    steps: Optional[List[Number]] = None,
+    span: Optional[Number] = None,
+) -> Tuple[Number, Number, Number]:
+    """Calculate the bins for a given dataset.
+
+    This is a Python translation of the Javascript function available at
+    https://github.com/vega/vega/blob/v5.9.1/packages/vega-statistics/src/bin.js
     """
     min_, max_ = extent
     assert max_ > min_
@@ -105,7 +141,7 @@ def calculate_bins(
 
     start = min_
     stop = max_ if max_ != min_ else min_ + step
-    return np.arange(start, stop + 0.01 * step, step)
+    return start, stop, step
 
 
 def adaptive_sample(

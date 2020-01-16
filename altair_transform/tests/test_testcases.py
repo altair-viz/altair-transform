@@ -26,6 +26,9 @@ def test_testcase(transform: dict, data: pd.DataFrame, want: pd.DataFrame) -> No
     want = want[sorted(want.columns)]
     got = got[sorted(got.columns)]
 
+    print(want)
+    print(got)
+
     assert_frame_equal(
         got, want, check_dtype=False, check_index_type=False, check_less_precise=True
     )
