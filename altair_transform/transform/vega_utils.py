@@ -141,7 +141,7 @@ def adaptive_sample(
     stop = span / max_steps
 
     # sample minimum points on uniform grid
-    x = np.linspace(min_x, max_x, min_steps + 1)
+    x = min_x + (np.arange(min_steps + 1) / min_steps) * span
     y = f(x)
 
     if min_steps == max_steps:

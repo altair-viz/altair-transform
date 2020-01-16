@@ -18,9 +18,14 @@ def iter_test_cases():
             yield (t["transform"], data, _load(t["out"]))
 
 
-@pytest.mark.parametrize("transform, data, out", iter_test_cases())
-def test_testcase(transform: dict, data: pd.DataFrame, out: pd.DataFrame) -> None:
+@pytest.mark.parametrize("transform, data, want", iter_test_cases())
+def test_testcase(transform: dict, data: pd.DataFrame, want: pd.DataFrame) -> None:
     got = apply(data, transform)
-    print(got)
-    print(out)
-    assert_frame_equal(got, out, check_dtype=False, check_index_type=False)
+
+    # Normalize column order.
+    want = want[sorted(want.columns)]
+    got = got[sorted(got.columns)]
+
+    assert_frame_equal(
+        got, want, check_dtype=False, check_index_type=False, check_less_precise=True
+    )
