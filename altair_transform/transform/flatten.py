@@ -19,7 +19,7 @@ def visit_flatten(transform: alt.FlattenTransform, df: pd.DataFrame) -> pd.DataF
         return df
 
     to_flatten = df[fields]
-    others = df[[c for c in df.columns if c not in fields]]
+    others = df[[c for c in df.columns if c not in out]]
 
     def flatten_row(row):
         flattened = to_flatten.iloc[row].apply(pd.Series).T

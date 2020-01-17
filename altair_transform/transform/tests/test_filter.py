@@ -47,5 +47,25 @@ def test_filter_transform(
     calc: Callable[[pd.DataFrame], pd.DataFrame],
 ):
     out1 = altair_transform.apply(data, {"filter": filter})
-    out2 = calc(data)
+    out2 = calc(data).reset_index(drop=True)
     assert_frame_equal(out1, out2)
+
+
+@pytest.mark.parametrize("filter,_", FILTER_PREDICATES)
+def test_filter_against_js(
+    driver,
+    data: pd.DataFrame,
+    filter: Union[str, Dict[str, Any]],
+    _: Callable[[pd.DataFrame], pd.DataFrame],
+) -> None:
+    transform = {"filter": filter}
+    got = altair_transform.apply(data, transform)
+    want = driver.apply(data, transform)
+
+    assert_frame_equal(
+        got[sorted(got.columns)],
+        want[sorted(want.columns)],
+        check_dtype=False,
+        check_index_type=False,
+        check_less_precise=True,
+    )

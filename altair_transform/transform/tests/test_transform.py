@@ -61,25 +61,6 @@ def test_calculate_transform(data):
     assert_frame_equal(out1, out2)
 
 
-@pytest.mark.parametrize("as_", (None, ["name", "val"]))
-def test_fold_transform(as_):
-    data = pd.DataFrame({"x": [1, 2, 3], "y1": ["A", "B", "C"], "y2": ["D", "E", "F"]})
-    if as_ is None:
-        out = altair_transform.apply(data, {"fold": ["y1", "y2"]})
-        as_ = ["key", "value"]
-    else:
-        out = altair_transform.apply(data, {"fold": ["y1", "y2"], "as": as_})
-
-    expected = pd.DataFrame(
-        {
-            "x": 2 * data["x"].tolist(),
-            as_[0]: 3 * ["y1"] + 3 * ["y2"],
-            as_[1]: data["y1"].tolist() + data["y2"].tolist(),
-        }
-    )
-    assert_frame_equal(out, expected)
-
-
 @pytest.mark.parametrize("groupby", [True, False])
 @pytest.mark.parametrize("op", set(AGGREGATES) - set(AGG_SKIP))
 def test_aggregate_transform(data, groupby, op):
@@ -189,6 +170,6 @@ def test_multiple_transforms(data):
     out1 = altair_transform.apply(data, transform)
     out2 = data.copy()
     out2["xy_mean"] = 0.5 * (data.x + data.y)
-    out2 = out2[out2.x < out2.xy_mean]
+    out2 = out2[out2.x < out2.xy_mean].reset_index(drop=True)
 
     assert_frame_equal(out1, out2)

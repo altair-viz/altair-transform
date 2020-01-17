@@ -1,7 +1,8 @@
-from typing import List
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import pytest
 
 import altair_transform
@@ -56,3 +57,28 @@ def test_bin_transform_steps(nice: bool, steps: List[int] = [5, 10, 20]) -> None
     bins = np.sort(out.xbin.unique())
     assert bins[1] - bins[0] in steps
     assert not out.xbin.isnull().any()
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        {"bin": True, "field": "x", "as": "xbin"},
+        {"bin": True, "field": "x", "as": ["xbin1", "xbin2"]},
+        {"bin": {"maxbins": 20}, "field": "x", "as": "xbin"},
+        {"bin": {"nice": False}, "field": "x", "as": "xbin"},
+        {"bin": {"anchor": 3.5}, "field": "x", "as": "xbin"},
+        {"bin": {"step": 20}, "field": "x", "as": "xbin"},
+        {"bin": {"base": 2}, "field": "x", "as": "xbin"},
+        {"bin": {"extent": [20, 80]}, "field": "x", "as": "xbin"},
+    ],
+)
+def test_bin_against_js(driver, data: pd.DataFrame, transform: Dict[str, Any]) -> None:
+    got = altair_transform.apply(data, transform)
+    want = driver.apply(data, transform)
+    assert_frame_equal(
+        got[sorted(got.columns)],
+        want[sorted(want.columns)],
+        check_dtype=False,
+        check_index_type=False,
+        check_less_precise=True,
+    )
