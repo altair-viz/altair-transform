@@ -189,6 +189,6 @@ def test_multiple_transforms(data):
     out1 = altair_transform.apply(data, transform)
     out2 = data.copy()
     out2["xy_mean"] = 0.5 * (data.x + data.y)
-    out2 = out2[out2.x < out2.xy_mean]
+    out2 = out2[out2.x < out2.xy_mean].reset_index(drop=True)
 
     assert_frame_equal(out1, out2)

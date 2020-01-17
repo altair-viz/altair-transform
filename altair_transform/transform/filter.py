@@ -11,7 +11,7 @@ from ..vegaexpr import eval_vegajs
 @visit.register(alt.FilterTransform)
 def visit_filter(transform: alt.FilterTransform, df: pd.DataFrame) -> pd.DataFrame:
     mask = eval_predicate(transform.filter, df).astype(bool)
-    return df[mask]
+    return df[mask].reset_index(drop=True)
 
 
 def get_column(df: pd.DataFrame, predicate: Any) -> pd.Series:
