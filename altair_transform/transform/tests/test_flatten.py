@@ -68,9 +68,6 @@ def test_flatten_against_js(
     got = altair_transform.apply(data, transform)
     want = driver.apply(data, transform)
 
-    print(got)
-    print(want)
-
     assert_frame_equal(
         got[sorted(got.columns)],
         want[sorted(want.columns)],
