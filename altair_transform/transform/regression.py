@@ -51,7 +51,12 @@ def visit_regression(
             return model.params(df)
     else:
         if groupby:
-            return df.groupby(groupby).apply(model.predict).reset_index(groupby)
+            return (
+                df.groupby(groupby)
+                .apply(model.predict)
+                .reset_index(groupby)
+                .reset_index(drop=True)
+            )
         else:
             return model.predict(df)
 
