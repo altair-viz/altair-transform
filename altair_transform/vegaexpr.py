@@ -680,7 +680,6 @@ def truncate(
     elif align == "left":
         return ellipsis + string[-nchars:]
     elif align == "center":
-        print(nchars, nchars // 2, nchars // 2 - nchars)
         return string[: nchars - nchars // 2] + ellipsis + string[-(nchars // 2) :]
     else:
         return string[:nchars] + ellipsis

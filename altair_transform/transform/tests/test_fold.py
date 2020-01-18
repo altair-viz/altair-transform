@@ -45,10 +45,6 @@ def test_fold_against_js(
     got = altair_transform.apply(data, transform)
     want = driver.apply(data, transform)
 
-    print(data)
-    print(got)
-    print(want)
-
     assert_frame_equal(
         got[sorted(got.columns)],
         want[sorted(want.columns)],
