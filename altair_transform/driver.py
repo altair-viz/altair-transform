@@ -32,7 +32,7 @@ var name = arguments[1];
 var done = arguments[2];
 
 vegaEmbed("#vis", spec, {"mode": "vega-lite"})
-  .then(result => done({data: result.view.data(name)}))
+  .then(result => done({data: JSON.stringify(result.view.data(name))}))
   .catch(error => done({error: error.toString()}));
 """
 
@@ -96,7 +96,7 @@ def _extract_data(spec: JSONDict, name: str = "data_0") -> pd.DataFrame:
     if "error" in data:
         raise ValueError(f"Javascript Error: {data['error']}")
 
-    return pd.DataFrame.from_records(data["data"])
+    return pd.DataFrame.from_records(json.loads(data["data"]))
 
 
 def apply(
