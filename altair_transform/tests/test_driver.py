@@ -22,3 +22,8 @@ def test_driver_apply(driver):
 
     df["y"] = 2 * df["x"]
     assert_frame_equal(df, df_out)
+
+
+def test_utc_tz_offset(driver):
+    # Test that UTC dates have zero offset between Python and Javascript.
+    assert driver.get_tz_offset("UTC") == pd.Timedelta(0)

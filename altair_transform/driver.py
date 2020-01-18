@@ -1,7 +1,7 @@
 """Extract transformed data directly via a selenium webdriver."""
 import io
 import json
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import altair as alt
 import pandas as pd
@@ -128,3 +128,27 @@ def apply(
     with alt.data_transformers.enable(max_rows=None, consolidate_datasets=False):
         spec = chart.to_dict()
     return _extract_data(spec, "data_0")
+
+
+def get_tz_offset(tz: Optional[str] = None) -> pd.Timedelta:
+    """Get the timezone offset between Python and Javascript for dates with the given timezone.
+
+    Parameters
+    ----------
+    tz : string (optional)
+        The timezone of the input dates
+
+    Returns
+    -------
+    offset : pd.Timedelta
+        The offset between the Javasript representation and the Python representation
+        of a date with the given timezone.
+    """
+    ts = pd.to_datetime("2012-01-01").tz_localize(tz)
+    df = pd.DataFrame({"t": [ts]})
+    out = apply(df, {"timeUnit": "year", "field": "t", "as": "year"})
+
+    date_in = df.t[0]
+    date_out = pd.to_datetime(1e6 * out.t)[0].tz_localize(tz)
+
+    return date_out - date_in
