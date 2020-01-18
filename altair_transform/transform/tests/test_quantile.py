@@ -39,7 +39,7 @@ def test_quantile_transform_groupby(data: pd.DataFrame) -> None:
 @pytest.mark.parametrize("groupby", [None, ["c"]])
 @pytest.mark.parametrize("probs", [None, [0.2 * i for i in range(6)]])
 @pytest.mark.parametrize("as_", [None, ["p", "q"]])
-def test_bin_against_js(
+def test_quantile_against_js(
     driver,
     data: pd.DataFrame,
     step: Optional[float],
