@@ -33,7 +33,7 @@ AGGREGATES = [
     "variancep",
 ]
 
-AGG_SKIP = ["ci0", "ci1"]  # These require scipy.
+AGG_SKIP = ["ci0", "ci1", "values"]  # These require scipy.
 
 
 @pytest.fixture
@@ -59,30 +59,6 @@ def test_calculate_transform(data):
     out2["z"] = data.x + data.y
 
     assert_frame_equal(out1, out2)
-
-
-@pytest.mark.parametrize("groupby", [True, False])
-@pytest.mark.parametrize("op", set(AGGREGATES) - set(AGG_SKIP))
-def test_aggregate_transform(data, groupby, op):
-    field = "x"
-    col = "z"
-    group = "c"
-
-    transform = {"aggregate": [{"op": op, "field": field, "as": col}]}
-    if groupby:
-        transform["groupby"] = [group]
-
-    op = AGG_REPLACEMENTS.get(op, op)
-    out = altair_transform.apply(data, transform)
-
-    if groupby:
-        grouped = data.groupby(group)[field].aggregate(op)
-        grouped.name = col
-        grouped = grouped.reset_index()
-    else:
-        grouped = pd.DataFrame({col: [data[field].aggregate(op)]})
-
-    assert_frame_equal(grouped, out)
 
 
 @pytest.mark.parametrize("groupby", [True, False])
