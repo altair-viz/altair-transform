@@ -130,6 +130,26 @@ def apply(
     return _extract_data(spec, "data_0")
 
 
+def get_tz_code() -> str:
+    """Get the timezone code used by chromedriver."""
+    # Optional deps
+    from selenium.common.exceptions import NoSuchElementException
+    from altair_saver import SeleniumSaver
+
+    html = """<html><body><div id="vis"></div></body></html>"""
+    script = "arguments[0](Intl.DateTimeFormat().resolvedOptions().timeZone)"
+    url = SeleniumSaver._serve(html, {})
+    driver_name = SeleniumSaver._select_webdriver(20)
+    driver = SeleniumSaver._registry.get(driver_name, 20)
+    driver.get("about:blank")
+    driver.get(url)
+    try:
+        driver.find_element_by_id("vis")
+    except NoSuchElementException:
+        raise RuntimeError(f"Could not load {url}")
+    return driver.execute_async_script(script)
+
+
 def get_tz_offset(tz: Optional[str] = None) -> pd.Timedelta:
     """Get the timezone offset between Python and Javascript for dates with the given timezone.
 

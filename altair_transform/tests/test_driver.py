@@ -27,3 +27,8 @@ def test_driver_apply(driver):
 def test_utc_tz_offset(driver):
     # Test that UTC dates have zero offset between Python and Javascript.
     assert driver.get_tz_offset("UTC") == pd.Timedelta(0)
+
+
+def test_tz_code(driver):
+    code = driver.get_tz_code()
+    pd.to_datetime("2012-01-01").tz_localize(code)

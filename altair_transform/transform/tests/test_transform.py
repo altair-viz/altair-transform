@@ -132,12 +132,6 @@ def test_sample_transform(data, N):
     assert_frame_equal(out, data.iloc[out.index])
 
 
-def test_timeunit_transform(data):
-    transform = {"timeUnit": "year", "field": "t", "as": "year"}
-    out = altair_transform.apply(data, transform)
-    assert (out.year == pd.to_datetime("2012-01-01")).all()
-
-
 def test_multiple_transforms(data):
     transform = [
         {"calculate": "0.5 * (datum.x + datum.y)", "as": "xy_mean"},

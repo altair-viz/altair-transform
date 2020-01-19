@@ -67,7 +67,7 @@ def _parse_timeunit_string(timeunit: str) -> Set[str]:
 def _compute_timeunit(name: str, date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     """Workhorse for compute_timeunit."""
     if name in ["day", "utcday"]:
-        return pd.to_datetime("2006-01-01") + pd.to_timedelta(
+        return pd.to_datetime("2012-01-01") + pd.to_timedelta(
             (date.dayofweek + 1) % 7, "D"
         )
     units = _parse_timeunit_string(name)
@@ -79,7 +79,7 @@ def _compute_timeunit(name: str, date: pd.DatetimeIndex) -> pd.DatetimeIndex:
     def quarter(month: pd.Int64Index) -> pd.Int64Index:
         return month - (month - 1) % 3
 
-    Y = date.year.astype(str) if "year" in units else "1900"
+    Y = date.year.astype(str) if "year" in units else "2012"
     M = (
         date.month.astype(str).str.zfill(2)
         if "month" in units
