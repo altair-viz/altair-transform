@@ -33,7 +33,7 @@ AGGREGATES = [
     "variancep",
 ]
 
-AGG_SKIP = ["ci0", "ci1"]  # These require scipy.
+AGG_SKIP = ["ci0", "ci1", "values"]  # These require scipy.
 
 
 @pytest.fixture
@@ -59,30 +59,6 @@ def test_calculate_transform(data):
     out2["z"] = data.x + data.y
 
     assert_frame_equal(out1, out2)
-
-
-@pytest.mark.parametrize("groupby", [True, False])
-@pytest.mark.parametrize("op", set(AGGREGATES) - set(AGG_SKIP))
-def test_aggregate_transform(data, groupby, op):
-    field = "x"
-    col = "z"
-    group = "c"
-
-    transform = {"aggregate": [{"op": op, "field": field, "as": col}]}
-    if groupby:
-        transform["groupby"] = [group]
-
-    op = AGG_REPLACEMENTS.get(op, op)
-    out = altair_transform.apply(data, transform)
-
-    if groupby:
-        grouped = data.groupby(group)[field].aggregate(op)
-        grouped.name = col
-        grouped = grouped.reset_index()
-    else:
-        grouped = pd.DataFrame({col: [data[field].aggregate(op)]})
-
-    assert_frame_equal(grouped, out)
 
 
 @pytest.mark.parametrize("groupby", [True, False])
@@ -154,12 +130,6 @@ def test_sample_transform(data, N):
 
     # Ensure the content are correct
     assert_frame_equal(out, data.iloc[out.index])
-
-
-def test_timeunit_transform(data):
-    transform = {"timeUnit": "year", "field": "t", "as": "year"}
-    out = altair_transform.apply(data, transform)
-    assert (out.year == pd.to_datetime("2012-01-01")).all()
 
 
 def test_multiple_transforms(data):

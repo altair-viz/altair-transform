@@ -16,14 +16,34 @@ def visit_aggregate(
         col = aggregate["as"]
         field = aggregate.get("field", df.columns[0])
 
-        op = AGG_REPLACEMENTS.get(op, op)
+        if op == "argmin":
+
+            def op(col, df=df):
+                return df.loc[col.idxmin()].to_dict()
+
+        elif op == "argmax":
+
+            def op(col, df=df):
+                return df.loc[col.idxmax()].to_dict()
+
+        else:
+            op = AGG_REPLACEMENTS.get(op, op)
+
         if field == "*" and field not in df.columns:
             field = df.columns[0]
 
-        if groupby:
-            agg_cols[col] = df.groupby(groupby)[field].aggregate(op)
+        if op == "values":
+            if groupby:
+                agg_cols[col] = df.groupby(groupby).apply(
+                    lambda x: x.to_dict(orient="records")
+                )
+            else:
+                agg_cols[col] = [df.to_dict(orient="records")]
         else:
-            agg_cols[col] = [df[field].aggregate(op)]
+            if groupby:
+                agg_cols[col] = df.groupby(groupby)[field].aggregate(op)
+            else:
+                agg_cols[col] = [df[field].aggregate(op)]
 
     df = pd.DataFrame(agg_cols)
     if groupby:
@@ -51,7 +71,6 @@ AGG_REPLACEMENTS = {
     "q1": lambda x: x.quantile(0.25),
     "q3": lambda x: x.quantile(0.75),
     "valid": "count",
-    "values": "count",
     "variance": "var",
     "variancep": lambda x: x.var(ddof=0),
 }

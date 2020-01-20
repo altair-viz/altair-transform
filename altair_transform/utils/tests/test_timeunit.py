@@ -68,7 +68,7 @@ def test_all_timeunits(dates, timezone, timeunit_name):
     dates = dates.tz_localize(timezone or tzlocal()).tz_convert(tz)
 
     to_check = [
-        ("year", "year", 2006 if "day" in timeunit_name else 1900),
+        ("year", "year", 2012),
         ("quarter", "quarter", None),
         ("month", "month", None if "quarter" in timeunit_name else 1),
         ("day", "dayofweek", None),

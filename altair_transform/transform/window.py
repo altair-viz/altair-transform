@@ -38,8 +38,9 @@ def visit_window(transform: alt.WindowTransform, df: pd.DataFrame) -> pd.DataFra
         rolling = grouped.rolling(frame[0] + 1, min_periods=1)
     elif frame == [None, None]:
         rolling = grouped.rolling(2 * len(df), min_periods=1, center=True)
-    elif frame[0] == frame[1]:
-        rolling = grouped.rolling(2 * frame[0] + 1, min_periods=1, center=True)
+    elif abs(frame[0]) == abs(frame[1]):
+        # TODO: duplicate values may increase the effective window size
+        rolling = grouped.rolling(2 * abs(frame[0]) + 1, min_periods=1, center=True)
     else:
         raise NotImplementedError("frame={}".format(frame))
 

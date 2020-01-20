@@ -1,7 +1,7 @@
 """Extract transformed data directly via a selenium webdriver."""
 import io
 import json
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import altair as alt
 import pandas as pd
@@ -32,7 +32,7 @@ var name = arguments[1];
 var done = arguments[2];
 
 vegaEmbed("#vis", spec, {"mode": "vega-lite"})
-  .then(result => done({data: result.view.data(name)}))
+  .then(result => done({data: JSON.stringify(result.view.data(name))}))
   .catch(error => done({error: error.toString()}));
 """
 
@@ -96,7 +96,7 @@ def _extract_data(spec: JSONDict, name: str = "data_0") -> pd.DataFrame:
     if "error" in data:
         raise ValueError(f"Javascript Error: {data['error']}")
 
-    return pd.DataFrame.from_records(data["data"])
+    return pd.DataFrame.from_records(json.loads(data["data"]))
 
 
 def apply(
@@ -128,3 +128,47 @@ def apply(
     with alt.data_transformers.enable(max_rows=None, consolidate_datasets=False):
         spec = chart.to_dict()
     return _extract_data(spec, "data_0")
+
+
+def get_tz_code() -> str:
+    """Get the timezone code used by chromedriver."""
+    # Optional deps
+    from selenium.common.exceptions import NoSuchElementException
+    from altair_saver import SeleniumSaver
+
+    html = """<html><body><div id="vis"></div></body></html>"""
+    script = "arguments[0](Intl.DateTimeFormat().resolvedOptions().timeZone)"
+    url = SeleniumSaver._serve(html, {})
+    driver_name = SeleniumSaver._select_webdriver(20)
+    driver = SeleniumSaver._registry.get(driver_name, 20)
+    driver.get("about:blank")
+    driver.get(url)
+    try:
+        driver.find_element_by_id("vis")
+    except NoSuchElementException:
+        raise RuntimeError(f"Could not load {url}")
+    return driver.execute_async_script(script)
+
+
+def get_tz_offset(tz: Optional[str] = None) -> pd.Timedelta:
+    """Get the timezone offset between Python and Javascript for dates with the given timezone.
+
+    Parameters
+    ----------
+    tz : string (optional)
+        The timezone of the input dates
+
+    Returns
+    -------
+    offset : pd.Timedelta
+        The offset between the Javasript representation and the Python representation
+        of a date with the given timezone.
+    """
+    ts = pd.to_datetime("2012-01-01").tz_localize(tz)
+    df = pd.DataFrame({"t": [ts]})
+    out = apply(df, {"timeUnit": "year", "field": "t", "as": "year"})
+
+    date_in = df.t[0]
+    date_out = pd.to_datetime(1e6 * out.t)[0].tz_localize(tz)
+
+    return date_out - date_in
